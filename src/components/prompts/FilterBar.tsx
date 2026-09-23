@@ -31,49 +31,49 @@ export function FilterBar({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      {/* Search Input & Reset in a Single Compact Row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
-        <div style={{ flexGrow: 1, position: 'relative' }}>
-          <Input
-            value={search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value)}
-            placeholder="Search prompts..."
-            style={{ paddingRight: search ? '2.5rem' : '0.875rem' }}
-          />
-          {search && (
-            <button
-              type="button"
-              onClick={() => onSearchChange('')}
-              aria-label="Clear search"
-              style={{
-                position: 'absolute',
-                right: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                color: 'var(--atlas-color-text-muted, #9ca3af)',
-                cursor: 'pointer',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                padding: '0.25rem',
-              }}
-            >
-              Clear
-            </button>
-          )}
-        </div>
-
-        {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={handleClearAll} style={{ flexShrink: 0 }}>
-            Reset
-          </Button>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '0.625rem',
+        flexWrap: 'wrap',
+      }}
+    >
+      {/* Compact Search Input */}
+      <div style={{ position: 'relative', width: '100%', maxWidth: '280px', flex: '1 1 240px' }}>
+        <Input
+          value={search}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value)}
+          placeholder="Search prompts..."
+          style={{ paddingRight: search ? '2.5rem' : '0.875rem' }}
+        />
+        {search && (
+          <button
+            type="button"
+            onClick={() => onSearchChange('')}
+            aria-label="Clear search"
+            style={{
+              position: 'absolute',
+              right: '0.75rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'none',
+              border: 'none',
+              color: 'var(--atlas-color-text-muted, #9ca3af)',
+              cursor: 'pointer',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              padding: '0.25rem',
+            }}
+          >
+            Clear
+          </button>
         )}
       </div>
 
-      {/* Slim Category Pills & Active Tag in One Horizontal Scrolling Line */}
+      {/* Slim Category Pills & Active Tag & Reset */}
       <div
         style={{
           display: 'flex',
@@ -82,7 +82,7 @@ export function FilterBar({
           overflowX: 'auto',
           paddingBottom: '0.125rem',
           WebkitOverflowScrolling: 'touch',
-          maxWidth: '100%',
+          flexShrink: 0,
         }}
       >
         <button
@@ -153,6 +153,12 @@ export function FilterBar({
               #{selectedTag}
             </Tag>
           </div>
+        )}
+
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" onClick={handleClearAll} style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', flexShrink: 0 }}>
+            Reset
+          </Button>
         )}
       </div>
     </div>
