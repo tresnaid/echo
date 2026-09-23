@@ -11,8 +11,8 @@ import { Prompt } from '../../types';
 
 interface PromptCardProps {
   prompt: Prompt;
-  onEdit: (prompt: Prompt) => void;
-  onDelete: (prompt: Prompt) => void;
+  onEdit?: (prompt: Prompt) => void;
+  onDelete?: (prompt: Prompt) => void;
   onTagClick?: (tag: string) => void;
   onOpenDetails?: (prompt: Prompt) => void;
 }
@@ -26,8 +26,6 @@ const CATEGORY_INTENTS: Record<string, 'info' | 'success' | 'warning' | 'danger'
 
 export function PromptCard({
   prompt,
-  onEdit,
-  onDelete,
   onTagClick,
   onOpenDetails,
 }: PromptCardProps) {
@@ -55,7 +53,6 @@ export function PromptCard({
       style={{
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'space-between',
         borderRadius: 'var(--atlas-radius-md, 6px)',
         backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
         border: isHovered
@@ -68,8 +65,8 @@ export function PromptCard({
         transition: 'border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease',
         cursor: 'pointer',
         overflow: 'hidden',
-        height: '100%',
-        minHeight: '260px',
+        width: '100%',
+        boxSizing: 'border-box',
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -112,14 +109,13 @@ export function PromptCard({
         </Text>
       </div>
 
-      {/* Main Content Body */}
+      {/* Main Content Body (Fits content height) */}
       <div
         style={{
           padding: '1rem',
           display: 'flex',
           flexDirection: 'column',
           gap: '0.5rem',
-          flexGrow: 1,
         }}
       >
         {/* Title */}
@@ -141,7 +137,6 @@ export function PromptCard({
           <Text
             size="sm"
             color="secondary"
-            truncate={2}
             style={{
               lineHeight: 1.45,
               fontSize: '0.8125rem',
@@ -163,11 +158,11 @@ export function PromptCard({
             fontSize: '0.78125rem',
             lineHeight: 1.4,
             color: 'var(--atlas-color-text-secondary, #475569)',
-            maxHeight: '3.6em',
+            maxHeight: '4.8em',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             display: '-webkit-box',
-            WebkitLineClamp: 2,
+            WebkitLineClamp: 3,
             WebkitBoxOrient: 'vertical',
           }}
         >
@@ -181,8 +176,7 @@ export function PromptCard({
               display: 'flex',
               flexWrap: 'wrap',
               gap: '0.25rem',
-              marginTop: 'auto',
-              paddingTop: '0.5rem',
+              paddingTop: '0.25rem',
             }}
           >
             {prompt.tags.map((tag, idx) => (
@@ -205,20 +199,15 @@ export function PromptCard({
         )}
       </div>
 
-      {/* Footer Action Bar */}
+      {/* Footer Action: Single Tasteful Copy Button */}
       <div
         style={{
-          padding: '0.625rem 1rem',
+          padding: '0.625rem 1rem 0.75rem 1rem',
           borderTop: '1px solid var(--atlas-color-border-subtle, #f1f5f9)',
           backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '0.5rem',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Primary Action Button */}
         <Button
           variant={copied ? 'primary' : 'outline'}
           size="sm"
@@ -226,41 +215,12 @@ export function PromptCard({
           style={{
             fontWeight: 500,
             fontSize: '0.8125rem',
-            flexGrow: 1,
+            width: '100%',
             justifyContent: 'center',
           }}
         >
           {copied ? 'Copied' : 'Copy Prompt'}
         </Button>
-
-        {/* Secondary Action Controls */}
-        <Stack direction="horizontal" gap="1" align="center">
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={`Edit ${prompt.title}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(prompt);
-            }}
-            style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.8125rem' }}
-          >
-            Edit
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            isDanger
-            aria-label={`Delete ${prompt.title}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(prompt);
-            }}
-            style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.8125rem' }}
-          >
-            Delete
-          </Button>
-        </Stack>
       </div>
     </div>
   );

@@ -61,16 +61,17 @@ export function PromptGrid({
   }
 
   return (
-    <div className="echo-prompt-grid">
+    <div className="echo-prompt-masonry">
       {prompts.map((prompt) => (
-        <PromptCard
-          key={prompt.id}
-          prompt={prompt}
-          onEdit={onEditPrompt}
-          onDelete={onDeletePrompt}
-          onTagClick={onTagClick}
-          onOpenDetails={onOpenDetails}
-        />
+        <div key={prompt.id} className="echo-prompt-card-wrapper">
+          <PromptCard
+            prompt={prompt}
+            onEdit={onEditPrompt}
+            onDelete={onDeletePrompt}
+            onTagClick={onTagClick}
+            onOpenDetails={onOpenDetails}
+          />
+        </div>
       ))}
     </div>
   );
