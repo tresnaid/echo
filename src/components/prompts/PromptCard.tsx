@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import {
-  Stack,
   Heading,
-  Text,
-  Badge,
-  Tag,
   Button,
 } from '@atlas/ds';
 import { Prompt } from '../../types';
@@ -17,12 +13,6 @@ interface PromptCardProps {
   onOpenDetails?: (prompt: Prompt) => void;
 }
 
-const CATEGORY_INTENTS: Record<string, 'info' | 'success' | 'warning' | 'danger' | 'neutral'> = {
-  text: 'info',
-  code: 'neutral',
-  image: 'success',
-  video: 'warning',
-};
 
 function PlayIcon({ size = 12 }: { size?: number }) {
   return (
@@ -40,7 +30,6 @@ function PlayIcon({ size = 12 }: { size?: number }) {
 
 export function PromptCard({
   prompt,
-  onTagClick,
   onOpenDetails,
 }: PromptCardProps) {
   const [copied, setCopied] = useState(false);
@@ -57,10 +46,6 @@ export function PromptCard({
       console.error('Failed to copy to clipboard:', err);
     }
   };
-
-  const categoryIntent = prompt.category_id
-    ? CATEGORY_INTENTS[prompt.category_id.toLowerCase()] || 'info'
-    : 'neutral';
 
   const primaryMedia = prompt.media && prompt.media.length > 0 ? prompt.media[0] : null;
 
@@ -178,47 +163,15 @@ export function PromptCard({
         </div>
       )}
 
-      {/* Top Header: Category & Collection Badges */}
-      <div
-        style={{
-          padding: '0.75rem 1rem 0.625rem 1rem',
-          borderBottom: '1px solid var(--atlas-color-border-subtle, #f1f5f9)',
-          backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '0.5rem',
-        }}
-      >
-        <Stack direction="horizontal" align="center" gap="2" wrap="wrap">
-          {prompt.category_id ? (
-            <Badge variant="subtle" intent={categoryIntent} size="sm">
-              {prompt.category_name || prompt.category_id.toUpperCase()}
-            </Badge>
-          ) : (
-            <Badge variant="subtle" intent="neutral" size="sm">
-              TEXT
-            </Badge>
-          )}
-
-          {prompt.collection_name && (
-            <Badge variant="outline" intent="neutral" size="sm">
-              {prompt.collection_name}
-            </Badge>
-          )}
-        </Stack>
-      </div>
-
-      {/* Main Content Body (Fits content height) */}
+      {/* Main Content Body: Title only */}
       <div
         style={{
           padding: '1rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.5rem',
+          flex: 1,
         }}
       >
-        {/* Title */}
         <Heading
           level={3}
           style={{
@@ -231,72 +184,6 @@ export function PromptCard({
         >
           {prompt.title}
         </Heading>
-
-        {/* Short Description */}
-        {prompt.description ? (
-          <Text
-            size="sm"
-            color="secondary"
-            style={{
-              lineHeight: 1.45,
-              fontSize: '0.8125rem',
-            }}
-          >
-            {prompt.description}
-          </Text>
-        ) : null}
-
-        {/* Prompt Preview Snippet */}
-        <div
-          style={{
-            marginTop: '0.25rem',
-            padding: '0.5rem 0.625rem',
-            borderRadius: 'var(--atlas-radius-sm, 4px)',
-            backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
-            border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-            fontFamily: 'var(--atlas-font-mono, monospace)',
-            fontSize: '0.78125rem',
-            lineHeight: 1.4,
-            color: 'var(--atlas-color-text-secondary, #475569)',
-            maxHeight: '4.8em',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: 'vertical',
-          }}
-        >
-          {prompt.prompt_text}
-        </div>
-
-        {/* Tags */}
-        {prompt.tags && prompt.tags.length > 0 && (
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '0.25rem',
-              paddingTop: '0.25rem',
-            }}
-          >
-            {prompt.tags.map((tag, idx) => (
-              <Tag
-                key={idx}
-                size="sm"
-                variant="subtle"
-                intent="neutral"
-                onSelect={
-                  onTagClick
-                    ? () => onTagClick(tag)
-                    : undefined
-                }
-                style={{ cursor: onTagClick ? 'pointer' : 'default' }}
-              >
-                #{tag}
-              </Tag>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Footer Action: Single Full-Width Copy Action */}
@@ -325,3 +212,4 @@ export function PromptCard({
     </div>
   );
 }
+
