@@ -1,9 +1,6 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Stack,
-  Text,
-  Badge,
-  Button,
 } from '@atlas/ds';
 import { Collection, CollectionCounts, SelectedCollectionView } from '../../types';
 import { CreateCollectionModal } from './CreateCollectionModal';
@@ -19,7 +16,7 @@ interface SidebarNavigationProps {
   style?: React.CSSProperties;
 }
 
-function EditIcon({ size = 13 }: { size?: number }) {
+function EditIcon({ size = 12 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -38,7 +35,7 @@ function EditIcon({ size = 13 }: { size?: number }) {
   );
 }
 
-function TrashIcon({ size = 13 }: { size?: number }) {
+function TrashIcon({ size = 12 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -54,6 +51,25 @@ function TrashIcon({ size = 13 }: { size?: number }) {
       <path d="M3 6h18" />
       <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
       <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+    </svg>
+  );
+}
+
+function PlusIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   );
 }
@@ -93,8 +109,8 @@ function SidebarItem({
         alignItems: 'center',
         justifyContent: 'space-between',
         width: '100%',
-        padding: '0.5rem 0.75rem',
-        borderRadius: 'var(--atlas-radius-md, 6px)',
+        padding: '0.35rem 0.5rem',
+        borderRadius: 'var(--atlas-radius-sm, 4px)',
         border: isSelected
           ? '1px solid var(--atlas-color-border-focus, #3b82f6)'
           : '1px solid transparent',
@@ -114,37 +130,46 @@ function SidebarItem({
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.625rem',
+          gap: '0.5rem',
           flexGrow: 1,
           minWidth: 0,
         }}
       >
-        <Badge
-          variant="subtle"
-          intent="neutral"
-          size="sm"
+        <span
           style={{
-            minWidth: '22px',
+            fontSize: '0.6875rem',
+            fontWeight: 600,
+            color: isSelected ? '#2563eb' : '#64748b',
+            backgroundColor: isSelected ? 'rgba(37, 99, 235, 0.12)' : '#f1f5f9',
+            padding: '1px 5px',
+            borderRadius: '10px',
+            minWidth: '18px',
             textAlign: 'center',
-            justifyContent: 'center',
+            lineHeight: '1.4',
             flexShrink: 0,
           }}
         >
           {count}
-        </Badge>
-        <Text
-          weight={isSelected ? 'semibold' : 'normal'}
-          truncate
-          style={{ maxWidth: actions ? '135px' : '185px' }}
+        </span>
+        <span
+          style={{
+            fontSize: '0.8125rem',
+            fontWeight: isSelected ? 600 : 450,
+            color: isSelected ? '#0f172a' : '#475569',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            flex: 1,
+          }}
         >
           {label}
-        </Text>
+        </span>
       </div>
 
       {actions && (
         <div
           onClick={(e) => e.stopPropagation()}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.125rem', flexShrink: 0 }}
         >
           {actions}
         </div>
@@ -182,8 +207,49 @@ export function SidebarNavigation({
   };
 
   return (
-    <aside style={{ width: '280px', flexShrink: 0, ...style }}>
+    <aside style={{ width: '210px', flexShrink: 0, ...style }}>
       <Stack direction="vertical" gap="1">
+        {/* Navigation Header */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 0.5rem 0.25rem',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '0.6875rem',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              color: 'var(--atlas-color-text-muted, #94a3b8)',
+            }}
+          >
+            Collections
+          </span>
+          <button
+            type="button"
+            onClick={() => setCreateModalOpen(true)}
+            aria-label="Create collection"
+            title="Create collection"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#64748b',
+              padding: '2px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '3px',
+            }}
+          >
+            <PlusIcon size={13} />
+          </button>
+        </div>
+
         {/* All Prompts */}
         <SidebarItem
           label="All Prompts"
@@ -203,49 +269,52 @@ export function SidebarNavigation({
               isSelected={isSelected}
               onClick={() => onSelectView(col.id)}
               actions={
-                <Stack direction="horizontal" gap="1" align="center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label={`Rename collection ${col.name}`}
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                  <button
+                    type="button"
+                    aria-label={`Rename ${col.name}`}
                     title={`Rename ${col.name}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setRenamingCollection(col);
                     }}
                     style={{
-                      padding: '0.25rem',
-                      minWidth: '24px',
-                      height: '24px',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#94a3b8',
+                      padding: '2px',
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      borderRadius: '3px',
                     }}
                   >
                     <EditIcon />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    isDanger
-                    aria-label={`Delete collection ${col.name}`}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Delete ${col.name}`}
                     title={`Delete ${col.name}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setDeletingCollection(col);
                     }}
                     style={{
-                      padding: '0.25rem',
-                      minWidth: '24px',
-                      height: '24px',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#ef4444',
+                      padding: '2px',
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      borderRadius: '3px',
                     }}
                   >
                     <TrashIcon />
-                  </Button>
-                </Stack>
+                  </button>
+                </div>
               }
             />
           );
@@ -259,16 +328,31 @@ export function SidebarNavigation({
           onClick={() => onSelectView('uncollected')}
         />
 
-        {/* Create New Collection Button at the bottom */}
-        <div style={{ paddingTop: '0.5rem', marginTop: '0.25rem', borderTop: '1px solid var(--atlas-color-border-subtle, #e2e8f0)' }}>
-          <Button
-            variant="outline"
-            size="sm"
+        {/* Create New Collection Button */}
+        <div style={{ paddingTop: '0.35rem', marginTop: '0.125rem', borderTop: '1px solid var(--atlas-color-border-subtle, #f1f5f9)' }}>
+          <button
+            type="button"
             onClick={() => setCreateModalOpen(true)}
-            style={{ width: '100%', justifyContent: 'center' }}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.35rem',
+              padding: '0.35rem 0.5rem',
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              color: 'var(--atlas-color-text-secondary, #64748b)',
+              backgroundColor: '#ffffff',
+              border: '1px dashed var(--atlas-color-border-subtle, #cbd5e1)',
+              borderRadius: 'var(--atlas-radius-sm, 4px)',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
           >
-            Create New Collection
-          </Button>
+            <PlusIcon size={11} />
+            <span>New Collection</span>
+          </button>
         </div>
       </Stack>
 

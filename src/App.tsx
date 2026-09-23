@@ -404,7 +404,7 @@ export function App() {
             )}
 
             {/* Main Product Layout with Sidebar (on desktop) & Product Catalog Grid */}
-            <div style={{ display: 'flex', gap: isMobile ? '1rem' : '2rem', alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
+            <div style={{ display: 'flex', gap: isMobile ? '1rem' : '1.5rem', alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
               {/* Left Sidebar Navigation (Desktop only) */}
               {!isMobile && (
                 <SidebarNavigation
