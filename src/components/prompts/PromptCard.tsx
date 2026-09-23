@@ -103,9 +103,8 @@ export function PromptCard({
         borderRadius: 'var(--atlas-radius-md, 6px)',
         backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
         border: isHovered
-          ? `1px solid ${categoryStyle.accent}`
+          ? '1px solid var(--atlas-color-border-focus, #3b82f6)'
           : '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-        borderTop: `3px solid ${categoryStyle.accent}`,
         boxShadow: isHovered
           ? 'var(--atlas-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.08))'
           : 'var(--atlas-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.04))',
@@ -122,6 +121,16 @@ export function PromptCard({
         if (onOpenDetails) onOpenDetails(prompt);
       }}
     >
+      {/* Permanent Category Color Accent Stripe */}
+      <div
+        style={{
+          width: '100%',
+          height: '3px',
+          backgroundColor: categoryStyle.accent,
+          flexShrink: 0,
+        }}
+      />
+
       {/* Visual Media Preview Banner (if media present) */}
       {primaryMedia ? (
         <div
