@@ -56,17 +56,17 @@ export function PromptCard({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        borderRadius: 'var(--atlas-radius-lg, 8px)',
+        borderRadius: 'var(--atlas-radius-md, 6px)',
         backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
         border: isHovered
-          ? '1px solid var(--atlas-color-primary, #1e3a8a)'
+          ? '1px solid var(--atlas-color-border-focus, #3b82f6)'
           : '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
         boxShadow: isHovered
-          ? 'var(--atlas-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06))'
-          : 'var(--atlas-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05))',
+          ? 'var(--atlas-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.08))'
+          : 'var(--atlas-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.04))',
         transform: isHovered ? 'translateY(-2px)' : 'none',
-        transition: 'all 0.18s ease-in-out',
-        cursor: onOpenDetails ? 'pointer' : 'default',
+        transition: 'border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease',
+        cursor: 'pointer',
         overflow: 'hidden',
         height: '100%',
         minHeight: '260px',
@@ -77,10 +77,10 @@ export function PromptCard({
         if (onOpenDetails) onOpenDetails(prompt);
       }}
     >
-      {/* Top Header / Meta Bar */}
+      {/* Top Header: Category & Collection Badges */}
       <div
         style={{
-          padding: '0.875rem 1rem 0.625rem 1rem',
+          padding: '0.75rem 1rem',
           borderBottom: '1px solid var(--atlas-color-border-subtle, #f1f5f9)',
           backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
           display: 'flex',
@@ -102,7 +102,7 @@ export function PromptCard({
 
           {prompt.collection_name && (
             <Badge variant="outline" intent="neutral" size="sm">
-              📁 {prompt.collection_name}
+              {prompt.collection_name}
             </Badge>
           )}
         </Stack>
@@ -112,22 +112,22 @@ export function PromptCard({
         </Text>
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Content Body */}
       <div
         style={{
           padding: '1rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.625rem',
+          gap: '0.5rem',
           flexGrow: 1,
         }}
       >
-        {/* Product Title */}
+        {/* Title */}
         <Heading
           level={3}
           style={{
-            fontSize: '1.0625rem',
-            lineHeight: 1.35,
+            fontSize: '1rem',
+            lineHeight: 1.4,
             fontWeight: 600,
             color: 'var(--atlas-color-text-primary, #0f172a)',
             margin: 0,
@@ -144,7 +144,7 @@ export function PromptCard({
             truncate={2}
             style={{
               lineHeight: 1.45,
-              fontSize: '0.875rem',
+              fontSize: '0.8125rem',
             }}
           >
             {prompt.description}
@@ -155,15 +155,15 @@ export function PromptCard({
         <div
           style={{
             marginTop: '0.25rem',
-            padding: '0.5rem 0.75rem',
-            borderRadius: 'var(--atlas-radius-md, 6px)',
+            padding: '0.5rem 0.625rem',
+            borderRadius: 'var(--atlas-radius-sm, 4px)',
             backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
-            border: '1px dashed var(--atlas-color-border-subtle, #cbd5e1)',
+            border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
             fontFamily: 'var(--atlas-font-mono, monospace)',
-            fontSize: '0.8125rem',
+            fontSize: '0.78125rem',
             lineHeight: 1.4,
-            color: 'var(--atlas-color-text-secondary, #334155)',
-            maxHeight: '4.2em',
+            color: 'var(--atlas-color-text-secondary, #475569)',
+            maxHeight: '3.6em',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             display: '-webkit-box',
@@ -180,7 +180,7 @@ export function PromptCard({
             style={{
               display: 'flex',
               flexWrap: 'wrap',
-              gap: '0.375rem',
+              gap: '0.25rem',
               marginTop: 'auto',
               paddingTop: '0.5rem',
             }}
@@ -205,10 +205,10 @@ export function PromptCard({
         )}
       </div>
 
-      {/* Product Action / E-commerce Footer */}
+      {/* Footer Action Bar */}
       <div
         style={{
-          padding: '0.75rem 1rem',
+          padding: '0.625rem 1rem',
           borderTop: '1px solid var(--atlas-color-border-subtle, #f1f5f9)',
           backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
           display: 'flex',
@@ -218,22 +218,22 @@ export function PromptCard({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Direct Action: Copy Prompt Button */}
+        {/* Primary Action Button */}
         <Button
           variant={copied ? 'primary' : 'outline'}
           size="sm"
           onClick={handleCopy}
           style={{
-            fontWeight: 600,
+            fontWeight: 500,
+            fontSize: '0.8125rem',
             flexGrow: 1,
             justifyContent: 'center',
-            fontSize: '0.875rem',
           }}
         >
-          {copied ? '✓ Copied!' : '📋 Copy Prompt'}
+          {copied ? 'Copied' : 'Copy Prompt'}
         </Button>
 
-        {/* Auxiliary Controls */}
+        {/* Secondary Action Controls */}
         <Stack direction="horizontal" gap="1" align="center">
           <Button
             variant="ghost"

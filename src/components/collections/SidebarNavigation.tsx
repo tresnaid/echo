@@ -127,14 +127,14 @@ export function SidebarNavigation({
               onClick={() => setCreateModalOpen(true)}
               style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.8125rem' }}
             >
-              + New
+              New
             </Button>
           </Stack>
 
           {collections.length === 0 ? (
             <Card variant="outline" style={{ padding: '0.75rem', textAlign: 'center' }}>
               <Text size="sm" color="muted">
-                No collections yet. Click "+ New" to create one.
+                No collections yet. Click "New" to create one.
               </Text>
             </Card>
           ) : (

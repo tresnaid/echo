@@ -56,11 +56,13 @@ export function FilterBar({
                 border: 'none',
                 color: 'var(--atlas-color-text-muted, #9ca3af)',
                 cursor: 'pointer',
-                fontSize: '1rem',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                textTransform: 'uppercase',
                 padding: '0.25rem',
               }}
             >
-              ✕
+              Clear
             </button>
           )}
         </div>

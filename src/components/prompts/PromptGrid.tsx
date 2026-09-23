@@ -51,7 +51,7 @@ export function PromptGrid({
               </Button>
             ) : (
               <Button variant="primary" onClick={onCreatePrompt}>
-                + Create First Prompt
+                Create First Prompt
               </Button>
             )}
           </Stack>

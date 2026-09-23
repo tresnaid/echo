@@ -13,6 +13,7 @@ import { fetchPrompts, fetchCategories, fetchTags } from './api/prompts';
 import { SidebarNavigation } from './components/collections/SidebarNavigation';
 import { PromptFormModal } from './components/prompts/PromptFormModal';
 import { DeletePromptDialog } from './components/prompts/DeletePromptDialog';
+import { PromptDetailModal } from './components/prompts/PromptDetailModal';
 import { FilterBar } from './components/prompts/FilterBar';
 import { PromptGrid } from './components/prompts/PromptGrid';
 
@@ -43,6 +44,7 @@ export function App() {
   const [promptModalOpen, setPromptModalOpen] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
   const [deletingPrompt, setDeletingPrompt] = useState<Prompt | null>(null);
+  const [detailPrompt, setDetailPrompt] = useState<Prompt | null>(null);
 
   // Load global metadata (health, collections, categories, tags)
   const loadMetadata = useCallback(async () => {
@@ -181,7 +183,7 @@ export function App() {
               <Badge variant="subtle" intent="danger">Offline</Badge>
             )}
             <Button variant="primary" onClick={handleOpenCreatePrompt}>
-              + New Prompt
+              New Prompt
             </Button>
           </Stack>
         </Stack>
@@ -239,11 +241,30 @@ export function App() {
                 onEditPrompt={handleOpenEditPrompt}
                 onDeletePrompt={setDeletingPrompt}
                 onTagClick={(tag) => setSelectedTag(tag)}
+                onOpenDetails={(prompt) => setDetailPrompt(prompt)}
               />
             </Stack>
           </div>
         </div>
       </Stack>
+
+      {/* Prompt Detail Modal */}
+      <PromptDetailModal
+        prompt={detailPrompt}
+        isOpen={Boolean(detailPrompt)}
+        onClose={() => setDetailPrompt(null)}
+        onEdit={(prompt) => {
+          setDetailPrompt(null);
+          handleOpenEditPrompt(prompt);
+        }}
+        onDelete={(prompt) => {
+          setDetailPrompt(null);
+          setDeletingPrompt(prompt);
+        }}
+        onTagClick={(tag) => {
+          setSelectedTag(tag);
+        }}
+      />
 
       {/* Prompt Form Modal (Create & Edit) */}
       <PromptFormModal
