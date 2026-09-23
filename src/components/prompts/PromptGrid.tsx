@@ -1,7 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Card, Stack, Heading, Text, Button } from '@atlas/ds';
 import { Prompt } from '../../types';
 import { PromptCard } from './PromptCard';
-import './PromptGrid.css';
 
 interface PromptGridProps {
   prompts: Prompt[];
@@ -9,10 +9,37 @@ interface PromptGridProps {
   hasActiveFilters: boolean;
   onClearFilters: () => void;
   onCreatePrompt: () => void;
-  onEditPrompt: (prompt: Prompt) => void;
-  onDeletePrompt: (prompt: Prompt) => void;
+  onEditPrompt?: (prompt: Prompt) => void;
+  onDeletePrompt?: (prompt: Prompt) => void;
   onTagClick?: (tag: string) => void;
   onOpenDetails?: (prompt: Prompt) => void;
+}
+
+function useColumnCount() {
+  const [columnCount, setColumnCount] = useState(() => {
+    if (typeof window === 'undefined') return 4;
+    const w = window.innerWidth;
+    if (w >= 1400) return 4;
+    if (w >= 1024) return 3;
+    if (w >= 576) return 2;
+    return 1;
+  });
+
+  useEffect(() => {
+    const updateColumns = () => {
+      const w = window.innerWidth;
+      if (w >= 1400) setColumnCount(4);
+      else if (w >= 1024) setColumnCount(3);
+      else if (w >= 576) setColumnCount(2);
+      else setColumnCount(1);
+    };
+
+    window.addEventListener('resize', updateColumns);
+    updateColumns();
+    return () => window.removeEventListener('resize', updateColumns);
+  }, []);
+
+  return columnCount;
 }
 
 export function PromptGrid({
@@ -21,11 +48,11 @@ export function PromptGrid({
   hasActiveFilters,
   onClearFilters,
   onCreatePrompt,
-  onEditPrompt,
-  onDeletePrompt,
   onTagClick,
   onOpenDetails,
 }: PromptGridProps) {
+  const columnCount = useColumnCount();
+
   if (loading) {
     return (
       <Card variant="outline" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
@@ -60,17 +87,41 @@ export function PromptGrid({
     );
   }
 
+  // Distribute prompts across columns in row-first order
+  const columns: Prompt[][] = Array.from({ length: columnCount }, () => []);
+  prompts.forEach((prompt, index) => {
+    columns[index % columnCount].push(prompt);
+  });
+
   return (
-    <div className="echo-prompt-grid">
-      {prompts.map((prompt) => (
-        <PromptCard
-          key={prompt.id}
-          prompt={prompt}
-          onEdit={onEditPrompt}
-          onDelete={onDeletePrompt}
-          onTagClick={onTagClick}
-          onOpenDetails={onOpenDetails}
-        />
+    <div
+      style={{
+        display: 'flex',
+        gap: '1.25rem',
+        width: '100%',
+        alignItems: 'flex-start',
+      }}
+    >
+      {columns.map((colPrompts, colIdx) => (
+        <div
+          key={colIdx}
+          style={{
+            flex: 1,
+            minWidth: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.25rem',
+          }}
+        >
+          {colPrompts.map((prompt) => (
+            <PromptCard
+              key={prompt.id}
+              prompt={prompt}
+              onTagClick={onTagClick}
+              onOpenDetails={onOpenDetails}
+            />
+          ))}
+        </div>
       ))}
     </div>
   );
