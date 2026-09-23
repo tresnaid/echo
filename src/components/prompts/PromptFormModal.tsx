@@ -11,6 +11,7 @@ import {
   Text,
   Badge,
   Card,
+  IconButton,
 } from '@atlas/ds';
 import { Prompt, Collection, Category, PromptMedia } from '../../types';
 import { createPrompt, updatePrompt, fetchCategories, uploadMediaFiles } from '../../api/prompts';
@@ -505,24 +506,21 @@ export function PromptFormModal({
                           <Badge variant="subtle" size="sm" intent={item.media_type === 'video' ? 'warning' : 'info'}>
                             {item.media_type.toUpperCase()}
                           </Badge>
-                          <Button
-                            type="button"
-                            variant="ghost"
+                          <IconButton
                             size="sm"
+                            variant="ghost"
                             isDanger
                             aria-label="Remove media"
+                            title="Remove media"
+                            icon={<TrashIcon size={12} />}
                             onClick={() => handleRemoveMedia(idx)}
                             style={{
-                              padding: '0.125rem',
-                              minWidth: '20px',
-                              height: '20px',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
+                              minWidth: '22px',
+                              minHeight: '22px',
+                              width: '22px',
+                              height: '22px',
                             }}
-                          >
-                            <TrashIcon size={12} />
-                          </Button>
+                          />
                         </div>
                       </div>
                     ))}

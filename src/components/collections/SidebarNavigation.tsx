@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   NavList,
   NavItem,
+  IconButton,
 } from '@atlas/ds';
 import { Collection, CollectionCounts, SelectedCollectionView } from '../../types';
 import { CreateCollectionModal } from './CreateCollectionModal';
@@ -126,25 +127,21 @@ export function SidebarNavigation({
           >
             Collections
           </span>
-          <button
-            type="button"
-            onClick={() => setCreateModalOpen(true)}
+          <IconButton
+            size="sm"
+            variant="ghost"
             aria-label="Create collection"
             title="Create collection"
+            icon={<PlusIcon size={14} />}
+            onClick={() => setCreateModalOpen(true)}
             style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#64748b',
-              padding: '2px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '3px',
+              minWidth: '24px',
+              minHeight: '24px',
+              width: '24px',
+              height: '24px',
+              color: 'var(--atlas-color-text-secondary, #64748b)',
             }}
-          >
-            <PlusIcon size={13} />
-          </button>
+          />
         </div>
 
         {/* Official Atlas NavList */}
@@ -183,75 +180,68 @@ export function SidebarNavigation({
                 label={col.name}
                 badge={
                   <span
-                    style={{
-                      fontSize: '0.6875rem',
-                      fontWeight: 600,
-                      color: isSelected ? '#2563eb' : '#64748b',
-                      backgroundColor: isSelected ? 'rgba(37, 99, 235, 0.12)' : '#f1f5f9',
-                      padding: '1px 5px',
-                      borderRadius: '10px',
-                      minWidth: '18px',
-                      textAlign: 'center',
-                      lineHeight: '1.4',
-                    }}
-                  >
-                    {col.prompt_count}
-                  </span>
-                }
-                badgePosition="leading"
-                isSelected={isSelected}
-                onClick={() => onSelectView(col.id)}
-                actions={
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                    <button
-                      type="button"
-                      aria-label={`Rename ${col.name}`}
-                      title={`Rename ${col.name}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setRenamingCollection(col);
-                      }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: '#94a3b8',
-                        padding: '2px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '3px',
-                      }}
-                    >
-                      <EditIcon />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`Delete ${col.name}`}
-                      title={`Delete ${col.name}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeletingCollection(col);
-                      }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: '#ef4444',
-                        padding: '2px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '3px',
-                      }}
-                    >
-                      <TrashIcon />
-                    </button>
-                  </div>
-                }
-              />
-            );
-          })}
+                style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 600,
+                  color: isSelected ? '#2563eb' : '#64748b',
+                  backgroundColor: isSelected ? 'rgba(37, 99, 235, 0.12)' : '#f1f5f9',
+                  padding: '1px 5px',
+                  borderRadius: '10px',
+                  minWidth: '18px',
+                  textAlign: 'center',
+                  lineHeight: '1.4',
+                }}
+              >
+                {col.prompt_count}
+              </span>
+            }
+            badgePosition="leading"
+            isSelected={isSelected}
+            onClick={() => onSelectView(col.id)}
+            actions={
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                <IconButton
+                  size="sm"
+                  variant="ghost"
+                  aria-label={`Rename ${col.name}`}
+                  title={`Rename ${col.name}`}
+                  icon={<EditIcon size={12} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setRenamingCollection(col);
+                  }}
+                  style={{
+                    minWidth: '22px',
+                    minHeight: '22px',
+                    width: '22px',
+                    height: '22px',
+                    color: '#94a3b8',
+                  }}
+                />
+                <IconButton
+                  size="sm"
+                  variant="ghost"
+                  isDanger
+                  aria-label={`Delete ${col.name}`}
+                  title={`Delete ${col.name}`}
+                  icon={<TrashIcon size={12} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeletingCollection(col);
+                  }}
+                  style={{
+                    minWidth: '22px',
+                    minHeight: '22px',
+                    width: '22px',
+                    height: '22px',
+                    color: '#ef4444',
+                  }}
+                />
+              </div>
+            }
+          />
+        );
+      })}
 
           {/* Uncollected */}
           <NavItem

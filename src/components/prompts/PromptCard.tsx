@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Heading,
   Text,
+  IconButton,
 } from '@atlas/ds';
 import { Prompt } from '../../types';
 
@@ -78,7 +79,6 @@ export function PromptCard({
 }: PromptCardProps) {
   const [copied, setCopied] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [isCopyHovered, setIsCopyHovered] = useState(false);
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -253,43 +253,31 @@ export function PromptCard({
             {prompt.title}
           </Heading>
 
-          <button
-            type="button"
+          <IconButton
+            size="sm"
+            variant="ghost"
             aria-label={copied ? 'Copied to clipboard' : 'Copy prompt text'}
             title={copied ? 'Copied!' : 'Copy prompt text'}
+            icon={copied ? <CheckIcon size={15} /> : <CopyIcon size={15} />}
             onClick={handleCopy}
-            onMouseEnter={() => setIsCopyHovered(true)}
-            onMouseLeave={() => setIsCopyHovered(false)}
             style={{
-              padding: '0.4rem',
-              minWidth: '32px',
-              height: '32px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              minWidth: '30px',
+              minHeight: '30px',
+              width: '30px',
+              height: '30px',
               borderRadius: 'var(--atlas-radius-md, 6px)',
               backgroundColor: copied
                 ? '#dcfce7'
-                : isCopyHovered
-                  ? '#e2e8f0'
-                  : 'var(--atlas-color-bg-subtle, #f1f5f9)',
+                : 'var(--atlas-color-bg-subtle, #f1f5f9)',
               border: copied
                 ? '1px solid #86efac'
-                : isCopyHovered
-                  ? '1px solid #94a3b8'
-                  : '1px solid var(--atlas-color-border-subtle, #cbd5e1)',
+                : '1px solid var(--atlas-color-border-subtle, #cbd5e1)',
               color: copied
                 ? '#15803d'
-                : isCopyHovered
-                  ? '#0f172a'
-                  : 'var(--atlas-color-text-secondary, #475569)',
-              cursor: 'pointer',
+                : 'var(--atlas-color-text-secondary, #475569)',
               flexShrink: 0,
-              transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease',
             }}
-          >
-            {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
-          </button>
+          />
         </div>
 
         {prompt.description && (
