@@ -21,7 +21,7 @@ function useColumnCount() {
     const w = window.innerWidth;
     if (w >= 1400) return 4;
     if (w >= 1024) return 3;
-    if (w >= 576) return 2;
+    if (w >= 600) return 2;
     return 1;
   });
 
@@ -30,7 +30,7 @@ function useColumnCount() {
       const w = window.innerWidth;
       if (w >= 1400) setColumnCount(4);
       else if (w >= 1024) setColumnCount(3);
-      else if (w >= 576) setColumnCount(2);
+      else if (w >= 600) setColumnCount(2);
       else setColumnCount(1);
     };
 
@@ -97,7 +97,7 @@ export function PromptGrid({
     <div
       style={{
         display: 'flex',
-        gap: '1.25rem',
+        gap: columnCount === 1 ? '0.875rem' : '1.25rem',
         width: '100%',
         alignItems: 'flex-start',
       }}
@@ -110,7 +110,7 @@ export function PromptGrid({
             minWidth: 0,
             display: 'flex',
             flexDirection: 'column',
-            gap: '1.25rem',
+            gap: columnCount === 1 ? '0.875rem' : '1.25rem',
           }}
         >
           {colPrompts.map((prompt) => (

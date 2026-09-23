@@ -144,7 +144,7 @@ export function PromptDetailModal({
             <div
               style={{
                 width: '100%',
-                maxHeight: '400px',
+                maxHeight: 'min(380px, 45vh)',
                 borderRadius: 'var(--atlas-radius-sm, 4px)',
                 overflow: 'hidden',
                 display: 'flex',
@@ -159,7 +159,7 @@ export function PromptDetailModal({
                   alt={activeMedia.caption || prompt.title}
                   style={{
                     maxWidth: '100%',
-                    maxHeight: '400px',
+                    maxHeight: 'min(380px, 45vh)',
                     objectFit: 'contain',
                     display: 'block',
                   }}
@@ -174,7 +174,7 @@ export function PromptDetailModal({
                   src={activeMedia.url}
                   style={{
                     width: '100%',
-                    maxHeight: '400px',
+                    maxHeight: 'min(380px, 45vh)',
                     backgroundColor: '#0f172a',
                     display: 'block',
                   }}

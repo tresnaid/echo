@@ -74,9 +74,19 @@ export function FilterBar({
         )}
       </Stack>
 
-      {/* Category Filter Pills */}
-      <Stack direction="horizontal" align="center" wrap="wrap" gap="2">
-        <Text size="xs" color="muted" weight="medium" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '0.25rem' }}>
+      {/* Category Filter Pills (Horizontal scrollable on mobile) */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          overflowX: 'auto',
+          paddingBottom: '0.25rem',
+          WebkitOverflowScrolling: 'touch',
+          maxWidth: '100%',
+        }}
+      >
+        <Text size="xs" color="muted" weight="medium" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '0.25rem', flexShrink: 0 }}>
           Type:
         </Text>
 
@@ -94,6 +104,7 @@ export function FilterBar({
             backgroundColor: selectedCategory === '' ? 'var(--atlas-color-bg-subtle, #f1f5f9)' : '#ffffff',
             color: selectedCategory === '' ? 'var(--atlas-color-text-primary, #0f172a)' : 'var(--atlas-color-text-secondary, #475569)',
             cursor: 'pointer',
+            flexShrink: 0,
             transition: 'background-color 0.15s ease, color 0.15s ease',
           }}
         >
@@ -126,6 +137,7 @@ export function FilterBar({
                 backgroundColor: isSelected ? 'var(--atlas-color-bg-subtle, #f1f5f9)' : '#ffffff',
                 color: isSelected ? 'var(--atlas-color-text-primary, #0f172a)' : 'var(--atlas-color-text-secondary, #475569)',
                 cursor: 'pointer',
+                flexShrink: 0,
                 transition: 'background-color 0.15s ease, color 0.15s ease',
               }}
             >
@@ -133,7 +145,7 @@ export function FilterBar({
             </button>
           );
         })}
-      </Stack>
+      </div>
 
       {/* Tag Filter row (if tags exist or if a tag is selected) */}
       {(availableTags.length > 0 || selectedTag) && (

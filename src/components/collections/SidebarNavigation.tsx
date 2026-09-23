@@ -16,6 +16,7 @@ interface SidebarNavigationProps {
   selectedView: SelectedCollectionView;
   onSelectView: (view: SelectedCollectionView) => void;
   onCollectionsChanged: () => void;
+  style?: React.CSSProperties;
 }
 
 function EditIcon({ size = 13 }: { size?: number }) {
@@ -158,6 +159,7 @@ export function SidebarNavigation({
   selectedView,
   onSelectView,
   onCollectionsChanged,
+  style,
 }: SidebarNavigationProps) {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [renamingCollection, setRenamingCollection] = useState<Collection | null>(null);
@@ -180,7 +182,7 @@ export function SidebarNavigation({
   };
 
   return (
-    <aside style={{ width: '280px', flexShrink: 0 }}>
+    <aside style={{ width: '280px', flexShrink: 0, ...style }}>
       <Stack direction="vertical" gap="1">
         {/* All Prompts */}
         <SidebarItem

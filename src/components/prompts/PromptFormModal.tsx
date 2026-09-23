@@ -327,7 +327,7 @@ export function PromptFormModal({
             </Field>
 
             {/* Organization row: Category & Collection */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
               {/* Category */}
               <Field label="Category" description="Optional prompt medium type">
                 <Select
@@ -405,7 +405,7 @@ export function PromptFormModal({
                 {showUrlInput && (
                   <Card variant="outline" style={{ padding: '0.75rem' }}>
                     <Stack direction="vertical" gap="2">
-                      <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '0.5rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
                         <Select
                           value={mediaTypeInput}
                           onChange={(e) => setMediaTypeInput(e.target.value as 'image' | 'video')}
@@ -419,12 +419,14 @@ export function PromptFormModal({
                           placeholder="https://example.com/image.jpg"
                         />
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.5rem' }}>
-                        <Input
-                          value={mediaCaptionInput}
-                          onChange={(e) => setMediaCaptionInput(e.target.value)}
-                          placeholder="Optional caption..."
-                        />
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <div style={{ flex: '1 1 180px' }}>
+                          <Input
+                            value={mediaCaptionInput}
+                            onChange={(e) => setMediaCaptionInput(e.target.value)}
+                            placeholder="Optional caption..."
+                          />
+                        </div>
                         <Button
                           type="button"
                           variant="primary"
