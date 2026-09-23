@@ -18,6 +18,45 @@ interface SidebarNavigationProps {
   onCollectionsChanged: () => void;
 }
 
+function EditIcon({ size = 13 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+      <path d="m15 5 4 4" />
+    </svg>
+  );
+}
+
+function TrashIcon({ size = 13 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+    </svg>
+  );
+}
+
 export function SidebarNavigation({
   collections,
   counts,
@@ -135,26 +174,42 @@ export function SidebarNavigation({
                   variant="ghost"
                   size="sm"
                   aria-label={`Rename collection ${col.name}`}
+                  title={`Rename ${col.name}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setRenamingCollection(col);
                   }}
-                  style={{ padding: '0.125rem 0.375rem', height: 'auto', fontSize: '0.75rem' }}
+                  style={{
+                    padding: '0.25rem',
+                    minWidth: '24px',
+                    height: '24px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                 >
-                  Rename
+                  <EditIcon />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   isDanger
                   aria-label={`Delete collection ${col.name}`}
+                  title={`Delete ${col.name}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setDeletingCollection(col);
                   }}
-                  style={{ padding: '0.125rem 0.375rem', height: 'auto', fontSize: '0.75rem' }}
+                  style={{
+                    padding: '0.25rem',
+                    minWidth: '24px',
+                    height: '24px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                 >
-                  Delete
+                  <TrashIcon />
                 </Button>
               </Stack>
             </div>

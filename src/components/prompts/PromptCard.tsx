@@ -74,7 +74,7 @@ export function PromptCard({
         if (onOpenDetails) onOpenDetails(prompt);
       }}
     >
-      {/* Top Header: Category & Collection Badges + Date */}
+      {/* Top Header: Category & Collection Badges */}
       <div
         style={{
           padding: '0.75rem 1rem 0.625rem 1rem',
@@ -103,10 +103,6 @@ export function PromptCard({
             </Badge>
           )}
         </Stack>
-
-        <Text size="xs" color="muted">
-          {new Date(prompt.created_at).toLocaleDateString()}
-        </Text>
       </div>
 
       {/* Main Content Body (Fits content height) */}
