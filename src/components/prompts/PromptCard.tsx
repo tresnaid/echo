@@ -65,6 +65,40 @@ function CheckIcon({ size = 14 }: { size?: number }) {
   );
 }
 
+const CATEGORY_STYLES: Record<
+  string,
+  { accent: string; bg: string; border: string; text: string; label: string }
+> = {
+  text: {
+    accent: '#3b82f6',
+    bg: '#eff6ff',
+    border: '#bfdbfe',
+    text: '#1d4ed8',
+    label: 'TEXT',
+  },
+  code: {
+    accent: '#8b5cf6',
+    bg: '#f5f3ff',
+    border: '#ddd6fe',
+    text: '#6d28d9',
+    label: 'CODE',
+  },
+  image: {
+    accent: '#10b981',
+    bg: '#ecfdf5',
+    border: '#a7f3d0',
+    text: '#047857',
+    label: 'IMAGE',
+  },
+  video: {
+    accent: '#f59e0b',
+    bg: '#fffbeb',
+    border: '#fde68a',
+    text: '#b45309',
+    label: 'VIDEO',
+  },
+};
+
 export function PromptCard({
   prompt,
   onOpenDetails,
@@ -84,6 +118,8 @@ export function PromptCard({
     }
   };
 
+  const categoryKey = (prompt.category_id || 'text').toLowerCase();
+  const categoryStyle = CATEGORY_STYLES[categoryKey] || CATEGORY_STYLES.text;
   const primaryMedia = prompt.media && prompt.media.length > 0 ? prompt.media[0] : null;
 
   return (
@@ -94,8 +130,9 @@ export function PromptCard({
         borderRadius: 'var(--atlas-radius-md, 6px)',
         backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
         border: isHovered
-          ? '1px solid var(--atlas-color-border-focus, #3b82f6)'
+          ? `1px solid ${categoryStyle.accent}`
           : '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
+        borderTop: `3px solid ${categoryStyle.accent}`,
         boxShadow: isHovered
           ? 'var(--atlas-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.08))'
           : 'var(--atlas-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.04))',
@@ -112,8 +149,8 @@ export function PromptCard({
         if (onOpenDetails) onOpenDetails(prompt);
       }}
     >
-      {/* Visual Media Preview Banner */}
-      {primaryMedia && (
+      {/* Visual Media Preview Banner (if media present) */}
+      {primaryMedia ? (
         <div
           style={{
             position: 'relative',
@@ -198,9 +235,9 @@ export function PromptCard({
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
-      {/* Main Content Body: Title and Copy Icon beside it */}
+      {/* Main Content Body: Title with Category Dot & Copy Icon */}
       <div
         style={{
           padding: '0.875rem 1rem',
@@ -210,24 +247,36 @@ export function PromptCard({
           gap: '0.5rem',
         }}
       >
-        <Heading
-          level={3}
-          style={{
-            fontSize: '0.9375rem',
-            lineHeight: 1.4,
-            fontWeight: 600,
-            color: 'var(--atlas-color-text-primary, #0f172a)',
-            margin: 0,
-            flex: 1,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-          }}
-        >
-          {prompt.title}
-        </Heading>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
+          <span
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: categoryStyle.accent,
+              flexShrink: 0,
+            }}
+            title={`Category: ${prompt.category_name || categoryStyle.label}`}
+          />
+          <Heading
+            level={3}
+            style={{
+              fontSize: '0.9375rem',
+              lineHeight: 1.4,
+              fontWeight: 600,
+              color: 'var(--atlas-color-text-primary, #0f172a)',
+              margin: 0,
+              flex: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+            }}
+          >
+            {prompt.title}
+          </Heading>
+        </div>
 
         <Button
           variant="ghost"
@@ -253,5 +302,6 @@ export function PromptCard({
     </div>
   );
 }
+
 
 

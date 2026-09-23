@@ -89,17 +89,44 @@ export function FilterBar({
           All Types
         </Button>
 
-        {categories.map((cat) => (
-          <Button
-            key={cat.id}
-            variant={selectedCategory === cat.id ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => onCategoryChange(selectedCategory === cat.id ? '' : cat.id)}
-            style={{ padding: '0.25rem 0.75rem', height: 'auto', fontSize: '0.8125rem' }}
-          >
-            {cat.name}
-          </Button>
-        ))}
+        {categories.map((cat) => {
+          const catColors: Record<string, string> = {
+            text: '#3b82f6',
+            code: '#8b5cf6',
+            image: '#10b981',
+            video: '#f59e0b',
+          };
+          const dotColor = catColors[cat.id.toLowerCase()] || '#64748b';
+          const isSelected = selectedCategory === cat.id;
+
+          return (
+            <Button
+              key={cat.id}
+              variant={isSelected ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => onCategoryChange(isSelected ? '' : cat.id)}
+              style={{
+                padding: '0.25rem 0.75rem',
+                height: 'auto',
+                fontSize: '0.8125rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <span
+                style={{
+                  width: '7px',
+                  height: '7px',
+                  borderRadius: '50%',
+                  backgroundColor: isSelected ? '#ffffff' : dotColor,
+                  display: 'inline-block',
+                }}
+              />
+              {cat.name}
+            </Button>
+          );
+        })}
       </Stack>
 
       {/* Tag Filter row (if tags exist or if a tag is selected) */}

@@ -11,7 +11,7 @@
     "start": "NODE_ENV=production tsx server/index.ts",
     "typecheck": "tsc --noEmit",
     "seed": "tsx server/db/seed.ts",
-    "test": "vitest run"
+    "test": "vitest run --pool=forks"
   },
   "dependencies": {
     "@atlas/ds": "file:../atlas/packages/ds",
