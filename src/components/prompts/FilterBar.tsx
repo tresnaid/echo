@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, Input, Button, Tag, Text } from '@atlas/ds';
+import { Input, Button, Tag } from '@atlas/ds';
 import { Category } from '../../types';
 
 interface FilterBarProps {
@@ -21,7 +21,6 @@ export function FilterBar({
   selectedTag,
   onTagChange,
   categories,
-  availableTags,
 }: FilterBarProps) {
   const hasActiveFilters = Boolean(search.trim() || selectedCategory || selectedTag);
 
@@ -32,14 +31,14 @@ export function FilterBar({
   };
 
   return (
-    <Stack direction="vertical" gap="3">
-      {/* Search Input and Reset Action */}
-      <Stack direction="horizontal" align="center" gap="3">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      {/* Search Input & Reset in a Single Compact Row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
         <div style={{ flexGrow: 1, position: 'relative' }}>
           <Input
             value={search}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value)}
-            placeholder="Search prompts by title, description, or tags..."
+            placeholder="Search prompts..."
             style={{ paddingRight: search ? '2.5rem' : '0.875rem' }}
           />
           {search && (
@@ -68,35 +67,31 @@ export function FilterBar({
         </div>
 
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={handleClearAll}>
-            Reset Filters
+          <Button variant="ghost" size="sm" onClick={handleClearAll} style={{ flexShrink: 0 }}>
+            Reset
           </Button>
         )}
-      </Stack>
+      </div>
 
-      {/* Category Filter Pills (Horizontal scrollable on mobile) */}
+      {/* Slim Category Pills & Active Tag in One Horizontal Scrolling Line */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.5rem',
+          gap: '0.375rem',
           overflowX: 'auto',
-          paddingBottom: '0.25rem',
+          paddingBottom: '0.125rem',
           WebkitOverflowScrolling: 'touch',
           maxWidth: '100%',
         }}
       >
-        <Text size="xs" color="muted" weight="medium" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '0.25rem', flexShrink: 0 }}>
-          Type:
-        </Text>
-
         <button
           type="button"
           onClick={() => onCategoryChange('')}
           style={{
             position: 'relative',
-            padding: '0.3125rem 0.75rem',
-            fontSize: '0.8125rem',
+            padding: '0.25rem 0.625rem',
+            fontSize: '0.75rem',
             fontWeight: selectedCategory === '' ? 600 : 500,
             borderRadius: 'var(--atlas-radius-sm, 4px)',
             border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
@@ -108,7 +103,7 @@ export function FilterBar({
             transition: 'background-color 0.15s ease, color 0.15s ease',
           }}
         >
-          All Types
+          All
         </button>
 
         {categories.map((cat) => {
@@ -128,8 +123,8 @@ export function FilterBar({
               onClick={() => onCategoryChange(isSelected ? '' : cat.id)}
               style={{
                 position: 'relative',
-                padding: '0.3125rem 0.75rem',
-                fontSize: '0.8125rem',
+                padding: '0.25rem 0.625rem',
+                fontSize: '0.75rem',
                 fontWeight: isSelected ? 600 : 500,
                 borderRadius: 'var(--atlas-radius-sm, 4px)',
                 border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
@@ -145,42 +140,21 @@ export function FilterBar({
             </button>
           );
         })}
-      </div>
 
-      {/* Tag Filter row (if tags exist or if a tag is selected) */}
-      {(availableTags.length > 0 || selectedTag) && (
-        <Stack direction="horizontal" align="center" wrap="wrap" gap="2">
-          <Text size="xs" color="muted" weight="medium" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '0.25rem' }}>
-            Tags:
-          </Text>
-
-          {selectedTag ? (
+        {/* Active Tag Chip (only shown when a tag filter is active) */}
+        {selectedTag && (
+          <div style={{ marginLeft: '0.25rem', flexShrink: 0 }}>
             <Tag
               size="sm"
               variant="solid"
               intent="neutral"
               onRemove={() => onTagChange('')}
             >
-              #{selectedTag} (Active)
+              #{selectedTag}
             </Tag>
-          ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
-              {availableTags.slice(0, 10).map((tag) => (
-                <Tag
-                  key={tag}
-                  size="sm"
-                  variant="subtle"
-                  intent="neutral"
-                  onSelect={() => onTagChange(tag)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  #{tag}
-                </Tag>
-              ))}
-            </div>
-          )}
-        </Stack>
-      )}
-    </Stack>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

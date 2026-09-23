@@ -423,20 +423,22 @@ export function App() {
 
               {/* Product Grid Area */}
               <div style={{ flexGrow: 1, minWidth: 0, width: '100%' }}>
-                <Stack direction="vertical" gap={isMobile ? '4' : '5'}>
-                  {/* Header: Title + Prompt Count */}
-                  <Stack direction="horizontal" align="center" justify="between" wrap="wrap" gap="2">
-                    <Stack direction="horizontal" align="center" gap="3">
-                      <Heading level={2} style={{ fontSize: isMobile ? '1.125rem' : '1.25rem', fontWeight: 600 }}>
-                        {activeViewLabel}
-                      </Heading>
-                      <Badge variant="subtle" intent="neutral">
-                        {prompts.length} {prompts.length === 1 ? 'item' : 'items'}
-                      </Badge>
+                <Stack direction="vertical" gap={isMobile ? '3' : '4'}>
+                  {/* Header: Title + Prompt Count (Desktop only to save vertical space on mobile) */}
+                  {!isMobile && (
+                    <Stack direction="horizontal" align="center" justify="between" wrap="wrap" gap="2">
+                      <Stack direction="horizontal" align="center" gap="3">
+                        <Heading level={2} style={{ fontSize: '1.25rem', fontWeight: 600 }}>
+                          {activeViewLabel}
+                        </Heading>
+                        <Badge variant="subtle" intent="neutral">
+                          {prompts.length} {prompts.length === 1 ? 'item' : 'items'}
+                        </Badge>
+                      </Stack>
                     </Stack>
-                  </Stack>
+                  )}
 
-                  {/* Filter Bar: Search, Category Pills, Tag Selectors */}
+                  {/* Compact Filter Bar */}
                   <FilterBar
                     search={search}
                     onSearchChange={setSearch}
