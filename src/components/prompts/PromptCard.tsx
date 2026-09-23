@@ -135,9 +135,9 @@ export function PromptCard({
           style={{
             position: 'relative',
             width: '100%',
-            height: '180px',
             overflow: 'hidden',
             backgroundColor: primaryMedia.media_type === 'video' ? '#0f172a' : 'var(--atlas-color-bg-subtle, #f1f5f9)',
+            ...(primaryMedia.aspect_ratio ? { aspectRatio: String(primaryMedia.aspect_ratio) } : {}),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -151,14 +151,13 @@ export function PromptCard({
               decoding="async"
               style={{
                 width: '100%',
-                height: '100%',
-                objectFit: 'cover',
+                height: 'auto',
                 display: 'block',
               }}
             />
           ) : (
             <>
-              {primaryMedia.thumbnail_url && (
+              {primaryMedia.thumbnail_url ? (
                 <img
                   src={primaryMedia.thumbnail_url}
                   alt={primaryMedia.caption || prompt.title}
@@ -166,12 +165,13 @@ export function PromptCard({
                   decoding="async"
                   style={{
                     width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
+                    height: 'auto',
                     display: 'block',
                     opacity: 0.85,
                   }}
                 />
+              ) : (
+                <div style={{ width: '100%', aspectRatio: '16/9', backgroundColor: '#0f172a' }} />
               )}
               <div
                 style={{
