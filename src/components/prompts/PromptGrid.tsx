@@ -1,6 +1,7 @@
-import { Grid, Card, Stack, Heading, Text, Button } from '@atlas/ds';
+import { Card, Stack, Heading, Text, Button } from '@atlas/ds';
 import { Prompt } from '../../types';
 import { PromptCard } from './PromptCard';
+import './PromptGrid.css';
 
 interface PromptGridProps {
   prompts: Prompt[];
@@ -60,7 +61,7 @@ export function PromptGrid({
   }
 
   return (
-    <Grid minChildWidth="310px" columnGap="4" rowGap="4">
+    <div className="echo-prompt-grid">
       {prompts.map((prompt) => (
         <PromptCard
           key={prompt.id}
@@ -71,6 +72,6 @@ export function PromptGrid({
           onOpenDetails={onOpenDetails}
         />
       ))}
-    </Grid>
+    </div>
   );
 }
