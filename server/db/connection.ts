@@ -61,10 +61,29 @@ export function initSchema(db: Database.Database): void {
       PRIMARY KEY (prompt_id, tag_id)
     );
 
+    CREATE TABLE IF NOT EXISTS prompt_media (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      prompt_id INTEGER NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
+      media_type TEXT NOT NULL,
+      url TEXT NOT NULL,
+      thumbnail_url TEXT,
+      medium_url TEXT,
+      file_path TEXT,
+      file_name TEXT,
+      file_size INTEGER,
+      mime_type TEXT,
+      width INTEGER,
+      height INTEGER,
+      aspect_ratio REAL,
+      caption TEXT,
+      created_at TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_prompts_deleted_at ON prompts(deleted_at);
     CREATE INDEX IF NOT EXISTS idx_prompts_collection_id ON prompts(collection_id);
     CREATE INDEX IF NOT EXISTS idx_prompts_category_id ON prompts(category_id);
     CREATE INDEX IF NOT EXISTS idx_prompts_created_at ON prompts(created_at);
+    CREATE INDEX IF NOT EXISTS idx_prompt_media_prompt_id ON prompt_media(prompt_id);
   `);
 
   // Seed initial categories if empty
