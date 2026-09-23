@@ -26,6 +26,8 @@ const CATEGORY_INTENTS: Record<string, 'info' | 'success' | 'warning' | 'danger'
 
 export function PromptCard({
   prompt,
+  onEdit,
+  onDelete,
   onTagClick,
   onOpenDetails,
 }: PromptCardProps) {
@@ -74,10 +76,10 @@ export function PromptCard({
         if (onOpenDetails) onOpenDetails(prompt);
       }}
     >
-      {/* Top Header: Category & Collection Badges */}
+      {/* Top Header: Category & Collection Badges + Quick Edit/Delete Actions */}
       <div
         style={{
-          padding: '0.75rem 1rem',
+          padding: '0.625rem 0.875rem',
           borderBottom: '1px solid var(--atlas-color-border-subtle, #f1f5f9)',
           backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
           display: 'flex',
@@ -104,15 +106,40 @@ export function PromptCard({
           )}
         </Stack>
 
-        <Text size="xs" color="muted">
-          {new Date(prompt.created_at).toLocaleDateString()}
-        </Text>
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {onEdit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={`Edit ${prompt.title}`}
+              onClick={() => onEdit(prompt)}
+              style={{ padding: '0.125rem 0.375rem', height: 'auto', fontSize: '0.75rem' }}
+            >
+              Edit
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              isDanger
+              aria-label={`Delete ${prompt.title}`}
+              onClick={() => onDelete(prompt)}
+              style={{ padding: '0.125rem 0.375rem', height: 'auto', fontSize: '0.75rem' }}
+            >
+              Delete
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Main Content Body (Fits content height) */}
       <div
         style={{
-          padding: '1rem',
+          padding: '1rem 0.875rem',
           display: 'flex',
           flexDirection: 'column',
           gap: '0.5rem',
@@ -199,23 +226,41 @@ export function PromptCard({
         )}
       </div>
 
-      {/* Footer Action: Single Tasteful Copy Button */}
+      {/* Footer Action: Details & Copy Buttons */}
       <div
         style={{
-          padding: '0.625rem 1rem 0.75rem 1rem',
+          padding: '0.625rem 0.875rem 0.75rem 0.875rem',
           borderTop: '1px solid var(--atlas-color-border-subtle, #f1f5f9)',
           backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {onOpenDetails && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onOpenDetails(prompt)}
+            style={{
+              fontWeight: 500,
+              fontSize: '0.8125rem',
+              flex: '1',
+              justifyContent: 'center',
+            }}
+          >
+            Details
+          </Button>
+        )}
         <Button
-          variant={copied ? 'primary' : 'outline'}
+          variant={copied ? 'primary' : 'primary'}
           size="sm"
           onClick={handleCopy}
           style={{
             fontWeight: 500,
             fontSize: '0.8125rem',
-            width: '100%',
+            flex: '1.5',
             justifyContent: 'center',
           }}
         >
