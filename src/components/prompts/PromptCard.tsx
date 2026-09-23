@@ -24,6 +24,20 @@ const CATEGORY_INTENTS: Record<string, 'info' | 'success' | 'warning' | 'danger'
   video: 'warning',
 };
 
+function PlayIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <polygon points="6 3 20 12 6 21 6 3" />
+    </svg>
+  );
+}
+
 export function PromptCard({
   prompt,
   onTagClick,
@@ -47,6 +61,8 @@ export function PromptCard({
   const categoryIntent = prompt.category_id
     ? CATEGORY_INTENTS[prompt.category_id.toLowerCase()] || 'info'
     : 'neutral';
+
+  const primaryMedia = prompt.media && prompt.media.length > 0 ? prompt.media[0] : null;
 
   return (
     <div
@@ -74,6 +90,94 @@ export function PromptCard({
         if (onOpenDetails) onOpenDetails(prompt);
       }}
     >
+      {/* Visual Media Preview Banner */}
+      {primaryMedia && (
+        <div
+          style={{
+            position: 'relative',
+            width: '100%',
+            maxHeight: '220px',
+            overflow: 'hidden',
+            backgroundColor: primaryMedia.media_type === 'video' ? '#0f172a' : 'var(--atlas-color-bg-subtle, #f1f5f9)',
+            aspectRatio: primaryMedia.aspect_ratio ? String(Math.max(1, Math.min(2.2, primaryMedia.aspect_ratio))) : '16/9',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {primaryMedia.media_type === 'image' ? (
+            <img
+              src={primaryMedia.thumbnail_url || primaryMedia.medium_url || primaryMedia.url}
+              alt={primaryMedia.caption || prompt.title}
+              loading="lazy"
+              decoding="async"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+          ) : (
+            <>
+              {primaryMedia.thumbnail_url && (
+                <img
+                  src={primaryMedia.thumbnail_url}
+                  alt={primaryMedia.caption || prompt.title}
+                  loading="lazy"
+                  decoding="async"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                    opacity: 0.85,
+                  }}
+                />
+              )}
+              <div
+                style={{
+                  position: 'absolute',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                  color: '#ffffff',
+                  padding: '4px 8px',
+                  borderRadius: '12px',
+                  fontSize: '0.6875rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.04em',
+                  backdropFilter: 'blur(4px)',
+                }}
+              >
+                <PlayIcon size={10} />
+                <span>VIDEO</span>
+              </div>
+            </>
+          )}
+
+          {prompt.media && prompt.media.length > 1 && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '6px',
+                right: '6px',
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                color: '#ffffff',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontSize: '0.6875rem',
+                fontWeight: 600,
+                backdropFilter: 'blur(4px)',
+              }}
+            >
+              +{prompt.media.length - 1}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Top Header: Category & Collection Badges */}
       <div
         style={{

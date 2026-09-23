@@ -7,7 +7,7 @@ import {
   Tag,
   Button,
 } from '@atlas/ds';
-import { Prompt } from '../../types';
+import { Prompt, PromptMedia } from '../../types';
 
 interface PromptDetailModalProps {
   prompt: Prompt | null;
@@ -25,6 +25,40 @@ const CATEGORY_INTENTS: Record<string, 'info' | 'success' | 'warning' | 'danger'
   video: 'warning',
 };
 
+function PlayIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <polygon points="6 3 20 12 6 21 6 3" />
+    </svg>
+  );
+}
+
+function ImageIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+      <circle cx="9" cy="9" r="2" />
+      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+    </svg>
+  );
+}
+
 export function PromptDetailModal({
   prompt,
   isOpen,
@@ -34,6 +68,7 @@ export function PromptDetailModal({
   onTagClick,
 }: PromptDetailModalProps) {
   const [copied, setCopied] = useState(false);
+  const [selectedMediaIdx, setSelectedMediaIdx] = useState(0);
 
   if (!prompt) return null;
 
@@ -51,11 +86,17 @@ export function PromptDetailModal({
     ? CATEGORY_INTENTS[prompt.category_id.toLowerCase()] || 'info'
     : 'neutral';
 
+  const mediaList = prompt.media || [];
+  const activeMedia: PromptMedia | undefined = mediaList[selectedMediaIdx] || mediaList[0];
+
   return (
     <Dialog
       open={isOpen}
       onOpenChange={(open) => {
-        if (!open) onClose();
+        if (!open) {
+          setSelectedMediaIdx(0);
+          onClose();
+        }
       }}
       title={prompt.title}
       size="lg"
@@ -85,6 +126,178 @@ export function PromptDetailModal({
       }
     >
       <Stack direction="vertical" gap="4">
+        {/* Media Showcase / Viewer */}
+        {mediaList.length > 0 && activeMedia && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem',
+              borderRadius: 'var(--atlas-radius-md, 6px)',
+              overflow: 'hidden',
+              backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
+              border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
+              padding: '0.75rem',
+            }}
+          >
+            {/* Active Media Container */}
+            <div
+              style={{
+                width: '100%',
+                maxHeight: '400px',
+                borderRadius: 'var(--atlas-radius-sm, 4px)',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: activeMedia.media_type === 'video' ? '#0f172a' : '#000000',
+              }}
+            >
+              {activeMedia.media_type === 'image' ? (
+                <img
+                  src={activeMedia.medium_url || activeMedia.url}
+                  alt={activeMedia.caption || prompt.title}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '400px',
+                    objectFit: 'contain',
+                    display: 'block',
+                  }}
+                />
+              ) : (
+                <video
+                  key={activeMedia.url}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  poster={activeMedia.medium_url || activeMedia.thumbnail_url || undefined}
+                  src={activeMedia.url}
+                  style={{
+                    width: '100%',
+                    maxHeight: '400px',
+                    backgroundColor: '#0f172a',
+                    display: 'block',
+                  }}
+                />
+              )}
+            </div>
+
+            {/* Media Metadata & Caption */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '0 0.25rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Badge variant="subtle" intent={activeMedia.media_type === 'video' ? 'warning' : 'info'} size="sm">
+                  {activeMedia.media_type.toUpperCase()}
+                </Badge>
+                {activeMedia.caption && (
+                  <Text size="xs" color="secondary">
+                    {activeMedia.caption}
+                  </Text>
+                )}
+              </div>
+
+              <a
+                href={activeMedia.url}
+                target="_blank"
+                rel="noreferrer noopener"
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'var(--atlas-color-text-brand, #2563eb)',
+                  textDecoration: 'none',
+                }}
+              >
+                Open original
+              </a>
+            </div>
+
+            {/* Media Thumbnail Strip (if multiple media items) */}
+            {mediaList.length > 1 && (
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  overflowX: 'auto',
+                  paddingTop: '0.25rem',
+                  paddingBottom: '0.25rem',
+                }}
+              >
+                {mediaList.map((m, idx) => {
+                  const isSelected = idx === selectedMediaIdx;
+                  return (
+                    <button
+                      key={m.id || idx}
+                      type="button"
+                      onClick={() => setSelectedMediaIdx(idx)}
+                      style={{
+                        position: 'relative',
+                        width: '56px',
+                        height: '42px',
+                        flexShrink: 0,
+                        borderRadius: '4px',
+                        overflow: 'hidden',
+                        padding: 0,
+                        border: isSelected
+                          ? '2px solid var(--atlas-color-border-focus, #3b82f6)'
+                          : '1px solid var(--atlas-color-border-subtle, #cbd5e1)',
+                        cursor: 'pointer',
+                        backgroundColor: '#0f172a',
+                      }}
+                    >
+                      {m.thumbnail_url || m.url ? (
+                        <img
+                          src={m.thumbnail_url || m.url}
+                          alt=""
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            display: 'block',
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#94a3b8',
+                          }}
+                        >
+                          {m.media_type === 'video' ? <PlayIcon size={12} /> : <ImageIcon size={12} />}
+                        </div>
+                      )}
+                      {m.media_type === 'video' && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '2px',
+                            right: '2px',
+                            backgroundColor: 'rgba(0,0,0,0.75)',
+                            borderRadius: '2px',
+                            padding: '1px 3px',
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <PlayIcon size={8} />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Metadata Bar */}
         <Stack direction="horizontal" align="center" justify="between" wrap="wrap" gap="2">
           <Stack direction="horizontal" align="center" gap="2">

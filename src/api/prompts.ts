@@ -1,4 +1,4 @@
-import { Prompt, Category } from '../types';
+import { Prompt, Category, PromptMedia } from '../types';
 
 export interface PromptInput {
   title: string;
@@ -8,6 +8,27 @@ export interface PromptInput {
   collection_id?: number | null;
   category_id?: string | null;
   tags?: string[];
+  media?: PromptMedia[];
+}
+
+export async function uploadMediaFiles(files: File[]): Promise<PromptMedia[]> {
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append('files', file);
+  }
+
+  const res = await fetch('/api/media/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to upload media files');
+  }
+
+  const data = await res.json();
+  return data.media as PromptMedia[];
 }
 
 export interface PromptQueryParams {

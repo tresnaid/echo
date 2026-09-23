@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   Field,
@@ -9,10 +9,32 @@ import {
   Stack,
   Tag,
   Text,
+  Badge,
+  Card,
 } from '@atlas/ds';
-import { Prompt, Collection, Category } from '../../types';
-import { createPrompt, updatePrompt, fetchCategories } from '../../api/prompts';
+import { Prompt, Collection, Category, PromptMedia } from '../../types';
+import { createPrompt, updatePrompt, fetchCategories, uploadMediaFiles } from '../../api/prompts';
 import { CreateCollectionModal } from '../collections/CreateCollectionModal';
+
+function TrashIcon({ size = 13 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+    </svg>
+  );
+}
 
 interface PromptFormModalProps {
   prompt?: Prompt | null;
@@ -43,11 +65,21 @@ export function PromptFormModal({
   const [categoryId, setCategoryId] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
+  const [mediaList, setMediaList] = useState<PromptMedia[]>([]);
+
+  // URL attachment inputs
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [mediaUrlInput, setMediaUrlInput] = useState('');
+  const [mediaTypeInput, setMediaTypeInput] = useState<'image' | 'video'>('image');
+  const [mediaCaptionInput, setMediaCaptionInput] = useState('');
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [createCollectionOpen, setCreateCollectionOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<{ title?: string; prompt_text?: string; general?: string }>({});
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load categories
   useEffect(() => {
@@ -67,6 +99,7 @@ export function PromptFormModal({
         setCollectionId(prompt.collection_id ? String(prompt.collection_id) : '');
         setCategoryId(prompt.category_id || '');
         setTags(prompt.tags || []);
+        setMediaList(prompt.media || []);
       } else {
         setTitle('');
         setPromptText('');
@@ -75,11 +108,59 @@ export function PromptFormModal({
         setCollectionId(defaultCollectionId ? String(defaultCollectionId) : '');
         setCategoryId('');
         setTags([]);
+        setMediaList([]);
       }
       setTagInput('');
+      setShowUrlInput(false);
+      setMediaUrlInput('');
+      setMediaCaptionInput('');
       setErrors({});
     }
   }, [open, prompt, defaultCollectionId]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      setUploading(true);
+      const uploaded = await uploadMediaFiles(Array.from(files));
+      setMediaList((prev) => [...prev, ...uploaded]);
+    } catch (err: unknown) {
+      setErrors((prev) => ({
+        ...prev,
+        general: err instanceof Error ? err.message : 'Failed to upload files',
+      }));
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleAddMediaUrl = () => {
+    const trimmedUrl = mediaUrlInput.trim();
+    if (!trimmedUrl) return;
+
+    const newMediaItem: PromptMedia = {
+      id: Date.now(),
+      prompt_id: prompt?.id || 0,
+      media_type: mediaTypeInput,
+      url: trimmedUrl,
+      thumbnail_url: mediaTypeInput === 'image' ? trimmedUrl : null,
+      medium_url: mediaTypeInput === 'image' ? trimmedUrl : null,
+      caption: mediaCaptionInput.trim() || null,
+      created_at: new Date().toISOString(),
+    };
+
+    setMediaList((prev) => [...prev, newMediaItem]);
+    setMediaUrlInput('');
+    setMediaCaptionInput('');
+    setShowUrlInput(false);
+  };
+
+  const handleRemoveMedia = (index: number) => {
+    setMediaList((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleAddTag = (rawTag: string) => {
     const trimmed = rawTag.trim();
@@ -145,6 +226,7 @@ export function PromptFormModal({
         collection_id: collectionId ? parseInt(collectionId, 10) : null,
         category_id: categoryId || null,
         tags: tags.length > 0 ? tags : undefined,
+        media: mediaList,
       };
 
       let result: Prompt;
@@ -175,8 +257,8 @@ export function PromptFormModal({
         title={isEditing ? 'Edit Prompt' : 'Create New Prompt'}
         description={
           isEditing
-            ? 'Update your prompt text, descriptions, and optional organization tags.'
-            : 'Add a reusable prompt to your library. Organization is optional.'
+            ? 'Update your prompt text, descriptions, media attachments, and optional organization tags.'
+            : 'Add a reusable prompt to your library. Organization and media attachments are optional.'
         }
         size="lg"
         footer={
@@ -184,7 +266,7 @@ export function PromptFormModal({
             <Button
               variant="ghost"
               onClick={() => onOpenChange(false)}
-              disabled={submitting}
+              disabled={submitting || uploading}
             >
               Cancel
             </Button>
@@ -192,6 +274,7 @@ export function PromptFormModal({
               variant="primary"
               onClick={() => handleSubmit()}
               isLoading={submitting}
+              disabled={uploading}
             >
               {isEditing ? 'Save Changes' : 'Create Prompt'}
             </Button>
@@ -278,6 +361,173 @@ export function PromptFormModal({
                 </Select>
               </Field>
             </div>
+
+            {/* Media Attachments Section */}
+            <Field
+              label="Photos & Videos"
+              description="Upload local photos/videos (auto-generates thumbnails) or add media URLs"
+            >
+              <Stack direction="vertical" gap="3">
+                {/* Hidden File Input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,video/mp4,video/webm,video/quicktime"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={handleFileUpload}
+                />
+
+                {/* Upload & Link Action Buttons */}
+                <Stack direction="horizontal" gap="2" wrap="wrap">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    isLoading={uploading}
+                    disabled={submitting}
+                  >
+                    {uploading ? 'Processing Media...' : 'Upload Photo / Video'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowUrlInput(!showUrlInput)}
+                    disabled={submitting || uploading}
+                  >
+                    {showUrlInput ? 'Cancel URL' : 'Add Media from URL'}
+                  </Button>
+                </Stack>
+
+                {/* Optional Media URL Form */}
+                {showUrlInput && (
+                  <Card variant="outline" style={{ padding: '0.75rem' }}>
+                    <Stack direction="vertical" gap="2">
+                      <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '0.5rem' }}>
+                        <Select
+                          value={mediaTypeInput}
+                          onChange={(e) => setMediaTypeInput(e.target.value as 'image' | 'video')}
+                        >
+                          <option value="image">Image URL</option>
+                          <option value="video">Video URL</option>
+                        </Select>
+                        <Input
+                          value={mediaUrlInput}
+                          onChange={(e) => setMediaUrlInput(e.target.value)}
+                          placeholder="https://example.com/image.jpg"
+                        />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.5rem' }}>
+                        <Input
+                          value={mediaCaptionInput}
+                          onChange={(e) => setMediaCaptionInput(e.target.value)}
+                          placeholder="Optional caption..."
+                        />
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          onClick={handleAddMediaUrl}
+                          disabled={!mediaUrlInput.trim()}
+                        >
+                          Attach
+                        </Button>
+                      </div>
+                    </Stack>
+                  </Card>
+                )}
+
+                {/* Media Attachment Previews */}
+                {mediaList.length > 0 && (
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                      gap: '0.5rem',
+                      marginTop: '0.25rem',
+                    }}
+                  >
+                    {mediaList.map((item, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          position: 'relative',
+                          borderRadius: 'var(--atlas-radius-sm, 4px)',
+                          border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
+                          overflow: 'hidden',
+                          backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                        }}
+                      >
+                        {item.media_type === 'image' ? (
+                          <img
+                            src={item.thumbnail_url || item.medium_url || item.url}
+                            alt={item.caption || item.file_name || 'Media preview'}
+                            style={{
+                              width: '100%',
+                              height: '80px',
+                              objectFit: 'cover',
+                              display: 'block',
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: '100%',
+                              height: '80px',
+                              backgroundColor: '#0f172a',
+                              color: '#ffffff',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                            }}
+                          >
+                            VIDEO
+                          </div>
+                        )}
+
+                        <div
+                          style={{
+                            padding: '0.25rem 0.375rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
+                          }}
+                        >
+                          <Badge variant="subtle" size="sm" intent={item.media_type === 'video' ? 'warning' : 'info'}>
+                            {item.media_type.toUpperCase()}
+                          </Badge>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            isDanger
+                            aria-label="Remove media"
+                            onClick={() => handleRemoveMedia(idx)}
+                            style={{
+                              padding: '0.125rem',
+                              minWidth: '20px',
+                              height: '20px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <TrashIcon size={12} />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Stack>
+            </Field>
 
             {/* Tags Input */}
             <Field label="Tags" description="Press Enter or comma to add tags">
