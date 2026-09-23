@@ -80,14 +80,24 @@ export function FilterBar({
           Type:
         </Text>
 
-        <Button
-          variant={selectedCategory === '' ? 'primary' : 'outline'}
-          size="sm"
+        <button
+          type="button"
           onClick={() => onCategoryChange('')}
-          style={{ padding: '0.25rem 0.75rem', height: 'auto', fontSize: '0.8125rem' }}
+          style={{
+            padding: '0.3125rem 0.75rem',
+            fontSize: '0.8125rem',
+            fontWeight: selectedCategory === '' ? 600 : 500,
+            borderRadius: 'var(--atlas-radius-sm, 4px)',
+            border: selectedCategory === '' ? '1px solid var(--atlas-color-border-focus, #2563eb)' : '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
+            borderTop: selectedCategory === '' ? '2.5px solid var(--atlas-color-brand-primary, #2563eb)' : '2.5px solid #64748b',
+            backgroundColor: selectedCategory === '' ? 'var(--atlas-color-bg-subtle, #f8fafc)' : '#ffffff',
+            color: selectedCategory === '' ? 'var(--atlas-color-brand-primary, #2563eb)' : 'var(--atlas-color-text-secondary, #475569)',
+            cursor: 'pointer',
+            transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease',
+          }}
         >
           All Types
-        </Button>
+        </button>
 
         {categories.map((cat) => {
           const catColors: Record<string, string> = {
@@ -96,35 +106,29 @@ export function FilterBar({
             image: '#10b981',
             video: '#f59e0b',
           };
-          const dotColor = catColors[cat.id.toLowerCase()] || '#64748b';
+          const accentColor = catColors[cat.id.toLowerCase()] || '#64748b';
           const isSelected = selectedCategory === cat.id;
 
           return (
-            <Button
+            <button
               key={cat.id}
-              variant={isSelected ? 'primary' : 'outline'}
-              size="sm"
+              type="button"
               onClick={() => onCategoryChange(isSelected ? '' : cat.id)}
               style={{
-                padding: '0.25rem 0.75rem',
-                height: 'auto',
+                padding: '0.3125rem 0.75rem',
                 fontSize: '0.8125rem',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
+                fontWeight: isSelected ? 600 : 500,
+                borderRadius: 'var(--atlas-radius-sm, 4px)',
+                border: isSelected ? `1px solid ${accentColor}` : '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
+                borderTop: `2.5px solid ${accentColor}`,
+                backgroundColor: isSelected ? `${accentColor}15` : '#ffffff',
+                color: isSelected ? accentColor : 'var(--atlas-color-text-secondary, #475569)',
+                cursor: 'pointer',
+                transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease',
               }}
             >
-              <span
-                style={{
-                  width: '7px',
-                  height: '7px',
-                  borderRadius: '50%',
-                  backgroundColor: isSelected ? '#ffffff' : dotColor,
-                  display: 'inline-block',
-                }}
-              />
               {cat.name}
-            </Button>
+            </button>
           );
         })}
       </Stack>
