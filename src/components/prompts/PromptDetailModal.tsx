@@ -136,19 +136,9 @@ export function PromptDetailModal({
 
         {/* Raw Prompt Text Box */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
-            <Text size="xs" color="muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
-              Prompt Text
-            </Text>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCopy}
-              style={{ fontSize: '0.8125rem' }}
-            >
-              {copied ? 'Copied' : 'Copy Text'}
-            </Button>
-          </div>
+          <Text size="xs" color="muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: '0.375rem', display: 'block' }}>
+            Prompt Text
+          </Text>
           <div
             style={{
               padding: '1rem',
