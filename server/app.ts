@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'node:path';
 import { getDatabase } from './db/connection';
 import { createCollectionsRouter } from './routes/collections';
+import { createPromptsRouter, createCategoriesRouter, createTagsRouter } from './routes/prompts';
 import Database from 'better-sqlite3';
 
 export function createApp(dbInstance?: Database.Database) {
@@ -27,8 +28,11 @@ export function createApp(dbInstance?: Database.Database) {
     }
   });
 
-  // Collections API
+  // API Endpoints
   app.use('/api/collections', createCollectionsRouter(db));
+  app.use('/api/prompts', createPromptsRouter(db));
+  app.use('/api/categories', createCategoriesRouter(db));
+  app.use('/api/tags', createTagsRouter(db));
 
   // Serve static assets in production
   if (process.env.NODE_ENV === 'production') {
