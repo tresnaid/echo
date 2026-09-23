@@ -90,4 +90,4 @@ None currently required beyond `PROJECT.md`.
 
 ## Current State
 
-MVP completed. Persistent SQLite storage, Collection Management, Prompt CRUD Operations with Soft-Deletion, Search & Multi-criteria Filtering, Row-first Masonry Browsing, Prompt Detail Modal with browsing context preservation, and Comprehensive Test Suite are fully implemented and verified. All upstream Atlas Design System component requests are tracked under issue #24.
+MVP completed. Persistent SQLite storage, Collection Management, Prompt CRUD Operations with Soft-Deletion, Search & Multi-criteria Filtering, Prompt Detail Modal with browsing context preservation, Photo & Video Media Attachments with thumbnail generation, and Comprehensive Test Suite are fully implemented and verified. All official Atlas Design System components (`@atlas/ds` Masonry, SearchInput, CodeSnippet, NavList, NavItem) have been fully integrated and local fallbacks retired (issue #24 closed).
