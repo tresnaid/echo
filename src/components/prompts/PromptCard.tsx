@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Card,
   Stack,
   Heading,
   Text,
@@ -33,6 +32,7 @@ export function PromptCard({
   onOpenDetails,
 }: PromptCardProps) {
   const [copied, setCopied] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -51,61 +51,86 @@ export function PromptCard({
     : 'neutral';
 
   return (
-    <Card
-      variant="outline"
+    <div
       style={{
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        padding: '1.25rem',
-        borderRadius: 'var(--atlas-radius-lg, 10px)',
+        borderRadius: 'var(--atlas-radius-lg, 8px)',
         backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
-        border: '1px solid var(--atlas-color-border-subtle, #e5e7eb)',
-        boxShadow: 'var(--atlas-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05))',
-        transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
+        border: isHovered
+          ? '1px solid var(--atlas-color-primary, #1e3a8a)'
+          : '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
+        boxShadow: isHovered
+          ? 'var(--atlas-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06))'
+          : 'var(--atlas-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05))',
+        transform: isHovered ? 'translateY(-2px)' : 'none',
+        transition: 'all 0.18s ease-in-out',
         cursor: onOpenDetails ? 'pointer' : 'default',
-        position: 'relative',
-        minHeight: '220px',
+        overflow: 'hidden',
+        height: '100%',
+        minHeight: '260px',
       }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       onClick={() => {
         if (onOpenDetails) onOpenDetails(prompt);
       }}
     >
-      <Stack direction="vertical" gap="3" style={{ flexGrow: 1 }}>
-        {/* Top Product Header: Category & Collection Badges */}
-        <Stack direction="horizontal" align="center" justify="between" wrap="wrap" gap="2">
-          <Stack direction="horizontal" align="center" gap="2">
-            {prompt.category_id ? (
-              <Badge variant="subtle" intent={categoryIntent} size="sm">
-                {prompt.category_name || prompt.category_id.toUpperCase()}
-              </Badge>
-            ) : (
-              <Badge variant="subtle" intent="neutral" size="sm">
-                GENERAL
-              </Badge>
-            )}
+      {/* Top Header / Meta Bar */}
+      <div
+        style={{
+          padding: '0.875rem 1rem 0.625rem 1rem',
+          borderBottom: '1px solid var(--atlas-color-border-subtle, #f1f5f9)',
+          backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '0.5rem',
+        }}
+      >
+        <Stack direction="horizontal" align="center" gap="2" wrap="wrap">
+          {prompt.category_id ? (
+            <Badge variant="subtle" intent={categoryIntent} size="sm">
+              {prompt.category_name || prompt.category_id.toUpperCase()}
+            </Badge>
+          ) : (
+            <Badge variant="subtle" intent="neutral" size="sm">
+              TEXT
+            </Badge>
+          )}
 
-            {prompt.collection_name && (
-              <Badge variant="outline" intent="neutral" size="sm">
-                📁 {prompt.collection_name}
-              </Badge>
-            )}
-          </Stack>
-
-          {/* Quick timestamp */}
-          <Text size="xs" color="muted">
-            {new Date(prompt.created_at).toLocaleDateString()}
-          </Text>
+          {prompt.collection_name && (
+            <Badge variant="outline" intent="neutral" size="sm">
+              📁 {prompt.collection_name}
+            </Badge>
+          )}
         </Stack>
 
-        {/* Title */}
+        <Text size="xs" color="muted">
+          {new Date(prompt.created_at).toLocaleDateString()}
+        </Text>
+      </div>
+
+      {/* Main Content Area */}
+      <div
+        style={{
+          padding: '1rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.625rem',
+          flexGrow: 1,
+        }}
+      >
+        {/* Product Title */}
         <Heading
           level={3}
           style={{
             fontSize: '1.0625rem',
             lineHeight: 1.35,
             fontWeight: 600,
-            color: 'var(--atlas-color-text-primary, #111827)',
+            color: 'var(--atlas-color-text-primary, #0f172a)',
+            margin: 0,
           }}
         >
           {prompt.title}
@@ -119,27 +144,47 @@ export function PromptCard({
             truncate={2}
             style={{
               lineHeight: 1.45,
-              minHeight: '2.9em',
+              fontSize: '0.875rem',
             }}
           >
             {prompt.description}
           </Text>
-        ) : (
-          <Text
-            size="sm"
-            color="muted"
-            style={{
-              fontStyle: 'italic',
-              minHeight: '2.9em',
-            }}
-          >
-            No description provided.
-          </Text>
-        )}
+        ) : null}
+
+        {/* Prompt Preview Snippet */}
+        <div
+          style={{
+            marginTop: '0.25rem',
+            padding: '0.5rem 0.75rem',
+            borderRadius: 'var(--atlas-radius-md, 6px)',
+            backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
+            border: '1px dashed var(--atlas-color-border-subtle, #cbd5e1)',
+            fontFamily: 'var(--atlas-font-mono, monospace)',
+            fontSize: '0.8125rem',
+            lineHeight: 1.4,
+            color: 'var(--atlas-color-text-secondary, #334155)',
+            maxHeight: '4.2em',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+          }}
+        >
+          {prompt.prompt_text}
+        </div>
 
         {/* Tags */}
         {prompt.tags && prompt.tags.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginTop: 'auto' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '0.375rem',
+              marginTop: 'auto',
+              paddingTop: '0.5rem',
+            }}
+          >
             {prompt.tags.map((tag, idx) => (
               <Tag
                 key={idx}
@@ -158,14 +203,14 @@ export function PromptCard({
             ))}
           </div>
         )}
-      </Stack>
+      </div>
 
-      {/* Card Action Footer */}
+      {/* Product Action / E-commerce Footer */}
       <div
         style={{
-          marginTop: '1rem',
-          paddingTop: '0.875rem',
-          borderTop: '1px solid var(--atlas-color-border-subtle, #f3f4f6)',
+          padding: '0.75rem 1rem',
+          borderTop: '1px solid var(--atlas-color-border-subtle, #f1f5f9)',
+          backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -173,21 +218,22 @@ export function PromptCard({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* One-Click Fast Copy Action Button */}
+        {/* Direct Action: Copy Prompt Button */}
         <Button
           variant={copied ? 'primary' : 'outline'}
           size="sm"
           onClick={handleCopy}
           style={{
-            fontWeight: 500,
+            fontWeight: 600,
             flexGrow: 1,
             justifyContent: 'center',
+            fontSize: '0.875rem',
           }}
         >
-          {copied ? '✓ Copied to Clipboard!' : '📋 Copy Prompt'}
+          {copied ? '✓ Copied!' : '📋 Copy Prompt'}
         </Button>
 
-        {/* Actions (Edit / Delete) */}
+        {/* Auxiliary Controls */}
         <Stack direction="horizontal" gap="1" align="center">
           <Button
             variant="ghost"
@@ -216,6 +262,6 @@ export function PromptCard({
           </Button>
         </Stack>
       </div>
-    </Card>
+    </div>
   );
 }
