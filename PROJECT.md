@@ -90,4 +90,4 @@ None currently required beyond `PROJECT.md`.
 
 ## Current State
 
-Project foundation, persistent SQLite storage, Collection Management, and Prompt CRUD Operations with Soft-Deletion implemented. Lightweight Prompt creation and editing modal integrated with Atlas Design System (`@atlas/ds`), supporting optional collections, categories, and tags.
+MVP completed. Persistent SQLite storage, Collection Management, Prompt CRUD Operations with Soft-Deletion, Search & Multi-criteria Filtering, Row-first Masonry Browsing, Prompt Detail Modal with browsing context preservation, and Comprehensive Test Suite are fully implemented and verified. All upstream Atlas Design System component requests are tracked under issue #24.
