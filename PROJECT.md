@@ -90,4 +90,4 @@ None currently required beyond `PROJECT.md`.
 
 ## Current State
 
-Project initialization and repository establishment phase.
+Project foundation established. React + TypeScript + Vite frontend integrated with Atlas Design System (`@atlas/ds`), backed by an Express API server with persistent SQLite database storage and seed category migrations.
