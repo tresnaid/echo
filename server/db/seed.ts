@@ -8,6 +8,16 @@ interface SeedPrompt {
   category: 'text' | 'code' | 'image' | 'video';
   collection?: string;
   tags: string[];
+  media?: {
+    media_type: 'image' | 'video';
+    url: string;
+    thumbnail_url?: string;
+    medium_url?: string;
+    width?: number;
+    height?: number;
+    aspect_ratio?: number;
+    caption?: string;
+  }[];
 }
 
 export function seedDatabase() {
@@ -67,6 +77,18 @@ Rules:
       category: 'image',
       collection: 'AI Image & Visual Arts',
       tags: ['midjourney', '3d', 'iconography', 'isometric'],
+      media: [
+        {
+          media_type: 'image',
+          url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
+          medium_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=640&q=80',
+          thumbnail_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=320&q=80',
+          width: 1200,
+          height: 1200,
+          aspect_ratio: 1,
+          caption: '3D Isometric Abstract Render Example',
+        },
+      ],
     },
     {
       title: 'Executive Summary Synthesizer',
@@ -91,6 +113,18 @@ Keep tone objective, direct, and free of fluff.
       category: 'video',
       collection: 'Video Generation & Motion',
       tags: ['cinematic', 'drone', 'hyperlapse', 'sora'],
+      media: [
+        {
+          media_type: 'video',
+          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+          thumbnail_url: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=640&q=80',
+          medium_url: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=640&q=80',
+          width: 1920,
+          height: 1080,
+          aspect_ratio: 1.7778,
+          caption: 'Drone Sunset Hyperlapse Preview',
+        },
+      ],
     },
     {
       title: 'SQL Query Optimizer & Index Advisor',
@@ -120,6 +154,18 @@ Provide:
       category: 'image',
       collection: 'AI Image & Visual Arts',
       tags: ['photography', 'portrait', 'lighting'],
+      media: [
+        {
+          media_type: 'image',
+          url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80',
+          medium_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=640&q=80',
+          thumbnail_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=320&q=80',
+          width: 960,
+          height: 1200,
+          aspect_ratio: 0.8,
+          caption: 'Editorial Studio Portrait Lighting Example',
+        },
+      ],
     },
     {
       title: 'Architecture Decision Record (ADR) Spec',
@@ -150,6 +196,18 @@ Topic to cover:
       category: 'image',
       collection: 'AI Image & Visual Arts',
       tags: ['ui', 'glassmorphism', 'dark-mode'],
+      media: [
+        {
+          media_type: 'image',
+          url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
+          medium_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=640&q=80',
+          thumbnail_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=320&q=80',
+          width: 1920,
+          height: 1080,
+          aspect_ratio: 1.7778,
+          caption: 'Dark UI Dashboard Scene Example',
+        },
+      ],
     },
     {
       title: 'Character Turnaround Animation Cue',
@@ -159,6 +217,18 @@ Topic to cover:
       category: 'video',
       collection: 'Video Generation & Motion',
       tags: ['character', 'animation', 'turnaround', 'runway'],
+      media: [
+        {
+          media_type: 'video',
+          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4',
+          thumbnail_url: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=640&q=80',
+          medium_url: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=640&q=80',
+          width: 1920,
+          height: 1080,
+          aspect_ratio: 1.7778,
+          caption: '3D Character Model Turnaround Preview',
+        },
+      ],
     },
     {
       title: 'Tailwind to CSS Design Token Refactorer',
@@ -205,6 +275,19 @@ Sentence 3: Low-friction call to interest (no calendar link, simple open questio
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
+  const insertMedia = db.prepare(`
+    INSERT INTO prompt_media (
+      prompt_id, media_type, url, thumbnail_url, medium_url,
+      file_path, file_name, file_size, mime_type, width, height,
+      aspect_ratio, caption, created_at
+    )
+    VALUES (
+      @prompt_id, @media_type, @url, @thumbnail_url, @medium_url,
+      @file_path, @file_name, @file_size, @mime_type, @width, @height,
+      @aspect_ratio, @caption, @created_at
+    )
+  `);
+
   const getTag = db.prepare('SELECT id FROM tags WHERE name = ?');
   const insertTag = db.prepare('INSERT INTO tags (name, created_at) VALUES (?, ?)');
   const linkPromptTag = db.prepare('INSERT OR IGNORE INTO prompt_tags (prompt_id, tag_id) VALUES (?, ?)');
@@ -236,6 +319,27 @@ Sentence 3: Low-friction call to interest (no calendar link, simple open questio
           tagRow = { id: Number(tagRes.lastInsertRowid) };
         }
         linkPromptTag.run(promptId, tagRow.id);
+      }
+
+      if (p.media) {
+        for (const m of p.media) {
+          insertMedia.run({
+            prompt_id: promptId,
+            media_type: m.media_type,
+            url: m.url,
+            thumbnail_url: m.thumbnail_url || m.url,
+            medium_url: m.medium_url || m.url,
+            file_path: null,
+            file_name: null,
+            file_size: null,
+            mime_type: m.media_type === 'video' ? 'video/mp4' : 'image/jpeg',
+            width: m.width || null,
+            height: m.height || null,
+            aspect_ratio: m.aspect_ratio || null,
+            caption: m.caption || null,
+            created_at: createdAt,
+          });
+        }
       }
     }
   });

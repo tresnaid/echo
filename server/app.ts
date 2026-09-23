@@ -4,6 +4,8 @@ import path from 'node:path';
 import { getDatabase } from './db/connection';
 import { createCollectionsRouter } from './routes/collections';
 import { createPromptsRouter, createCategoriesRouter, createTagsRouter } from './routes/prompts';
+import { createMediaRouter, createPromptMediaRouter } from './routes/media.js';
+import { getUploadsDir } from './services/mediaService.js';
 import Database from 'better-sqlite3';
 
 export function createApp(dbInstance?: Database.Database) {
@@ -12,6 +14,13 @@ export function createApp(dbInstance?: Database.Database) {
 
   app.use(cors());
   app.use(express.json());
+
+  // Static serving for uploaded media assets (images, thumbnails, videos)
+  const uploadsDir = getUploadsDir();
+  app.use('/uploads', express.static(uploadsDir, {
+    maxAge: '1y',
+    immutable: true,
+  }));
 
   // Health check endpoint
   app.get('/api/health', (_req, res) => {
@@ -30,9 +39,11 @@ export function createApp(dbInstance?: Database.Database) {
 
   // API Endpoints
   app.use('/api/collections', createCollectionsRouter(db));
+  app.use('/api/prompts/:id/media', createPromptMediaRouter(db));
   app.use('/api/prompts', createPromptsRouter(db));
   app.use('/api/categories', createCategoriesRouter(db));
   app.use('/api/tags', createTagsRouter(db));
+  app.use('/api/media', createMediaRouter(db));
 
   // Serve static assets in production
   if (process.env.NODE_ENV === 'production') {

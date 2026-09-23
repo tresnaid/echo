@@ -2,6 +2,22 @@ import { Router, Request, Response } from 'express';
 import Database from 'better-sqlite3';
 import { z } from 'zod';
 
+const mediaItemSchema = z.object({
+  id: z.number().int().positive().optional(),
+  media_type: z.enum(['image', 'video']),
+  url: z.string().min(1),
+  thumbnail_url: z.string().nullable().optional(),
+  medium_url: z.string().nullable().optional(),
+  file_path: z.string().nullable().optional(),
+  file_name: z.string().nullable().optional(),
+  file_size: z.number().nullable().optional(),
+  mime_type: z.string().nullable().optional(),
+  width: z.number().nullable().optional(),
+  height: z.number().nullable().optional(),
+  aspect_ratio: z.number().nullable().optional(),
+  caption: z.string().nullable().optional(),
+});
+
 const promptSchema = z.object({
   title: z.string().trim().min(1, 'Title is required').max(200, 'Title is too long'),
   prompt_text: z.string().refine((val) => val.trim().length > 0, 'Prompt text is required'),
@@ -10,6 +26,7 @@ const promptSchema = z.object({
   collection_id: z.number().int().positive().optional().nullable(),
   category_id: z.string().trim().max(50).optional().nullable(),
   tags: z.array(z.string().trim().min(1).max(50)).optional(),
+  media: z.array(mediaItemSchema).optional(),
 });
 
 function parseId(param: string | string[] | undefined): number {
@@ -41,6 +58,77 @@ export function createPromptsRouter(db: Database.Database): Router {
         linkPromptTag.run(promptId, tagRow.id);
       }
     }
+  }
+
+  // Helper to sync media items for a prompt
+  function syncPromptMedia(promptId: number, mediaItems: z.infer<typeof mediaItemSchema>[] = []) {
+    db.prepare('DELETE FROM prompt_media WHERE prompt_id = ?').run(promptId);
+    if (mediaItems.length === 0) return;
+
+    const insertMedia = db.prepare(`
+      INSERT INTO prompt_media (
+        prompt_id, media_type, url, thumbnail_url, medium_url,
+        file_path, file_name, file_size, mime_type, width, height,
+        aspect_ratio, caption, created_at
+      )
+      VALUES (
+        @prompt_id, @media_type, @url, @thumbnail_url, @medium_url,
+        @file_path, @file_name, @file_size, @mime_type, @width, @height,
+        @aspect_ratio, @caption, @created_at
+      )
+    `);
+
+    const now = new Date().toISOString();
+    for (const item of mediaItems) {
+      insertMedia.run({
+        prompt_id: promptId,
+        media_type: item.media_type,
+        url: item.url,
+        thumbnail_url: item.thumbnail_url || null,
+        medium_url: item.medium_url || null,
+        file_path: item.file_path || null,
+        file_name: item.file_name || null,
+        file_size: item.file_size || null,
+        mime_type: item.mime_type || null,
+        width: item.width || null,
+        height: item.height || null,
+        aspect_ratio: item.aspect_ratio || null,
+        caption: item.caption || null,
+        created_at: now,
+      });
+    }
+  }
+
+  function getMediaForPrompt(promptId: number) {
+    return db.prepare(`
+      SELECT id, prompt_id, media_type, url, thumbnail_url, medium_url,
+             file_path, file_name, file_size, mime_type, width, height,
+             aspect_ratio, caption, created_at
+      FROM prompt_media
+      WHERE prompt_id = ?
+      ORDER BY id ASC
+    `).all(promptId);
+  }
+
+  function getMediaForPrompts(promptIds: number[]) {
+    if (promptIds.length === 0) return new Map<number, any[]>();
+    const placeholders = promptIds.map(() => '?').join(',');
+    const rows = db.prepare(`
+      SELECT id, prompt_id, media_type, url, thumbnail_url, medium_url,
+             file_path, file_name, file_size, mime_type, width, height,
+             aspect_ratio, caption, created_at
+      FROM prompt_media
+      WHERE prompt_id IN (${placeholders})
+      ORDER BY id ASC
+    `).all(...promptIds) as any[];
+
+    const map = new Map<number, any[]>();
+    for (const row of rows) {
+      const list = map.get(row.prompt_id) || [];
+      list.push(row);
+      map.set(row.prompt_id, list);
+    }
+    return map;
   }
 
   // GET /api/prompts - List prompts (newest first, soft-deleted excluded)
@@ -143,6 +231,9 @@ export function createPromptsRouter(db: Database.Database): Router {
         tags_concat: string | null;
       }[];
 
+      const promptIds = rows.map((r) => r.id);
+      const mediaMap = getMediaForPrompts(promptIds);
+
       const prompts = rows.map((r) => ({
         id: r.id,
         title: r.title,
@@ -156,6 +247,7 @@ export function createPromptsRouter(db: Database.Database): Router {
         collection_name: r.collection_name,
         category_name: r.category_name,
         tags: r.tags_concat ? r.tags_concat.split('|||').filter(Boolean) : [],
+        media: mediaMap.get(r.id) || [],
       }));
 
       res.json(prompts);
@@ -217,6 +309,8 @@ export function createPromptsRouter(db: Database.Database): Router {
         return;
       }
 
+      const media = getMediaForPrompt(id);
+
       const prompt = {
         id: row.id,
         title: row.title,
@@ -230,6 +324,7 @@ export function createPromptsRouter(db: Database.Database): Router {
         collection_name: row.collection_name,
         category_name: row.category_name,
         tags: row.tags_concat ? row.tags_concat.split('|||').filter(Boolean) : [],
+        media,
       };
 
       res.json(prompt);
@@ -274,6 +369,9 @@ export function createPromptsRouter(db: Database.Database): Router {
         if (data.tags) {
           syncPromptTags(promptId, data.tags);
         }
+        if (data.media) {
+          syncPromptMedia(promptId, data.media);
+        }
 
         return promptId;
       });
@@ -292,9 +390,12 @@ export function createPromptsRouter(db: Database.Database): Router {
         WHERE p.id = ?
       `).get(promptId) as Record<string, unknown>;
 
+      const media = getMediaForPrompt(promptId);
+
       res.status(201).json({
         ...created,
         tags: data.tags || [],
+        media,
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to create prompt';
@@ -346,6 +447,9 @@ export function createPromptsRouter(db: Database.Database): Router {
         if (data.tags !== undefined) {
           syncPromptTags(id, data.tags);
         }
+        if (data.media !== undefined) {
+          syncPromptMedia(id, data.media);
+        }
       });
 
       updateTx();
@@ -361,9 +465,12 @@ export function createPromptsRouter(db: Database.Database): Router {
         WHERE p.id = ?
       `).get(id) as Record<string, unknown>;
 
+      const media = getMediaForPrompt(id);
+
       res.json({
         ...updated,
         tags: data.tags || [],
+        media,
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to update prompt';
