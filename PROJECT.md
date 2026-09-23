@@ -34,12 +34,12 @@ A local-first web application built with React and Atlas Design System backed by
 * Soft-deletion: Prompts are soft-deleted in the database and completely excluded from normal application behavior (no trash UI).
 * Persistent database storage (browser local storage is not the primary data store).
 * Integration with the Atlas design system (`@atlas/ds`).
+* Photo and video media attachments (local uploads to `data/uploads/` and external media URLs) for prompts, with card previews and full detail modal inspection.
 
 ### Out of Scope
 
 * Authentication, registration, and user accounts.
 * Multi-user permissions, sharing, collaboration, and public profiles.
-* Media uploads, example images, generated-result previews, thumbnails, and attachments.
 * Prompt variables, templating, and prompt transformations.
 * Duplicate detection.
 * Trash / restore UI.
