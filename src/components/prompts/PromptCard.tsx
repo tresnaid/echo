@@ -102,14 +102,12 @@ export function PromptCard({
         flexDirection: 'column',
         borderRadius: 'var(--atlas-radius-md, 6px)',
         backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
-        border: isHovered
-          ? '1px solid var(--atlas-color-border-focus, #3b82f6)'
-          : '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
+        border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
         boxShadow: isHovered
           ? 'var(--atlas-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.08))'
           : 'var(--atlas-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.04))',
         transform: isHovered ? 'translateY(-2px)' : 'none',
-        transition: 'border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease',
+        transition: 'box-shadow 0.15s ease, transform 0.15s ease',
         cursor: 'pointer',
         overflow: 'hidden',
         width: '100%',
