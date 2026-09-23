@@ -135,10 +135,9 @@ export function PromptCard({
           style={{
             position: 'relative',
             width: '100%',
-            maxHeight: '220px',
+            height: '180px',
             overflow: 'hidden',
             backgroundColor: primaryMedia.media_type === 'video' ? '#0f172a' : 'var(--atlas-color-bg-subtle, #f1f5f9)',
-            aspectRatio: primaryMedia.aspect_ratio ? String(Math.max(1, Math.min(2.2, primaryMedia.aspect_ratio))) : '16/9',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
