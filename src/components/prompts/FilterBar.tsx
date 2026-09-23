@@ -1,5 +1,4 @@
-import React from 'react';
-import { Input, Button, Tag } from '@atlas/ds';
+import { SearchInput, Button, Tag } from '@atlas/ds';
 import { Category } from '../../types';
 
 interface FilterBarProps {
@@ -35,35 +34,13 @@ export function FilterBar({
       {/* Search Input & Reset Row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <div style={{ position: 'relative', width: '100%', maxWidth: '280px' }}>
-          <Input
+          <SearchInput
             value={search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value)}
+            onValueChange={onSearchChange}
+            onClear={() => onSearchChange('')}
             placeholder="Search prompts..."
-            style={{ paddingRight: search ? '2.5rem' : '0.875rem' }}
+            size="sm"
           />
-          {search && (
-            <button
-              type="button"
-              onClick={() => onSearchChange('')}
-              aria-label="Clear search"
-              style={{
-                position: 'absolute',
-                right: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                color: 'var(--atlas-color-text-muted, #9ca3af)',
-                cursor: 'pointer',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                padding: '0.25rem',
-              }}
-            >
-              Clear
-            </button>
-          )}
         </div>
 
         {hasActiveFilters && (

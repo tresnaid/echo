@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
-  Stack,
+  NavList,
+  NavItem,
 } from '@atlas/ds';
 import { Collection, CollectionCounts, SelectedCollectionView } from '../../types';
 import { CreateCollectionModal } from './CreateCollectionModal';
@@ -74,110 +75,6 @@ function PlusIcon({ size = 12 }: { size?: number }) {
   );
 }
 
-interface SidebarItemProps {
-  label: string;
-  count: number;
-  isSelected: boolean;
-  onClick: () => void;
-  actions?: React.ReactNode;
-}
-
-function SidebarItem({
-  label,
-  count,
-  isSelected,
-  onClick,
-  actions,
-}: SidebarItemProps) {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        width: '100%',
-        padding: '0.35rem 0.5rem',
-        borderRadius: 'var(--atlas-radius-sm, 4px)',
-        border: isSelected
-          ? '1px solid var(--atlas-color-border-focus, #3b82f6)'
-          : '1px solid transparent',
-        backgroundColor: isSelected
-          ? 'var(--atlas-color-bg-subtle, rgba(59, 130, 246, 0.08))'
-          : isHovered
-            ? 'var(--atlas-color-bg-subtle, rgba(0, 0, 0, 0.04))'
-            : 'transparent',
-        cursor: 'pointer',
-        textAlign: 'left',
-        userSelect: 'none',
-        boxSizing: 'border-box',
-        transition: 'background-color 0.15s ease, border-color 0.15s ease',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          flexGrow: 1,
-          minWidth: 0,
-        }}
-      >
-        <span
-          style={{
-            fontSize: '0.6875rem',
-            fontWeight: 600,
-            color: isSelected ? '#2563eb' : '#64748b',
-            backgroundColor: isSelected ? 'rgba(37, 99, 235, 0.12)' : '#f1f5f9',
-            padding: '1px 5px',
-            borderRadius: '10px',
-            minWidth: '18px',
-            textAlign: 'center',
-            lineHeight: '1.4',
-            flexShrink: 0,
-          }}
-        >
-          {count}
-        </span>
-        <span
-          style={{
-            fontSize: '0.8125rem',
-            fontWeight: isSelected ? 600 : 450,
-            color: isSelected ? '#0f172a' : '#475569',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            flex: 1,
-          }}
-        >
-          {label}
-        </span>
-      </div>
-
-      {actions && (
-        <div
-          onClick={(e) => e.stopPropagation()}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.125rem', flexShrink: 0 }}
-        >
-          {actions}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function SidebarNavigation({
   collections,
   counts,
@@ -208,7 +105,7 @@ export function SidebarNavigation({
 
   return (
     <aside style={{ width: '210px', flexShrink: 0, ...style }}>
-      <Stack direction="vertical" gap="1">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
         {/* Navigation Header */}
         <div
           style={{
@@ -250,84 +147,138 @@ export function SidebarNavigation({
           </button>
         </div>
 
-        {/* All Prompts */}
-        <SidebarItem
-          label="All Prompts"
-          count={counts.all}
-          isSelected={selectedView === 'all'}
-          onClick={() => onSelectView('all')}
-        />
+        {/* Official Atlas NavList */}
+        <NavList density="compact">
+          {/* All Prompts */}
+          <NavItem
+            label="All Prompts"
+            badge={
+              <span
+                style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 600,
+                  color: selectedView === 'all' ? '#2563eb' : '#64748b',
+                  backgroundColor: selectedView === 'all' ? 'rgba(37, 99, 235, 0.12)' : '#f1f5f9',
+                  padding: '1px 5px',
+                  borderRadius: '10px',
+                  minWidth: '18px',
+                  textAlign: 'center',
+                  lineHeight: '1.4',
+                }}
+              >
+                {counts.all}
+              </span>
+            }
+            badgePosition="leading"
+            isSelected={selectedView === 'all'}
+            onClick={() => onSelectView('all')}
+          />
 
-        {/* Collections List */}
-        {collections.map((col) => {
-          const isSelected = selectedView === col.id;
-          return (
-            <SidebarItem
-              key={col.id}
-              label={col.name}
-              count={col.prompt_count}
-              isSelected={isSelected}
-              onClick={() => onSelectView(col.id)}
-              actions={
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                  <button
-                    type="button"
-                    aria-label={`Rename ${col.name}`}
-                    title={`Rename ${col.name}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setRenamingCollection(col);
-                    }}
+          {/* Collections List */}
+          {collections.map((col) => {
+            const isSelected = selectedView === col.id;
+            return (
+              <NavItem
+                key={col.id}
+                label={col.name}
+                badge={
+                  <span
                     style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: '#94a3b8',
-                      padding: '2px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: '3px',
+                      fontSize: '0.6875rem',
+                      fontWeight: 600,
+                      color: isSelected ? '#2563eb' : '#64748b',
+                      backgroundColor: isSelected ? 'rgba(37, 99, 235, 0.12)' : '#f1f5f9',
+                      padding: '1px 5px',
+                      borderRadius: '10px',
+                      minWidth: '18px',
+                      textAlign: 'center',
+                      lineHeight: '1.4',
                     }}
                   >
-                    <EditIcon />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Delete ${col.name}`}
-                    title={`Delete ${col.name}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeletingCollection(col);
-                    }}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: '#ef4444',
-                      padding: '2px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: '3px',
-                    }}
-                  >
-                    <TrashIcon />
-                  </button>
-                </div>
-              }
-            />
-          );
-        })}
+                    {col.prompt_count}
+                  </span>
+                }
+                badgePosition="leading"
+                isSelected={isSelected}
+                onClick={() => onSelectView(col.id)}
+                actions={
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                    <button
+                      type="button"
+                      aria-label={`Rename ${col.name}`}
+                      title={`Rename ${col.name}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRenamingCollection(col);
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#94a3b8',
+                        padding: '2px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '3px',
+                      }}
+                    >
+                      <EditIcon />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${col.name}`}
+                      title={`Delete ${col.name}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeletingCollection(col);
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#ef4444',
+                        padding: '2px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '3px',
+                      }}
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
+                }
+              />
+            );
+          })}
 
-        {/* Uncollected */}
-        <SidebarItem
-          label="Uncollected"
-          count={counts.uncollected}
-          isSelected={selectedView === 'uncollected'}
-          onClick={() => onSelectView('uncollected')}
-        />
-      </Stack>
+          {/* Uncollected */}
+          <NavItem
+            label="Uncollected"
+            badge={
+              <span
+                style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 600,
+                  color: selectedView === 'uncollected' ? '#2563eb' : '#64748b',
+                  backgroundColor: selectedView === 'uncollected' ? 'rgba(37, 99, 235, 0.12)' : '#f1f5f9',
+                  padding: '1px 5px',
+                  borderRadius: '10px',
+                  minWidth: '18px',
+                  textAlign: 'center',
+                  lineHeight: '1.4',
+                }}
+              >
+                {counts.uncollected}
+              </span>
+            }
+            badgePosition="leading"
+            isSelected={selectedView === 'uncollected'}
+            onClick={() => onSelectView('uncollected')}
+          />
+        </NavList>
+      </div>
 
       {/* Modals */}
       <CreateCollectionModal

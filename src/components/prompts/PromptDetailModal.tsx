@@ -6,6 +6,7 @@ import {
   Badge,
   Tag,
   Button,
+  CodeSnippet,
 } from '@atlas/ds';
 import { Prompt, PromptMedia } from '../../types';
 
@@ -67,20 +68,9 @@ export function PromptDetailModal({
   onDelete,
   onTagClick,
 }: PromptDetailModalProps) {
-  const [copied, setCopied] = useState(false);
   const [selectedMediaIdx, setSelectedMediaIdx] = useState(0);
 
   if (!prompt) return null;
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(prompt.prompt_text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy prompt text:', err);
-    }
-  };
 
   const categoryIntent = prompt.category_id
     ? CATEGORY_INTENTS[prompt.category_id.toLowerCase()] || 'info'
@@ -339,39 +329,18 @@ export function PromptDetailModal({
           </div>
         )}
 
-        {/* Raw Prompt Text Box with Copy Action */}
+        {/* Raw Prompt Text with 1-click Copy via CodeSnippet */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
-            <Text size="xs" color="muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
-              Prompt Text
-            </Text>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCopy}
-              style={{ fontSize: '0.8125rem' }}
-            >
-              {copied ? 'Copied' : 'Copy Text'}
-            </Button>
-          </div>
-          <div
-            style={{
-              padding: '1rem',
-              borderRadius: 'var(--atlas-radius-md, 6px)',
-              backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
-              border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-              fontFamily: 'var(--atlas-font-mono, monospace)',
-              fontSize: '0.875rem',
-              lineHeight: 1.6,
-              color: 'var(--atlas-color-text-primary, #0f172a)',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              maxHeight: '320px',
-              overflowY: 'auto',
-            }}
-          >
-            {prompt.prompt_text}
-          </div>
+          <CodeSnippet
+            title="Prompt Text"
+            text={prompt.prompt_text}
+            language={prompt.category_name || (prompt.category_id ? prompt.category_id.toUpperCase() : 'TEXT')}
+            variant="subtle"
+            scrollable
+            showCopyButton
+            copyLabel="Copy Text"
+            copiedLabel="Copied!"
+          />
         </div>
 
         {/* Usage Instructions / Description */}
