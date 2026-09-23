@@ -90,4 +90,4 @@ None currently required beyond `PROJECT.md`.
 
 ## Current State
 
-Project foundation, persistent SQLite storage, and complete Collection Management (create, rename, delete with uncollect cascade, and sidebar navigation) implemented. React + TypeScript + Vite frontend integrated with Atlas Design System (`@atlas/ds`).
+Project foundation, persistent SQLite storage, Collection Management, and Prompt CRUD Operations with Soft-Deletion implemented. Lightweight Prompt creation and editing modal integrated with Atlas Design System (`@atlas/ds`), supporting optional collections, categories, and tags.
