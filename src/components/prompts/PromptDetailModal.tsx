@@ -72,23 +72,15 @@ export function PromptDetailModal({
             Delete Prompt
           </Button>
 
-          <Stack direction="horizontal" gap="2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                onClose();
-                onEdit(prompt);
-              }}
-            >
-              Edit
-            </Button>
-            <Button
-              variant={copied ? 'primary' : 'primary'}
-              onClick={handleCopy}
-            >
-              {copied ? 'Copied to Clipboard' : 'Copy Prompt'}
-            </Button>
-          </Stack>
+          <Button
+            variant="primary"
+            onClick={() => {
+              onClose();
+              onEdit(prompt);
+            }}
+          >
+            Edit Prompt
+          </Button>
         </div>
       }
     >
@@ -134,11 +126,21 @@ export function PromptDetailModal({
           </div>
         )}
 
-        {/* Raw Prompt Text Box */}
+        {/* Raw Prompt Text Box with Copy Action */}
         <div>
-          <Text size="xs" color="muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: '0.375rem', display: 'block' }}>
-            Prompt Text
-          </Text>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
+            <Text size="xs" color="muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+              Prompt Text
+            </Text>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCopy}
+              style={{ fontSize: '0.8125rem' }}
+            >
+              {copied ? 'Copied' : 'Copy Text'}
+            </Button>
+          </div>
           <div
             style={{
               padding: '1rem',
