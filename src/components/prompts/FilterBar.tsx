@@ -84,16 +84,17 @@ export function FilterBar({
           type="button"
           onClick={() => onCategoryChange('')}
           style={{
+            position: 'relative',
             padding: '0.3125rem 0.75rem',
             fontSize: '0.8125rem',
             fontWeight: selectedCategory === '' ? 600 : 500,
             borderRadius: 'var(--atlas-radius-sm, 4px)',
-            border: selectedCategory === '' ? '1px solid var(--atlas-color-border-focus, #2563eb)' : '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-            borderTop: selectedCategory === '' ? '2.5px solid var(--atlas-color-brand-primary, #2563eb)' : '2.5px solid #64748b',
-            backgroundColor: selectedCategory === '' ? 'var(--atlas-color-bg-subtle, #f8fafc)' : '#ffffff',
-            color: selectedCategory === '' ? 'var(--atlas-color-brand-primary, #2563eb)' : 'var(--atlas-color-text-secondary, #475569)',
+            border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
+            borderTop: '3px solid #64748b',
+            backgroundColor: selectedCategory === '' ? 'var(--atlas-color-bg-subtle, #f1f5f9)' : '#ffffff',
+            color: selectedCategory === '' ? 'var(--atlas-color-text-primary, #0f172a)' : 'var(--atlas-color-text-secondary, #475569)',
             cursor: 'pointer',
-            transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease',
+            transition: 'background-color 0.15s ease, color 0.15s ease',
           }}
         >
           All Types
@@ -115,16 +116,17 @@ export function FilterBar({
               type="button"
               onClick={() => onCategoryChange(isSelected ? '' : cat.id)}
               style={{
+                position: 'relative',
                 padding: '0.3125rem 0.75rem',
                 fontSize: '0.8125rem',
                 fontWeight: isSelected ? 600 : 500,
                 borderRadius: 'var(--atlas-radius-sm, 4px)',
-                border: isSelected ? `1px solid ${accentColor}` : '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-                borderTop: `2.5px solid ${accentColor}`,
-                backgroundColor: isSelected ? `${accentColor}15` : '#ffffff',
-                color: isSelected ? accentColor : 'var(--atlas-color-text-secondary, #475569)',
+                border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
+                borderTop: `3px solid ${accentColor}`,
+                backgroundColor: isSelected ? 'var(--atlas-color-bg-subtle, #f1f5f9)' : '#ffffff',
+                color: isSelected ? 'var(--atlas-color-text-primary, #0f172a)' : 'var(--atlas-color-text-secondary, #475569)',
                 cursor: 'pointer',
-                transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease',
+                transition: 'background-color 0.15s ease, color 0.15s ease',
               }}
             >
               {cat.name}
