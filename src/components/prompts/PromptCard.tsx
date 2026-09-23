@@ -28,6 +28,43 @@ function PlayIcon({ size = 12 }: { size?: number }) {
   );
 }
 
+function CopyIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+    </svg>
+  );
+}
+
+function CheckIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
 export function PromptCard({
   prompt,
   onOpenDetails,
@@ -163,53 +200,58 @@ export function PromptCard({
         </div>
       )}
 
-      {/* Main Content Body: Title only */}
+      {/* Main Content Body: Title and Copy Icon beside it */}
       <div
         style={{
-          padding: '1rem',
+          padding: '0.875rem 1rem',
           display: 'flex',
-          flexDirection: 'column',
-          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '0.5rem',
         }}
       >
         <Heading
           level={3}
           style={{
-            fontSize: '1rem',
+            fontSize: '0.9375rem',
             lineHeight: 1.4,
             fontWeight: 600,
             color: 'var(--atlas-color-text-primary, #0f172a)',
             margin: 0,
+            flex: 1,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
           }}
         >
           {prompt.title}
         </Heading>
-      </div>
 
-      {/* Footer Action: Single Full-Width Copy Action */}
-      <div
-        style={{
-          padding: '0.625rem 1rem 0.75rem 1rem',
-          borderTop: '1px solid var(--atlas-color-border-subtle, #f1f5f9)',
-          backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
         <Button
-          variant={copied ? 'primary' : 'outline'}
+          variant="ghost"
           size="sm"
+          aria-label={copied ? 'Copied' : 'Copy prompt text'}
+          title={copied ? 'Copied!' : 'Copy prompt text'}
           onClick={handleCopy}
           style={{
-            fontWeight: 500,
-            fontSize: '0.8125rem',
-            width: '100%',
+            padding: '0.375rem',
+            minWidth: '28px',
+            height: '28px',
+            display: 'inline-flex',
+            alignItems: 'center',
             justifyContent: 'center',
+            borderRadius: 'var(--atlas-radius-sm, 4px)',
+            color: copied ? 'var(--atlas-color-success-primary, #16a34a)' : 'var(--atlas-color-text-secondary, #64748b)',
+            flexShrink: 0,
           }}
         >
-          {copied ? 'Copied' : 'Copy Prompt'}
+          {copied ? <CheckIcon size={15} /> : <CopyIcon size={15} />}
         </Button>
       </div>
     </div>
   );
 }
+
 
