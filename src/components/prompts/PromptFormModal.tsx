@@ -274,7 +274,7 @@ export function PromptFormModal({
                       {col.name}
                     </option>
                   ))}
-                  <option value="__CREATE_NEW__">+ Create new collection...</option>
+                  <option value="__CREATE_NEW__">Create new collection...</option>
                 </Select>
               </Field>
             </div>

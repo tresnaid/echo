@@ -4,7 +4,7 @@ import '@atlas/ds/styles.css';
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider defaultTheme="atlas" defaultMode="system">
+    <ThemeProvider defaultTheme="classic" defaultMode="light">
       <AnnouncementProvider>
         {children}
       </AnnouncementProvider>

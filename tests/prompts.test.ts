@@ -161,4 +161,29 @@ describe('Prompt CRUD & Soft-Deletion API', () => {
     expect(tagsRes.status).toBe(200);
     expect(tagsRes.body).toEqual(['frontend', 'react']);
   });
+
+  it('retrieves full prompt details including category and collection names', async () => {
+    const colRes = await request(app).post('/api/collections').send({ name: 'Productivity' });
+    const colId = colRes.body.id;
+
+    const created = await request(app).post('/api/prompts').send({
+      title: 'Daily Standup Summary',
+      prompt_text: 'Summarize today\'s accomplishments, blockers, and next steps.',
+      description: 'Format daily updates for team syncs',
+      usage_description: 'Run at the end of each working day',
+      collection_id: colId,
+      category_id: 'text',
+      tags: ['agile', 'standup'],
+    });
+
+    const getRes = await request(app).get(`/api/prompts/${created.body.id}`);
+    expect(getRes.status).toBe(200);
+    expect(getRes.body.title).toBe('Daily Standup Summary');
+    expect(getRes.body.prompt_text).toBe('Summarize today\'s accomplishments, blockers, and next steps.');
+    expect(getRes.body.description).toBe('Format daily updates for team syncs');
+    expect(getRes.body.usage_description).toBe('Run at the end of each working day');
+    expect(getRes.body.collection_name).toBe('Productivity');
+    expect(getRes.body.category_name).toBe('Text');
+    expect(getRes.body.tags).toEqual(['agile', 'standup']);
+  });
 });
