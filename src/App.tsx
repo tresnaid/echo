@@ -5,16 +5,16 @@ import {
   Heading,
   Text,
   Badge,
-  Card,
   Button,
-  Tag,
 } from '@atlas/ds';
-import { Collection, CollectionCounts, SelectedCollectionView, Prompt } from './types';
+import { Collection, CollectionCounts, SelectedCollectionView, Prompt, Category } from './types';
 import { fetchCollections } from './api/collections';
-import { fetchPrompts } from './api/prompts';
+import { fetchPrompts, fetchCategories, fetchTags } from './api/prompts';
 import { SidebarNavigation } from './components/collections/SidebarNavigation';
 import { PromptFormModal } from './components/prompts/PromptFormModal';
 import { DeletePromptDialog } from './components/prompts/DeletePromptDialog';
+import { FilterBar } from './components/prompts/FilterBar';
+import { PromptGrid } from './components/prompts/PromptGrid';
 
 interface HealthStatus {
   status: string;
@@ -26,62 +26,94 @@ export function App() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [counts, setCounts] = useState<CollectionCounts>({ all: 0, uncollected: 0 });
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+
+  // Browsing & Filtering state
   const [selectedView, setSelectedView] = useState<SelectedCollectionView>('all');
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedTag, setSelectedTag] = useState('');
+
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [promptsLoading, setPromptsLoading] = useState(true);
 
-  // Prompt Form & Delete Dialog states
+  // Modals
   const [promptModalOpen, setPromptModalOpen] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
   const [deletingPrompt, setDeletingPrompt] = useState<Prompt | null>(null);
 
-  const loadData = useCallback(async () => {
+  // Load global metadata (health, collections, categories, tags)
+  const loadMetadata = useCallback(async () => {
     try {
-      const [healthRes, colData] = await Promise.all([
+      const [healthRes, colData, catData, tagData] = await Promise.all([
         fetch('/api/health').then((r) => r.json()).catch(() => null),
         fetchCollections().catch(() => ({ collections: [], counts: { all: 0, uncollected: 0 } })),
+        fetchCategories().catch(() => []),
+        fetchTags().catch(() => []),
       ]);
       setHealth(healthRes);
       setCollections(colData.collections);
       setCounts(colData.counts);
+      setCategories(catData);
+      setAvailableTags(tagData);
     } catch (err) {
-      console.error('Failed to load initial data:', err);
+      console.error('Failed to load metadata:', err);
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Load filtered prompts
   const loadPrompts = useCallback(async () => {
     try {
+      setPromptsLoading(true);
       const params: Parameters<typeof fetchPrompts>[0] = {};
+
       if (selectedView === 'uncollected') {
         params.collection_id = 'uncollected';
       } else if (typeof selectedView === 'number') {
         params.collection_id = selectedView;
       }
+
+      if (selectedCategory) {
+        params.category_id = selectedCategory;
+      }
+
+      if (selectedTag) {
+        params.tag = selectedTag;
+      }
+
+      if (search.trim()) {
+        params.search = search.trim();
+      }
+
       const data = await fetchPrompts(params);
       setPrompts(data);
     } catch (err) {
       console.error('Failed to load prompts:', err);
+    } finally {
+      setPromptsLoading(false);
     }
-  }, [selectedView]);
+  }, [selectedView, selectedCategory, selectedTag, search]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    loadMetadata();
+  }, [loadMetadata]);
 
   useEffect(() => {
     loadPrompts();
   }, [loadPrompts]);
 
   const handlePromptSaved = () => {
-    loadData();
+    loadMetadata();
     loadPrompts();
     setEditingPrompt(null);
   };
 
   const handlePromptDeleted = () => {
-    loadData();
+    loadMetadata();
     loadPrompts();
     setDeletingPrompt(null);
   };
@@ -96,6 +128,12 @@ export function App() {
     setPromptModalOpen(true);
   };
 
+  const handleClearFilters = () => {
+    setSearch('');
+    setSelectedCategory('');
+    setSelectedTag('');
+  };
+
   // Determine active view label
   const activeViewLabel = (() => {
     if (selectedView === 'all') return 'All Prompts';
@@ -105,25 +143,32 @@ export function App() {
   })();
 
   const defaultCollectionForModal = typeof selectedView === 'number' ? selectedView : null;
+  const hasActiveFilters = Boolean(search.trim() || selectedCategory || selectedTag);
 
   return (
     <Container maxWidth="xl" center style={{ padding: '2rem 1rem' }}>
       <Stack direction="vertical" gap="6">
-        {/* App Header */}
+        {/* Top App Header */}
         <Stack
           direction="horizontal"
           align="center"
           justify="between"
           wrap="wrap"
           gap="4"
+          style={{
+            paddingBottom: '1rem',
+            borderBottom: '1px solid var(--atlas-color-border-subtle, #e5e7eb)',
+          }}
         >
           <Stack direction="vertical" gap="1">
             <Stack direction="horizontal" align="center" gap="3">
-              <Heading level={1}>Echo</Heading>
+              <Heading level={1} style={{ fontSize: '1.75rem', fontWeight: 700 }}>
+                Echo
+              </Heading>
               <Badge variant="subtle" intent="info">MVP</Badge>
             </Stack>
-            <Text color="secondary">
-              Multi-medium prompt library for storing, organizing, finding, and copying prompts.
+            <Text color="secondary" size="sm">
+              Prompt library for storing, organizing, finding, inspecting, and quickly copying reusable prompts.
             </Text>
           </Stack>
 
@@ -141,101 +186,60 @@ export function App() {
           </Stack>
         </Stack>
 
-        {/* Main Content Layout with Sidebar */}
+        {/* Main Product Layout with Sidebar & Product Catalog Grid */}
         <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
           {/* Left Sidebar Navigation */}
           <SidebarNavigation
             collections={collections}
             counts={counts}
             selectedView={selectedView}
-            onSelectView={setSelectedView}
+            onSelectView={(view) => {
+              setSelectedView(view);
+            }}
             onCollectionsChanged={() => {
-              loadData();
+              loadMetadata();
               loadPrompts();
             }}
           />
 
-          {/* Right Main Area */}
+          {/* Right Product Grid Area */}
           <div style={{ flexGrow: 1, minWidth: 0 }}>
-            <Stack direction="vertical" gap="4">
-              {/* Active Collection View Header */}
-              <Stack direction="horizontal" align="center" justify="between">
+            <Stack direction="vertical" gap="5">
+              {/* Header: Title + Prompt Count */}
+              <Stack direction="horizontal" align="center" justify="between" wrap="wrap" gap="2">
                 <Stack direction="horizontal" align="center" gap="3">
-                  <Heading level={2}>{activeViewLabel}</Heading>
+                  <Heading level={2} style={{ fontSize: '1.25rem', fontWeight: 600 }}>
+                    {activeViewLabel}
+                  </Heading>
                   <Badge variant="subtle" intent="neutral">
-                    {prompts.length} {prompts.length === 1 ? 'prompt' : 'prompts'}
+                    {prompts.length} {prompts.length === 1 ? 'item' : 'items'}
                   </Badge>
                 </Stack>
               </Stack>
 
-              {/* Prompts List / Empty State */}
-              {prompts.length === 0 ? (
-                <Card variant="outline" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
-                  <Stack direction="vertical" align="center" gap="3">
-                    <Heading level={4}>No prompts found in this view</Heading>
-                    <Text color="muted" style={{ maxWidth: '400px' }}>
-                      {selectedView === 'all'
-                        ? 'Get started by creating your first prompt using the "+ New Prompt" button.'
-                        : `No prompts currently in "${activeViewLabel}".`}
-                    </Text>
-                    <Button variant="primary" onClick={handleOpenCreatePrompt}>
-                      + Create Prompt
-                    </Button>
-                  </Stack>
-                </Card>
-              ) : (
-                <Stack direction="vertical" gap="3">
-                  {prompts.map((p) => (
-                    <Card key={p.id} variant="outline" style={{ padding: '1.25rem' }}>
-                      <Stack direction="vertical" gap="3">
-                        <Stack direction="horizontal" align="center" justify="between" wrap="wrap" gap="2">
-                          <Stack direction="horizontal" align="center" gap="2">
-                            <Heading level={3} style={{ fontSize: '1.125rem' }}>{p.title}</Heading>
-                            {p.category_id && (
-                              <Badge variant="subtle" intent="info" size="sm">
-                                {p.category_id.toUpperCase()}
-                              </Badge>
-                            )}
-                          </Stack>
-                          <Stack direction="horizontal" gap="2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleOpenEditPrompt(p)}
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              isDanger
-                              onClick={() => setDeletingPrompt(p)}
-                            >
-                              Delete
-                            </Button>
-                          </Stack>
-                        </Stack>
+              {/* Filter Bar: Search, Category Pills, Tag Selectors */}
+              <FilterBar
+                search={search}
+                onSearchChange={setSearch}
+                selectedCategory={selectedCategory}
+                onCategoryChange={setSelectedCategory}
+                selectedTag={selectedTag}
+                onTagChange={setSelectedTag}
+                categories={categories}
+                availableTags={availableTags}
+              />
 
-                        {p.description && (
-                          <Text color="secondary" size="sm">
-                            {p.description}
-                          </Text>
-                        )}
-
-                        {p.tags && p.tags.length > 0 && (
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
-                            {p.tags.map((tag, idx) => (
-                              <Tag key={idx} size="sm" variant="subtle" intent="neutral">
-                                {tag}
-                              </Tag>
-                            ))}
-                          </div>
-                        )}
-                      </Stack>
-                    </Card>
-                  ))}
-                </Stack>
-              )}
+              {/* Product Catalog Grid */}
+              <PromptGrid
+                prompts={prompts}
+                loading={promptsLoading}
+                hasActiveFilters={hasActiveFilters}
+                onClearFilters={handleClearFilters}
+                onCreatePrompt={handleOpenCreatePrompt}
+                onEditPrompt={handleOpenEditPrompt}
+                onDeletePrompt={setDeletingPrompt}
+                onTagClick={(tag) => setSelectedTag(tag)}
+              />
             </Stack>
           </div>
         </div>
@@ -253,7 +257,7 @@ export function App() {
         }}
         onSaved={handlePromptSaved}
         onCollectionCreated={() => {
-          loadData();
+          loadMetadata();
         }}
       />
 

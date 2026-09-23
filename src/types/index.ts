@@ -30,6 +30,8 @@ export interface Prompt {
   usage_description?: string | null;
   collection_id?: number | null;
   category_id?: string | null;
+  collection_name?: string | null;
+  category_name?: string | null;
   tags?: string[];
   created_at: string;
   updated_at: string;
