@@ -113,21 +113,31 @@ function SidebarItem({
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.5rem',
+          gap: '0.625rem',
           flexGrow: 1,
           minWidth: 0,
         }}
       >
+        <Badge
+          variant="subtle"
+          intent="neutral"
+          size="sm"
+          style={{
+            minWidth: '22px',
+            textAlign: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          {count}
+        </Badge>
         <Text
           weight={isSelected ? 'semibold' : 'normal'}
           truncate
-          style={{ maxWidth: actions ? '130px' : '180px' }}
+          style={{ maxWidth: actions ? '135px' : '185px' }}
         >
           {label}
         </Text>
-        <Badge variant="subtle" intent="neutral" size="sm">
-          {count}
-        </Badge>
       </div>
 
       {actions && (
