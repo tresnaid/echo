@@ -327,33 +327,6 @@ export function SidebarNavigation({
           isSelected={selectedView === 'uncollected'}
           onClick={() => onSelectView('uncollected')}
         />
-
-        {/* Create New Collection Button */}
-        <div style={{ paddingTop: '0.35rem', marginTop: '0.125rem', borderTop: '1px solid var(--atlas-color-border-subtle, #f1f5f9)' }}>
-          <button
-            type="button"
-            onClick={() => setCreateModalOpen(true)}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.35rem',
-              padding: '0.35rem 0.5rem',
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              color: 'var(--atlas-color-text-secondary, #64748b)',
-              backgroundColor: '#ffffff',
-              border: '1px dashed var(--atlas-color-border-subtle, #cbd5e1)',
-              borderRadius: 'var(--atlas-radius-sm, 4px)',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <PlusIcon size={11} />
-            <span>New Collection</span>
-          </button>
-        </div>
       </Stack>
 
       {/* Modals */}
