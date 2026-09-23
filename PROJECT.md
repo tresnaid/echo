@@ -90,4 +90,4 @@ None currently required beyond `PROJECT.md`.
 
 ## Current State
 
-Project foundation established. React + TypeScript + Vite frontend integrated with Atlas Design System (`@atlas/ds`), backed by an Express API server with persistent SQLite database storage and seed category migrations.
+Project foundation, persistent SQLite storage, and complete Collection Management (create, rename, delete with uncollect cascade, and sidebar navigation) implemented. React + TypeScript + Vite frontend integrated with Atlas Design System (`@atlas/ds`).

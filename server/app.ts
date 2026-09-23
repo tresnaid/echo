@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
 import { getDatabase } from './db/connection';
+import { createCollectionsRouter } from './routes/collections';
 import Database from 'better-sqlite3';
 
 export function createApp(dbInstance?: Database.Database) {
@@ -25,6 +26,9 @@ export function createApp(dbInstance?: Database.Database) {
       res.status(500).json({ status: 'error', error: message });
     }
   });
+
+  // Collections API
+  app.use('/api/collections', createCollectionsRouter(db));
 
   // Serve static assets in production
   if (process.env.NODE_ENV === 'production') {
