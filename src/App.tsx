@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Container,
   Stack,
@@ -8,6 +8,9 @@ import {
   Card,
   Button,
 } from '@atlas/ds';
+import { Collection, CollectionCounts, SelectedCollectionView } from './types';
+import { fetchCollections } from './api/collections';
+import { SidebarNavigation } from './components/collections/SidebarNavigation';
 
 interface HealthStatus {
   status: string;
@@ -17,20 +20,45 @@ interface HealthStatus {
 
 export function App() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [counts, setCounts] = useState<CollectionCounts>({ all: 0, uncollected: 0 });
+  const [selectedView, setSelectedView] = useState<SelectedCollectionView>('all');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch('/api/health')
-      .then((res) => res.json())
-      .then((data: HealthStatus) => {
-        setHealth(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Failed to connect to backend:', err);
-        setLoading(false);
-      });
+  const loadData = useCallback(async () => {
+    try {
+      const [healthRes, colData] = await Promise.all([
+        fetch('/api/health').then((r) => r.json()).catch(() => null),
+        fetchCollections().catch(() => ({ collections: [], counts: { all: 0, uncollected: 0 } })),
+      ]);
+      setHealth(healthRes);
+      setCollections(colData.collections);
+      setCounts(colData.counts);
+    } catch (err) {
+      console.error('Failed to load initial data:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Determine active view label
+  const activeViewLabel = (() => {
+    if (selectedView === 'all') return 'All Prompts';
+    if (selectedView === 'uncollected') return 'Uncollected Prompts';
+    const found = collections.find((c) => c.id === selectedView);
+    return found ? found.name : 'Collection';
+  })();
+
+  const activeViewCount = (() => {
+    if (selectedView === 'all') return counts.all;
+    if (selectedView === 'uncollected') return counts.uncollected;
+    const found = collections.find((c) => c.id === selectedView);
+    return found ? found.prompt_count : 0;
+  })();
 
   return (
     <Container maxWidth="xl" center style={{ padding: '2rem 1rem' }}>
@@ -67,20 +95,44 @@ export function App() {
           </Stack>
         </Stack>
 
-        {/* Foundation Status Banner */}
-        <Card variant="outline">
-          <Stack direction="vertical" gap="3">
-            <Heading level={3}>Foundation & Persistence Initialized</Heading>
-            <Text>
-              Atlas Design System (<code>@atlas/ds</code>) and persistent SQLite storage are integrated and active.
-            </Text>
-            {health && (
-              <Text size="sm" color="muted">
-                Database: <strong>{health.database}</strong> • Connected at: {new Date(health.timestamp).toLocaleTimeString()}
-              </Text>
-            )}
-          </Stack>
-        </Card>
+        {/* Main Content Layout with Sidebar */}
+        <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
+          {/* Left Sidebar Navigation */}
+          <SidebarNavigation
+            collections={collections}
+            counts={counts}
+            selectedView={selectedView}
+            onSelectView={setSelectedView}
+            onCollectionsChanged={loadData}
+          />
+
+          {/* Right Main Area */}
+          <div style={{ flexGrow: 1, minWidth: 0 }}>
+            <Stack direction="vertical" gap="4">
+              {/* Active Collection View Header */}
+              <Stack direction="horizontal" align="center" justify="between">
+                <Stack direction="horizontal" align="center" gap="3">
+                  <Heading level={2}>{activeViewLabel}</Heading>
+                  <Badge variant="subtle" intent="neutral">
+                    {activeViewCount} {activeViewCount === 1 ? 'prompt' : 'prompts'}
+                  </Badge>
+                </Stack>
+              </Stack>
+
+              {/* Prompts Area Placeholder */}
+              <Card variant="outline" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
+                <Stack direction="vertical" align="center" gap="3">
+                  <Heading level={4}>No prompts found in this view</Heading>
+                  <Text color="muted" style={{ maxWidth: '400px' }}>
+                    {selectedView === 'all'
+                      ? 'Get started by creating your first prompt using the "+ New Prompt" button.'
+                      : `No prompts currently in "${activeViewLabel}". Prompts added to this collection will appear here.`}
+                  </Text>
+                </Stack>
+              </Card>
+            </Stack>
+          </div>
+        </div>
       </Stack>
     </Container>
   );
