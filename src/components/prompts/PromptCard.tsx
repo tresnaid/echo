@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Heading,
-  Button,
 } from '@atlas/ds';
 import { Prompt } from '../../types';
 
@@ -65,46 +64,13 @@ function CheckIcon({ size = 14 }: { size?: number }) {
   );
 }
 
-const CATEGORY_STYLES: Record<
-  string,
-  { accent: string; bg: string; border: string; text: string; label: string }
-> = {
-  text: {
-    accent: '#3b82f6',
-    bg: '#eff6ff',
-    border: '#bfdbfe',
-    text: '#1d4ed8',
-    label: 'TEXT',
-  },
-  code: {
-    accent: '#8b5cf6',
-    bg: '#f5f3ff',
-    border: '#ddd6fe',
-    text: '#6d28d9',
-    label: 'CODE',
-  },
-  image: {
-    accent: '#10b981',
-    bg: '#ecfdf5',
-    border: '#a7f3d0',
-    text: '#047857',
-    label: 'IMAGE',
-  },
-  video: {
-    accent: '#f59e0b',
-    bg: '#fffbeb',
-    border: '#fde68a',
-    text: '#b45309',
-    label: 'VIDEO',
-  },
-};
-
 export function PromptCard({
   prompt,
   onOpenDetails,
 }: PromptCardProps) {
   const [copied, setCopied] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isCopyHovered, setIsCopyHovered] = useState(false);
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -118,8 +84,6 @@ export function PromptCard({
     }
   };
 
-  const categoryKey = (prompt.category_id || 'text').toLowerCase();
-  const categoryStyle = CATEGORY_STYLES[categoryKey] || CATEGORY_STYLES.text;
   const primaryMedia = prompt.media && prompt.media.length > 0 ? prompt.media[0] : null;
 
   return (
@@ -130,9 +94,8 @@ export function PromptCard({
         borderRadius: 'var(--atlas-radius-md, 6px)',
         backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
         border: isHovered
-          ? `1px solid ${categoryStyle.accent}`
+          ? '1px solid var(--atlas-color-border-focus, #3b82f6)'
           : '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-        borderTop: `3px solid ${categoryStyle.accent}`,
         boxShadow: isHovered
           ? 'var(--atlas-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.08))'
           : 'var(--atlas-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.04))',
@@ -237,71 +200,77 @@ export function PromptCard({
         </div>
       ) : null}
 
-      {/* Main Content Body: Title with Category Dot & Copy Icon */}
+      {/* Main Content Body: Title and Differentiated Copy Icon Button */}
       <div
         style={{
           padding: '0.875rem 1rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '0.5rem',
+          gap: '0.625rem',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
-          <span
-            style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: categoryStyle.accent,
-              flexShrink: 0,
-            }}
-            title={`Category: ${prompt.category_name || categoryStyle.label}`}
-          />
-          <Heading
-            level={3}
-            style={{
-              fontSize: '0.9375rem',
-              lineHeight: 1.4,
-              fontWeight: 600,
-              color: 'var(--atlas-color-text-primary, #0f172a)',
-              margin: 0,
-              flex: 1,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-            }}
-          >
-            {prompt.title}
-          </Heading>
-        </div>
+        <Heading
+          level={3}
+          style={{
+            fontSize: '0.9375rem',
+            lineHeight: 1.4,
+            fontWeight: 600,
+            color: 'var(--atlas-color-text-primary, #0f172a)',
+            margin: 0,
+            flex: 1,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+          }}
+        >
+          {prompt.title}
+        </Heading>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-label={copied ? 'Copied' : 'Copy prompt text'}
+        <button
+          type="button"
+          aria-label={copied ? 'Copied to clipboard' : 'Copy prompt text'}
           title={copied ? 'Copied!' : 'Copy prompt text'}
           onClick={handleCopy}
+          onMouseEnter={() => setIsCopyHovered(true)}
+          onMouseLeave={() => setIsCopyHovered(false)}
           style={{
-            padding: '0.375rem',
-            minWidth: '28px',
-            height: '28px',
+            padding: '0.4rem',
+            minWidth: '32px',
+            height: '32px',
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: 'var(--atlas-radius-sm, 4px)',
-            color: copied ? 'var(--atlas-color-success-primary, #16a34a)' : 'var(--atlas-color-text-secondary, #64748b)',
+            borderRadius: 'var(--atlas-radius-md, 6px)',
+            backgroundColor: copied
+              ? '#dcfce7'
+              : isCopyHovered
+                ? '#e2e8f0'
+                : 'var(--atlas-color-bg-subtle, #f1f5f9)',
+            border: copied
+              ? '1px solid #86efac'
+              : isCopyHovered
+                ? '1px solid #94a3b8'
+                : '1px solid var(--atlas-color-border-subtle, #cbd5e1)',
+            color: copied
+              ? '#15803d'
+              : isCopyHovered
+                ? '#0f172a'
+                : 'var(--atlas-color-text-secondary, #475569)',
+            cursor: 'pointer',
             flexShrink: 0,
+            transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease',
           }}
         >
-          {copied ? <CheckIcon size={15} /> : <CopyIcon size={15} />}
-        </Button>
+          {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+        </button>
       </div>
     </div>
   );
 }
+
 
 
 
