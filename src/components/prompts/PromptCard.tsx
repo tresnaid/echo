@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   Heading,
+  Text,
 } from '@atlas/ds';
 import { Prompt } from '../../types';
 
@@ -216,72 +217,98 @@ export function PromptCard({
         </div>
       ) : null}
 
-      {/* Main Content Body: Title and Differentiated Copy Icon Button */}
+      {/* Main Content Body: Title + Copy Button & Description */}
       <div
         style={{
           padding: '0.875rem 1rem',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '0.625rem',
+          flexDirection: 'column',
+          gap: '0.375rem',
         }}
       >
-        <Heading
-          level={3}
+        <div
           style={{
-            fontSize: '0.9375rem',
-            lineHeight: 1.4,
-            fontWeight: 600,
-            color: 'var(--atlas-color-text-primary, #0f172a)',
-            margin: 0,
-            flex: 1,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-          }}
-        >
-          {prompt.title}
-        </Heading>
-
-        <button
-          type="button"
-          aria-label={copied ? 'Copied to clipboard' : 'Copy prompt text'}
-          title={copied ? 'Copied!' : 'Copy prompt text'}
-          onClick={handleCopy}
-          onMouseEnter={() => setIsCopyHovered(true)}
-          onMouseLeave={() => setIsCopyHovered(false)}
-          style={{
-            padding: '0.4rem',
-            minWidth: '32px',
-            height: '32px',
-            display: 'inline-flex',
+            display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: 'var(--atlas-radius-md, 6px)',
-            backgroundColor: copied
-              ? '#dcfce7'
-              : isCopyHovered
-                ? '#e2e8f0'
-                : 'var(--atlas-color-bg-subtle, #f1f5f9)',
-            border: copied
-              ? '1px solid #86efac'
-              : isCopyHovered
-                ? '1px solid #94a3b8'
-                : '1px solid var(--atlas-color-border-subtle, #cbd5e1)',
-            color: copied
-              ? '#15803d'
-              : isCopyHovered
-                ? '#0f172a'
-                : 'var(--atlas-color-text-secondary, #475569)',
-            cursor: 'pointer',
-            flexShrink: 0,
-            transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease',
+            justifyContent: 'space-between',
+            gap: '0.625rem',
           }}
         >
-          {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
-        </button>
+          <Heading
+            level={3}
+            style={{
+              fontSize: '0.9375rem',
+              lineHeight: 1.4,
+              fontWeight: 600,
+              color: 'var(--atlas-color-text-primary, #0f172a)',
+              margin: 0,
+              flex: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+            }}
+          >
+            {prompt.title}
+          </Heading>
+
+          <button
+            type="button"
+            aria-label={copied ? 'Copied to clipboard' : 'Copy prompt text'}
+            title={copied ? 'Copied!' : 'Copy prompt text'}
+            onClick={handleCopy}
+            onMouseEnter={() => setIsCopyHovered(true)}
+            onMouseLeave={() => setIsCopyHovered(false)}
+            style={{
+              padding: '0.4rem',
+              minWidth: '32px',
+              height: '32px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 'var(--atlas-radius-md, 6px)',
+              backgroundColor: copied
+                ? '#dcfce7'
+                : isCopyHovered
+                  ? '#e2e8f0'
+                  : 'var(--atlas-color-bg-subtle, #f1f5f9)',
+              border: copied
+                ? '1px solid #86efac'
+                : isCopyHovered
+                  ? '1px solid #94a3b8'
+                  : '1px solid var(--atlas-color-border-subtle, #cbd5e1)',
+              color: copied
+                ? '#15803d'
+                : isCopyHovered
+                  ? '#0f172a'
+                  : 'var(--atlas-color-text-secondary, #475569)',
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease',
+            }}
+          >
+            {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+          </button>
+        </div>
+
+        {prompt.description && (
+          <Text
+            size="sm"
+            color="secondary"
+            style={{
+              fontSize: '0.8125rem',
+              lineHeight: 1.45,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+            }}
+          >
+            {prompt.description}
+          </Text>
+        )}
       </div>
     </div>
   );
