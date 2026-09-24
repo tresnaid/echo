@@ -2,43 +2,20 @@
   "name": "echo",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "dev": "concurrently -k -p \"[{name}]\" -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"tsx watch server/index.ts\" \"vite\"",
-    "dev:server": "tsx watch server/index.ts",
-    "dev:client": "vite",
-    "build": "tsc -b && vite build",
-    "start": "NODE_ENV=production tsx server/index.ts",
-    "typecheck": "tsc --noEmit",
-    "seed": "tsx server/db/seed.ts",
-    "test": "vitest run --pool=forks"
-  },
-  "dependencies": {
-    "@atlas/ds": "file:./vendor/atlas-ds-0.1.0.tgz",
-    "better-sqlite3": "^11.8.1",
-    "cors": "^2.8.5",
-    "express": "^4.21.2",
-    "multer": "^2.4.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "sharp": "^0.35.4",
-    "zod": "^3.24.2"
+    "dev": "concurrently -k -p \"[{name}]\" -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "dev:server": "npm run dev -w backend",
+    "dev:client": "npm run dev -w frontend",
+    "build": "npm run build -w frontend",
+    "start": "npm run start -w backend",
+    "typecheck": "npm run typecheck -w backend && npm run typecheck -w frontend",
+    "test": "npm run test -w backend"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.12",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.0",
-    "@types/multer": "^2.2.0",
-    "@types/node": "^24.5.2",
-    "@types/react": "^19.0.8",
-    "@types/react-dom": "^19.0.3",
-    "@types/supertest": "^6.0.2",
-    "@vitejs/plugin-react": "^4.3.4",
-    "concurrently": "^9.1.2",
-    "supertest": "^7.0.0",
-    "tsx": "^4.19.3",
-    "typescript": "^5.7.3",
-    "vite": "^6.1.0",
-    "vitest": "^3.0.5"
+    "concurrently": "^9.1.2"
   }
 }

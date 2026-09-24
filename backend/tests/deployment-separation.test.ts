@@ -1,9 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import Database from 'better-sqlite3';
-import { createApp } from '../server/app';
-import { initSchema } from '../server/db/connection';
-import { getApiUrl, getMediaUrl } from '../src/api/config';
+import { createApp } from '../src/app';
+import { initSchema } from '../src/db/connection';
 
 describe('Standalone & Separate Deployment Support', () => {
   let db: Database.Database;
@@ -41,16 +40,20 @@ describe('Standalone & Separate Deployment Support', () => {
     expect(res.headers['access-control-allow-origin']).toBe('https://echo.customdomain.com');
   });
 
-  it('resolves relative vs absolute URLs correctly with getMediaUrl and getApiUrl', () => {
-    // Relative endpoints
-    expect(getApiUrl('/api/prompts')).toBe('/api/prompts');
-    expect(getApiUrl('api/collections')).toBe('/api/collections');
+  it('supports comma-separated multiple origins in CORS_ORIGIN', async () => {
+    process.env.CORS_ORIGIN = 'http://localhost:5173,http://localhost:8080';
+    const { app } = createApp(db);
 
-    // Media URLs
-    expect(getMediaUrl(null)).toBe('');
-    expect(getMediaUrl(undefined)).toBe('');
-    expect(getMediaUrl('/uploads/originals/sample.jpg')).toBe('/uploads/originals/sample.jpg');
-    expect(getMediaUrl('https://images.unsplash.com/photo-123')).toBe('https://images.unsplash.com/photo-123');
-    expect(getMediaUrl('data:image/png;base64,abc')).toBe('data:image/png;base64,abc');
+    const res1 = await request(app)
+      .get('/api/health')
+      .set('Origin', 'http://localhost:5173');
+    expect(res1.status).toBe(200);
+    expect(res1.headers['access-control-allow-origin']).toBe('http://localhost:5173');
+
+    const res2 = await request(app)
+      .get('/api/health')
+      .set('Origin', 'http://localhost:8080');
+    expect(res2.status).toBe(200);
+    expect(res2.headers['access-control-allow-origin']).toBe('http://localhost:8080');
   });
 });

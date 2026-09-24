@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import Database from 'better-sqlite3';
-import { createApp } from '../server/app.js';
-import { initSchema } from '../server/db/connection.js';
+import { createApp } from '../src/app.js';
+import { initSchema } from '../src/db/connection.js';
 import sharp from 'sharp';
 
 describe('Media Storage, Multi-Size Thumbnail Generation & API', () => {
