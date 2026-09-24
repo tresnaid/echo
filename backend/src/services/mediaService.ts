@@ -44,6 +44,7 @@ export async function processUploadedFile(file: Express.Multer.File): Promise<Pr
   const isVideo = file.mimetype.startsWith('video/');
   const isImage = file.mimetype.startsWith('image/');
   const hasDiskPath = !!file.path && fs.existsSync(file.path);
+  const fileSize = file.size || 0;
 
   if (isVideo) {
     const videoFileName = `${fileHash}_${sanitizedOriginalName}`;
@@ -58,8 +59,6 @@ export async function processUploadedFile(file: Express.Multer.File): Promise<Pr
     } else if (file.buffer) {
       await fs.promises.writeFile(targetPath, file.buffer);
     }
-
-    const fileSize = file.size || (fs.existsSync(targetPath) ? (await fs.promises.stat(targetPath)).size : 0);
 
     return {
       media_type: 'video',
@@ -91,8 +90,6 @@ export async function processUploadedFile(file: Express.Multer.File): Promise<Pr
         await fs.promises.writeFile(targetPath, file.buffer);
       }
 
-      const fileSize = file.size || (fs.existsSync(targetPath) ? (await fs.promises.stat(targetPath)).size : 0);
-
       return {
         media_type: 'image',
         url: `/uploads/originals/${svgFileName}`,
@@ -109,60 +106,60 @@ export async function processUploadedFile(file: Express.Multer.File): Promise<Pr
     }
 
     // Process raster image with sharp using file path (or buffer fallback)
-    const imageInput = hasDiskPath ? file.path : file.buffer;
-    const imageInstance = sharp(imageInput);
-    const metadata = await imageInstance.metadata();
-    const width = metadata.width || null;
-    const height = metadata.height || null;
-    const aspect_ratio = width && height ? Number((width / height).toFixed(4)) : null;
+    try {
+      const imageInput = hasDiskPath ? file.path : file.buffer;
+      const imageInstance = sharp(imageInput);
+      const metadata = await imageInstance.metadata();
+      const width = metadata.width || null;
+      const height = metadata.height || null;
+      const aspect_ratio = width && height ? Number((width / height).toFixed(4)) : null;
 
-    // Save original file
-    const ext = path.extname(file.originalname) || `.${metadata.format || 'jpg'}`;
-    const originalFileName = `${fileHash}_original${ext}`;
-    const originalPath = path.join(uploadsDir, 'originals', originalFileName);
+      // Save original file
+      const ext = path.extname(file.originalname) || `.${metadata.format || 'jpg'}`;
+      const originalFileName = `${fileHash}_original${ext}`;
+      const originalPath = path.join(uploadsDir, 'originals', originalFileName);
 
-    if (hasDiskPath) {
-      await fs.promises.copyFile(file.path, originalPath);
-    } else if (file.buffer) {
-      await fs.promises.writeFile(originalPath, file.buffer);
+      if (hasDiskPath) {
+        await fs.promises.copyFile(file.path, originalPath);
+      } else if (file.buffer) {
+        await fs.promises.writeFile(originalPath, file.buffer);
+      }
+
+      // Generate medium WebP (max width 640px)
+      const mediumFileName = `${fileHash}_medium.webp`;
+      const mediumPath = path.join(uploadsDir, 'medium', mediumFileName);
+      await sharp(imageInput)
+        .resize({ width: 640, withoutEnlargement: true })
+        .webp({ quality: 85 })
+        .toFile(mediumPath);
+
+      // Generate thumbnail WebP (max width 320px)
+      const thumbFileName = `${fileHash}_thumb.webp`;
+      const thumbPath = path.join(uploadsDir, 'thumbnails', thumbFileName);
+      await sharp(imageInput)
+        .resize({ width: 320, withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toFile(thumbPath);
+
+      return {
+        media_type: 'image',
+        url: `/uploads/originals/${originalFileName}`,
+        thumbnail_url: `/uploads/thumbnails/${thumbFileName}`,
+        medium_url: `/uploads/medium/${mediumFileName}`,
+        file_path: originalPath,
+        file_name: file.originalname,
+        file_size: fileSize,
+        mime_type: file.mimetype,
+        width,
+        height,
+        aspect_ratio,
+      };
+    } finally {
+      // Guaranteed cleanup of temp file even if sharp/fs throws an error
+      if (hasDiskPath) {
+        await fs.promises.unlink(file.path).catch(() => {});
+      }
     }
-
-    // Generate medium WebP (max width 640px)
-    const mediumFileName = `${fileHash}_medium.webp`;
-    const mediumPath = path.join(uploadsDir, 'medium', mediumFileName);
-    await sharp(imageInput)
-      .resize({ width: 640, withoutEnlargement: true })
-      .webp({ quality: 85 })
-      .toFile(mediumPath);
-
-    // Generate thumbnail WebP (max width 320px)
-    const thumbFileName = `${fileHash}_thumb.webp`;
-    const thumbPath = path.join(uploadsDir, 'thumbnails', thumbFileName);
-    await sharp(imageInput)
-      .resize({ width: 320, withoutEnlargement: true })
-      .webp({ quality: 80 })
-      .toFile(thumbPath);
-
-    // Clean up temporary upload file if it was on disk
-    if (hasDiskPath) {
-      await fs.promises.unlink(file.path).catch(() => {});
-    }
-
-    const fileSize = file.size || (fs.existsSync(originalPath) ? (await fs.promises.stat(originalPath)).size : 0);
-
-    return {
-      media_type: 'image',
-      url: `/uploads/originals/${originalFileName}`,
-      thumbnail_url: `/uploads/thumbnails/${thumbFileName}`,
-      medium_url: `/uploads/medium/${mediumFileName}`,
-      file_path: originalPath,
-      file_name: file.originalname,
-      file_size: fileSize,
-      mime_type: file.mimetype,
-      width,
-      height,
-      aspect_ratio,
-    };
   }
 
   // Cleanup temp file on unsupported type
