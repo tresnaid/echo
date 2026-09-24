@@ -11,6 +11,7 @@ import {
 import { Collection, CollectionCounts, SelectedCollectionView, Prompt, Category } from './types';
 import { fetchCollections } from './api/collections';
 import { fetchPrompts, fetchCategories, fetchTags } from './api/prompts';
+import { getApiUrl } from './api/config';
 import { SidebarNavigation } from './components/collections/SidebarNavigation';
 import { CreateCollectionModal } from './components/collections/CreateCollectionModal';
 import { PromptFormModal } from './components/prompts/PromptFormModal';
@@ -82,7 +83,7 @@ export function App() {
   const loadMetadata = useCallback(async () => {
     try {
       const [healthRes, colData, catData, tagData] = await Promise.all([
-        fetch('/api/health').then((r) => r.json()).catch(() => null),
+        fetch(getApiUrl('/api/health')).then((r) => r.json()).catch(() => null),
         fetchCollections().catch(() => ({ collections: [], counts: { all: 0, uncollected: 0 } })),
         fetchCategories().catch(() => []),
         fetchTags().catch(() => []),

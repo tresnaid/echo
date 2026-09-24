@@ -9,6 +9,7 @@ import {
   CodeSnippet,
 } from '@atlas/ds';
 import { Prompt, PromptMedia } from '../../types';
+import { getMediaUrl } from '../../api/config';
 
 interface PromptDetailModalProps {
   prompt: Prompt | null;
@@ -145,7 +146,7 @@ export function PromptDetailModal({
             >
               {activeMedia.media_type === 'image' ? (
                 <img
-                  src={activeMedia.medium_url || activeMedia.url}
+                  src={getMediaUrl(activeMedia.medium_url || activeMedia.url)}
                   alt={activeMedia.caption || prompt.title}
                   style={{
                     maxWidth: '100%',
@@ -160,8 +161,8 @@ export function PromptDetailModal({
                   controls
                   playsInline
                   preload="metadata"
-                  poster={activeMedia.medium_url || activeMedia.thumbnail_url || undefined}
-                  src={activeMedia.url}
+                  poster={activeMedia.medium_url || activeMedia.thumbnail_url ? getMediaUrl(activeMedia.medium_url || activeMedia.thumbnail_url) : undefined}
+                  src={getMediaUrl(activeMedia.url)}
                   style={{
                     width: '100%',
                     maxHeight: 'min(380px, 45vh)',
@@ -193,7 +194,7 @@ export function PromptDetailModal({
               </div>
 
               <a
-                href={activeMedia.url}
+                href={getMediaUrl(activeMedia.url)}
                 target="_blank"
                 rel="noreferrer noopener"
                 style={{
@@ -241,7 +242,7 @@ export function PromptDetailModal({
                     >
                       {m.thumbnail_url || m.url ? (
                         <img
-                          src={m.thumbnail_url || m.url}
+                          src={getMediaUrl(m.thumbnail_url || m.url)}
                           alt=""
                           style={{
                             width: '100%',
