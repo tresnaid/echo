@@ -1,0 +1,173 @@
+name: Deploy Backend to Production VPS
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*-be'
+
+jobs:
+  test-and-build:
+    name: Test & Build Backend Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate backend release tag format
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          echo "Checking tag format for: '${TAG}'"
+          if [[ ! "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-be$ ]]; then
+            echo "::error::Invalid backend release tag '${TAG}'. Must strictly match '^v[0-9]+\.[0-9]+\.[0-9]+-be$' (e.g. v1.0.0-be, v2.1.0-be)."
+            exit 1
+          fi
+          echo "Backend release tag '${TAG}' is valid."
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check backend
+        run: npm run typecheck -w backend
+
+      - name: Run backend tests
+        run: npm test -w backend
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=${{ github.ref_name }}
+
+      - name: Build and push backend Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Production VPS
+    needs: test-and-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Synchronize compose.prod.yml to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          source: "compose.prod.yml"
+          target: "/srv/apps/echo"
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: GITHUB_REF_NAME
+          script: |
+            set -e
+            APP_DIR="/srv/apps/echo"
+            TAG="${GITHUB_REF_NAME}"
+
+            echo "==> Starting Echo backend deployment for version: ${TAG}"
+
+            # Ensure persistent uploads directory exists
+            mkdir -p "${APP_DIR}/data/uploads"
+            cd "${APP_DIR}"
+
+            # Step 1: Verify persistent .env exists (never create an empty .env automatically)
+            if [ ! -f "${APP_DIR}/.env" ]; then
+              echo "::error::/srv/apps/echo/.env does not exist on the VPS."
+              echo "Production .env must be manually provisioned once on the VPS before deploying."
+              exit 1
+            fi
+
+            # Step 2: Ensure compose.prod.yml was synchronized and update compose.yml
+            if [ ! -f "${APP_DIR}/compose.prod.yml" ]; then
+              echo "::error::compose.prod.yml synchronization failed; file missing in ${APP_DIR}."
+              exit 1
+            fi
+            cp "${APP_DIR}/compose.prod.yml" "${APP_DIR}/compose.yml"
+            echo "==> Synchronized repository compose.prod.yml to ${APP_DIR}/compose.yml"
+
+            # Step 3: Update ONLY ECHO_VERSION in persistent .env, preserving all other values
+            if grep -q '^ECHO_VERSION=' "${APP_DIR}/.env"; then
+              sed -i "s/^ECHO_VERSION=.*/ECHO_VERSION=${TAG}/" "${APP_DIR}/.env"
+            else
+              echo "ECHO_VERSION=${TAG}" >> "${APP_DIR}/.env"
+            fi
+            echo "==> Updated ECHO_VERSION to ${TAG} in ${APP_DIR}/.env"
+
+            # Step 4: Validate Docker Compose configuration BEFORE modifying running state
+            echo "==> Validating Docker Compose configuration..."
+            if ! docker compose config > /dev/null; then
+              echo "::error::Docker Compose validation failed! Deployment stopped without modifying running containers."
+              docker compose config
+              exit 1
+            fi
+            echo "==> Docker Compose configuration is valid."
+
+            # Step 5: Pull immutable release image from GHCR
+            echo "==> Pulling backend image: ghcr.io/${{ github.repository }}:${TAG}"
+            docker compose pull backend
+
+            # Step 6: Recreate backend container with the new version
+            echo "==> Recreating backend container..."
+            docker compose up -d backend
+
+            # Step 7: Verify health check endpoint
+            echo "==> Verifying backend health..."
+            HEALTHY=0
+            for i in $(seq 1 15); do
+              HEALTH_RESPONSE=$(curl -s -f http://127.0.0.1:3001/api/health || true)
+              if echo "${HEALTH_RESPONSE}" | grep -q '"status":"ok"'; then
+                echo "==> Backend is healthy! Response: ${HEALTH_RESPONSE}"
+                HEALTHY=1
+                break
+              fi
+              echo "Waiting for backend to become healthy (attempt $i/15)..."
+              sleep 2
+            done
+
+            if [ "${HEALTHY}" -ne 1 ]; then
+              echo "::error::Backend health check failed after 30 seconds!"
+              echo "Container logs:"
+              docker compose logs --tail=50 backend
+              exit 1
+            fi
+
+            echo "==> Deployment completed successfully for version ${TAG}"
