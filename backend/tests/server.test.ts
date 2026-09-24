@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import Database from 'better-sqlite3';
-import { createApp } from '../server/app';
-import { initSchema } from '../server/db/connection';
+import { createApp } from '../src/app';
+import { initSchema } from '../src/db/connection';
 
 describe('Echo Backend & Storage Foundation', () => {
   let db: Database.Database;
