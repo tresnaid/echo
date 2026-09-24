@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import Database from 'better-sqlite3';
+import path from 'node:path';
+import fs from 'node:fs';
 import { createApp } from '../src/app.js';
 import { initSchema } from '../src/db/connection.js';
 
@@ -106,19 +108,17 @@ describe('Standalone & Separate Deployment Support', () => {
   });
 
   describe('Release Tag Filtering Logic', () => {
-    // Matching logic corresponding to GitHub Actions tag filters: 'v.*-be' and 'v*-be'
+    // Strict regex matching requirement: ^v[0-9]+\.[0-9]+\.[0-9]+-be$
     const isBackendReleaseTag = (tag: string): boolean => {
-      return /^v(?:\.|\d).*-be$/.test(tag) || /^v.*-be$/.test(tag);
+      return /^v[0-9]+\.[0-9]+\.[0-9]+-be$/.test(tag);
     };
 
     it('matches valid backend release tags', () => {
       const validBackendTags = [
-        'v.1.0.0-be',
-        'v.1.0.1-be',
-        'v.1.1.0-be',
-        'v.2.0.0-be',
         'v1.0.0-be',
         'v1.0.1-be',
+        'v2.10.3-be',
+        'v10.20.30-be',
       ];
 
       for (const tag of validBackendTags) {
@@ -126,21 +126,34 @@ describe('Standalone & Separate Deployment Support', () => {
       }
     });
 
-    it('rejects frontend tags and regular branch/tag names from triggering backend deployment', () => {
-      const nonBackendTags = [
-        'v.1.0.0',
-        'v.1.0.1',
-        'v.1.1.0',
+    it('rejects invalid tags, frontend tags, and legacy dot-separated tags', () => {
+      const invalidTags = [
+        'v.1.0.0-be',
+        'v1.0-be',
         'v1.0.0',
         'v1.0.1',
+        'v2.0.0',
+        'v1.0.0-fe',
+        'vfoo-be',
+        '1.0.0-be',
         'main',
-        'feat/new-api',
-        'release-1.0.0',
-        'v.1.0.0-fe',
       ];
 
-      for (const tag of nonBackendTags) {
+      for (const tag of invalidTags) {
         expect(isBackendReleaseTag(tag), `Expected tag ${tag} NOT to match backend release filter`).toBe(false);
+      }
+    });
+  });
+
+  describe('Production Compose Configuration Invariants', () => {
+    it('verifies compose.prod.yml uses prebuilt GHCR image without local build', () => {
+      const composeProdPath = path.resolve(process.cwd(), '../compose.prod.yml');
+      if (fs.existsSync(composeProdPath)) {
+        const content = fs.readFileSync(composeProdPath, 'utf8');
+        expect(content).toContain('image: ghcr.io/tresnaid/echo:${ECHO_VERSION}');
+        expect(content).not.toContain('build:');
+        expect(content).toContain('./data:/app/data');
+        expect(content).toContain('127.0.0.1');
       }
     });
   });
