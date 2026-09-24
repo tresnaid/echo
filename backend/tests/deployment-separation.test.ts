@@ -115,6 +115,7 @@ describe('Standalone & Separate Deployment Support', () => {
 
     it('matches valid backend release tags', () => {
       const validBackendTags = [
+        'v0.0.1-be',
         'v1.0.0-be',
         'v1.0.1-be',
         'v2.10.3-be',
