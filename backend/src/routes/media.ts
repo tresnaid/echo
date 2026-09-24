@@ -2,10 +2,25 @@ import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import Database from 'better-sqlite3';
 import { z } from 'zod';
-import { processUploadedFile } from '../services/mediaService.js';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { processUploadedFile, getUploadsDir } from '../services/mediaService.js';
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    const uploadsDir = getUploadsDir();
+    const tempDir = path.join(uploadsDir, 'temp');
+    cb(null, tempDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}`;
+    const sanitized = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    cb(null, `${uniqueSuffix}-${sanitized}`);
+  },
+});
 
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage,
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB limit
   },

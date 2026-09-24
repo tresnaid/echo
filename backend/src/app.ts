@@ -2,9 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
 import fs from 'node:fs';
-import { getDatabase } from './db/connection';
-import { createCollectionsRouter } from './routes/collections';
-import { createPromptsRouter, createCategoriesRouter, createTagsRouter } from './routes/prompts';
+import { getDatabase } from './db/connection.js';
+import { createCollectionsRouter } from './routes/collections.js';
+import { createPromptsRouter, createCategoriesRouter, createTagsRouter } from './routes/prompts.js';
 import { createMediaRouter, createPromptMediaRouter } from './routes/media.js';
 import { getUploadsDir } from './services/mediaService.js';
 import Database from 'better-sqlite3';
@@ -13,14 +13,33 @@ export function createApp(dbInstance?: Database.Database) {
   const app = express();
   const db = dbInstance || getDatabase();
 
+  // Trust first proxy (e.g. Nginx, Cloudflare) for accurate client IP in X-Forwarded-For
+  app.set('trust proxy', 1);
+
+  // Configure CORS
   const corsOrigin = process.env.CORS_ORIGIN;
   if (corsOrigin) {
-    const origins = corsOrigin.includes(',')
-      ? corsOrigin.split(',').map((o) => o.trim())
-      : corsOrigin;
-    app.use(cors({ origin: origins, credentials: true }));
+    const allowedOrigins = corsOrigin
+      .split(',')
+      .map((o) => o.trim())
+      .filter(Boolean);
+    app.use(
+      cors({
+        origin: (requestOrigin, callback) => {
+          if (!requestOrigin || allowedOrigins.includes(requestOrigin)) {
+            return callback(null, true);
+          }
+          return callback(null, false);
+        },
+        credentials: true,
+      })
+    );
+  } else if (process.env.NODE_ENV === 'production') {
+    // In production without CORS_ORIGIN, disallow cross-origin requests by default
+    app.use(cors({ origin: false }));
   } else {
-    app.use(cors());
+    // In development / testing, allow open CORS
+    app.use(cors({ origin: true, credentials: true }));
   }
 
   app.use(express.json());
@@ -55,20 +74,28 @@ export function createApp(dbInstance?: Database.Database) {
   app.use('/api/tags', createTagsRouter(db));
   app.use('/api/media', createMediaRouter(db));
 
-  // Serve static assets in production if dist exists (monolithic mode)
-  if (process.env.NODE_ENV === 'production') {
-    const distPath = path.resolve(process.cwd(), 'dist');
-    if (fs.existsSync(distPath)) {
-      app.use(express.static(distPath));
-      app.get('*', (_req, res) => {
-        const indexPath = path.join(distPath, 'index.html');
-        if (fs.existsSync(indexPath)) {
-          res.sendFile(indexPath);
-        } else {
-          res.status(404).send('Not Found');
-        }
-      });
-    }
+  // Explicit JSON 404 handler for unknown /api/* endpoints
+  app.use('/api/*', (_req, res) => {
+    res.status(404).json({ error: 'Not Found' });
+  });
+
+  // Serve static assets if dist exists (monolithic / same-server mode)
+  const distPath = path.resolve(process.cwd(), 'dist');
+  if (fs.existsSync(distPath) && fs.existsSync(path.join(distPath, 'index.html'))) {
+    app.use(express.static(distPath));
+    app.get('*', (_req, res) => {
+      const indexPath = path.join(distPath, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        res.status(404).json({ error: 'Not Found' });
+      }
+    });
+  } else {
+    // Split-server mode: any unhandled non-API route returns JSON 404
+    app.use((_req, res) => {
+      res.status(404).json({ error: 'Not Found' });
+    });
   }
 
   return { app, db };

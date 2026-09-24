@@ -1,34 +1,51 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import Database from 'better-sqlite3';
-import { createApp } from '../src/app';
-import { initSchema } from '../src/db/connection';
+import { createApp } from '../src/app.js';
+import { initSchema } from '../src/db/connection.js';
 
 describe('Standalone & Separate Deployment Support', () => {
   let db: Database.Database;
+  const originalEnv = { ...process.env };
 
   beforeEach(() => {
     db = new Database(':memory:');
     db.pragma('foreign_keys = ON');
     initSchema(db);
+    delete process.env.CORS_ORIGIN;
+    delete process.env.NODE_ENV;
   });
 
   afterEach(() => {
     db.close();
-    delete process.env.CORS_ORIGIN;
+    process.env = { ...originalEnv };
   });
 
-  it('configures open CORS headers by default when CORS_ORIGIN is not set', async () => {
+  it('configures open CORS in development/testing mode when CORS_ORIGIN is not set', async () => {
+    process.env.NODE_ENV = 'development';
     const { app } = createApp(db);
     const res = await request(app)
       .get('/api/health')
       .set('Origin', 'http://localhost:5173');
 
     expect(res.status).toBe(200);
-    expect(res.headers['access-control-allow-origin']).toBe('*');
+    expect(res.headers['access-control-allow-origin']).toBe('http://localhost:5173');
   });
 
-  it('respects CORS_ORIGIN for specific origins when configured', async () => {
+  it('restricts CORS in production mode when CORS_ORIGIN is not set', async () => {
+    process.env.NODE_ENV = 'production';
+    const { app } = createApp(db);
+    const res = await request(app)
+      .get('/api/health')
+      .set('Origin', 'https://untrusted-site.com');
+
+    expect(res.status).toBe(200);
+    // Should NOT allow untrusted site
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
+  });
+
+  it('respects CORS_ORIGIN for specific origins when configured in production', async () => {
+    process.env.NODE_ENV = 'production';
     process.env.CORS_ORIGIN = 'https://echo.customdomain.com';
     const { app } = createApp(db);
 
@@ -38,9 +55,15 @@ describe('Standalone & Separate Deployment Support', () => {
 
     expect(res.status).toBe(200);
     expect(res.headers['access-control-allow-origin']).toBe('https://echo.customdomain.com');
+
+    const blocked = await request(app)
+      .get('/api/health')
+      .set('Origin', 'https://evil.com');
+    expect(blocked.headers['access-control-allow-origin']).toBeUndefined();
   });
 
   it('supports comma-separated multiple origins in CORS_ORIGIN', async () => {
+    process.env.NODE_ENV = 'production';
     process.env.CORS_ORIGIN = 'http://localhost:5173,http://localhost:8080';
     const { app } = createApp(db);
 
@@ -55,5 +78,19 @@ describe('Standalone & Separate Deployment Support', () => {
       .set('Origin', 'http://localhost:8080');
     expect(res2.status).toBe(200);
     expect(res2.headers['access-control-allow-origin']).toBe('http://localhost:8080');
+  });
+
+  it('returns consistent JSON 404 for unknown /api/* routes', async () => {
+    const { app } = createApp(db);
+    const res = await request(app).get('/api/unknown-endpoint');
+
+    expect(res.status).toBe(404);
+    expect(res.headers['content-type']).toContain('application/json');
+    expect(res.body).toEqual({ error: 'Not Found' });
+  });
+
+  it('configures trust proxy for reverse proxies', () => {
+    const { app } = createApp(db);
+    expect(app.get('trust proxy')).toBe(1);
   });
 });
