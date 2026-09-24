@@ -14,7 +14,7 @@
     "test": "vitest run --pool=forks"
   },
   "dependencies": {
-    "@atlas/ds": "file:../atlas/packages/ds",
+    "@atlas/ds": "file:./vendor/atlas-ds-0.1.0.tgz",
     "better-sqlite3": "^11.8.1",
     "cors": "^2.8.5",
     "express": "^4.21.2",
