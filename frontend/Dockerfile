@@ -7,7 +7,9 @@ COPY package*.json ./
 COPY vendor/ ./vendor/
 RUN npm install
 COPY . .
-ARG VITE_API_URL="http://localhost:3001"
+
+# Build-time API URL for separate server deployment (leave blank for relative or pass target backend URL)
+ARG VITE_API_URL=""
 ENV VITE_API_URL=${VITE_API_URL}
 RUN npm run build
 
