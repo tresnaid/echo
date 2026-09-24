@@ -5,6 +5,7 @@ import {
   IconButton,
 } from '@atlas/ds';
 import { Prompt } from '../../types';
+import { getMediaUrl } from '../../api/config';
 
 interface PromptCardProps {
   prompt: Prompt;
@@ -146,7 +147,7 @@ export function PromptCard({
         >
           {primaryMedia.media_type === 'image' ? (
             <img
-              src={primaryMedia.thumbnail_url || primaryMedia.medium_url || primaryMedia.url}
+              src={getMediaUrl(primaryMedia.thumbnail_url || primaryMedia.medium_url || primaryMedia.url)}
               alt={primaryMedia.caption || prompt.title}
               loading="lazy"
               decoding="async"
@@ -160,7 +161,7 @@ export function PromptCard({
             <>
               {primaryMedia.thumbnail_url ? (
                 <img
-                  src={primaryMedia.thumbnail_url}
+                  src={getMediaUrl(primaryMedia.thumbnail_url)}
                   alt={primaryMedia.caption || prompt.title}
                   loading="lazy"
                   decoding="async"

@@ -15,6 +15,7 @@ import {
 } from '@atlas/ds';
 import { Prompt, Collection, Category, PromptMedia } from '../../types';
 import { createPrompt, updatePrompt, fetchCategories, uploadMediaFiles } from '../../api/prompts';
+import { getMediaUrl } from '../../api/config';
 import { CreateCollectionModal } from '../collections/CreateCollectionModal';
 
 function TrashIcon({ size = 13 }: { size?: number }) {
@@ -467,7 +468,7 @@ export function PromptFormModal({
                       >
                         {item.media_type === 'image' ? (
                           <img
-                            src={item.thumbnail_url || item.medium_url || item.url}
+                            src={getMediaUrl(item.thumbnail_url || item.medium_url || item.url)}
                             alt={item.caption || item.file_name || 'Media preview'}
                             style={{
                               width: '100%',

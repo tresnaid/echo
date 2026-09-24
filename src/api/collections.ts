@@ -1,7 +1,8 @@
 import { Collection, CollectionsResponse } from '../types';
+import { getApiUrl } from './config';
 
 export async function fetchCollections(): Promise<CollectionsResponse> {
-  const res = await fetch('/api/collections');
+  const res = await fetch(getApiUrl('/api/collections'));
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.error || 'Failed to fetch collections');
@@ -10,7 +11,7 @@ export async function fetchCollections(): Promise<CollectionsResponse> {
 }
 
 export async function createCollection(name: string): Promise<Collection> {
-  const res = await fetch('/api/collections', {
+  const res = await fetch(getApiUrl('/api/collections'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name }),
@@ -23,7 +24,7 @@ export async function createCollection(name: string): Promise<Collection> {
 }
 
 export async function renameCollection(id: number, name: string): Promise<Collection> {
-  const res = await fetch(`/api/collections/${id}`, {
+  const res = await fetch(getApiUrl(`/api/collections/${id}`), {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name }),
@@ -36,7 +37,7 @@ export async function renameCollection(id: number, name: string): Promise<Collec
 }
 
 export async function deleteCollection(id: number): Promise<{ success: boolean; message: string; deleted_id: number }> {
-  const res = await fetch(`/api/collections/${id}`, {
+  const res = await fetch(getApiUrl(`/api/collections/${id}`), {
     method: 'DELETE',
   });
   if (!res.ok) {
@@ -45,3 +46,4 @@ export async function deleteCollection(id: number): Promise<{ success: boolean; 
   }
   return res.json();
 }
+

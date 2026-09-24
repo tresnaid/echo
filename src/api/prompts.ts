@@ -1,4 +1,5 @@
 import { Prompt, Category, PromptMedia } from '../types';
+import { getApiUrl } from './config';
 
 export interface PromptInput {
   title: string;
@@ -17,7 +18,7 @@ export async function uploadMediaFiles(files: File[]): Promise<PromptMedia[]> {
     formData.append('files', file);
   }
 
-  const res = await fetch('/api/media/upload', {
+  const res = await fetch(getApiUrl('/api/media/upload'), {
     method: 'POST',
     body: formData,
   });
@@ -54,7 +55,7 @@ export async function fetchPrompts(params?: PromptQueryParams): Promise<Prompt[]
   }
 
   const qs = query.toString();
-  const res = await fetch(`/api/prompts${qs ? `?${qs}` : ''}`);
+  const res = await fetch(getApiUrl(`/api/prompts${qs ? `?${qs}` : ''}`));
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.error || 'Failed to fetch prompts');
@@ -63,7 +64,7 @@ export async function fetchPrompts(params?: PromptQueryParams): Promise<Prompt[]
 }
 
 export async function fetchPrompt(id: number): Promise<Prompt> {
-  const res = await fetch(`/api/prompts/${id}`);
+  const res = await fetch(getApiUrl(`/api/prompts/${id}`));
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.error || 'Failed to fetch prompt');
@@ -72,7 +73,7 @@ export async function fetchPrompt(id: number): Promise<Prompt> {
 }
 
 export async function createPrompt(data: PromptInput): Promise<Prompt> {
-  const res = await fetch('/api/prompts', {
+  const res = await fetch(getApiUrl('/api/prompts'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -85,7 +86,7 @@ export async function createPrompt(data: PromptInput): Promise<Prompt> {
 }
 
 export async function updatePrompt(id: number, data: PromptInput): Promise<Prompt> {
-  const res = await fetch(`/api/prompts/${id}`, {
+  const res = await fetch(getApiUrl(`/api/prompts/${id}`), {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -98,7 +99,7 @@ export async function updatePrompt(id: number, data: PromptInput): Promise<Promp
 }
 
 export async function deletePrompt(id: number): Promise<{ success: boolean; message: string; deleted_id: number }> {
-  const res = await fetch(`/api/prompts/${id}`, {
+  const res = await fetch(getApiUrl(`/api/prompts/${id}`), {
     method: 'DELETE',
   });
   if (!res.ok) {
@@ -109,7 +110,7 @@ export async function deletePrompt(id: number): Promise<{ success: boolean; mess
 }
 
 export async function fetchCategories(): Promise<Category[]> {
-  const res = await fetch('/api/categories');
+  const res = await fetch(getApiUrl('/api/categories'));
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.error || 'Failed to fetch categories');
@@ -118,10 +119,11 @@ export async function fetchCategories(): Promise<Category[]> {
 }
 
 export async function fetchTags(): Promise<string[]> {
-  const res = await fetch('/api/tags');
+  const res = await fetch(getApiUrl('/api/tags'));
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.error || 'Failed to fetch tags');
   }
   return res.json();
 }
+

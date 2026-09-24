@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
+import fs from 'node:fs';
 import { getDatabase } from './db/connection';
 import { createCollectionsRouter } from './routes/collections';
 import { createPromptsRouter, createCategoriesRouter, createTagsRouter } from './routes/prompts';
@@ -12,7 +13,16 @@ export function createApp(dbInstance?: Database.Database) {
   const app = express();
   const db = dbInstance || getDatabase();
 
-  app.use(cors());
+  const corsOrigin = process.env.CORS_ORIGIN;
+  if (corsOrigin) {
+    const origins = corsOrigin.includes(',')
+      ? corsOrigin.split(',').map((o) => o.trim())
+      : corsOrigin;
+    app.use(cors({ origin: origins, credentials: true }));
+  } else {
+    app.use(cors());
+  }
+
   app.use(express.json());
 
   // Static serving for uploaded media assets (images, thumbnails, videos)
@@ -45,13 +55,20 @@ export function createApp(dbInstance?: Database.Database) {
   app.use('/api/tags', createTagsRouter(db));
   app.use('/api/media', createMediaRouter(db));
 
-  // Serve static assets in production
+  // Serve static assets in production if dist exists (monolithic mode)
   if (process.env.NODE_ENV === 'production') {
     const distPath = path.resolve(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath));
+      app.get('*', (_req, res) => {
+        const indexPath = path.join(distPath, 'index.html');
+        if (fs.existsSync(indexPath)) {
+          res.sendFile(indexPath);
+        } else {
+          res.status(404).send('Not Found');
+        }
+      });
+    }
   }
 
   return { app, db };
