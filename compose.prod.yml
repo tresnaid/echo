@@ -1,0 +1,32 @@
+# ==============================================================================
+# Echo Production Docker Compose - VPS Deployment
+# ==============================================================================
+# Target host location: /srv/apps/echo/compose.yml
+#
+# Architecture:
+# - Prebuilt backend Docker image pulled from GitHub Container Registry (GHCR)
+# - Persistent SQLite database and uploads stored on host at /srv/apps/echo/data/
+# - Bound to localhost (127.0.0.1:3001) by default for reverse proxy integration
+# ==============================================================================
+
+services:
+  backend:
+    image: ghcr.io/tresnaid/echo:${ECHO_VERSION}
+    container_name: echo-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_BIND:-127.0.0.1:3001}:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - DATABASE_PATH=/app/data/echo.db
+      - UPLOADS_PATH=/app/data/uploads
+      - CORS_ORIGIN=${CORS_ORIGIN:-}
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

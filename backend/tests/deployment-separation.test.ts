@@ -93,4 +93,55 @@ describe('Standalone & Separate Deployment Support', () => {
     const { app } = createApp(db);
     expect(app.get('trust proxy')).toBe(1);
   });
+
+  it('validates health endpoint response structure and database connectivity status', async () => {
+    const { app } = createApp(db);
+    const res = await request(app).get('/api/health');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('status', 'ok');
+    expect(res.body).toHaveProperty('database', 'connected');
+    expect(res.body).toHaveProperty('timestamp');
+    expect(new Date(res.body.timestamp).getTime()).not.toBeNaN();
+  });
+
+  describe('Release Tag Filtering Logic', () => {
+    // Matching logic corresponding to GitHub Actions tag filters: 'v.*-be' and 'v*-be'
+    const isBackendReleaseTag = (tag: string): boolean => {
+      return /^v(?:\.|\d).*-be$/.test(tag) || /^v.*-be$/.test(tag);
+    };
+
+    it('matches valid backend release tags', () => {
+      const validBackendTags = [
+        'v.1.0.0-be',
+        'v.1.0.1-be',
+        'v.1.1.0-be',
+        'v.2.0.0-be',
+        'v1.0.0-be',
+        'v1.0.1-be',
+      ];
+
+      for (const tag of validBackendTags) {
+        expect(isBackendReleaseTag(tag), `Expected tag ${tag} to match backend release filter`).toBe(true);
+      }
+    });
+
+    it('rejects frontend tags and regular branch/tag names from triggering backend deployment', () => {
+      const nonBackendTags = [
+        'v.1.0.0',
+        'v.1.0.1',
+        'v.1.1.0',
+        'v1.0.0',
+        'v1.0.1',
+        'main',
+        'feat/new-api',
+        'release-1.0.0',
+        'v.1.0.0-fe',
+      ];
+
+      for (const tag of nonBackendTags) {
+        expect(isBackendReleaseTag(tag), `Expected tag ${tag} NOT to match backend release filter`).toBe(false);
+      }
+    });
+  });
 });

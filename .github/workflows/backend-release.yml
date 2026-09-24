@@ -1,0 +1,143 @@
+name: Deploy Backend to Production VPS
+
+on:
+  push:
+    tags:
+      - 'v.*-be'
+      - 'v*-be'
+
+jobs:
+  test-and-build:
+    name: Test & Build Backend Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: backend
+
+      - name: Type check backend
+        run: npm run typecheck
+        working-directory: backend
+
+      - name: Run backend tests
+        run: npm test
+        working-directory: backend
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=tag
+
+      - name: Build and push backend Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Production VPS
+    needs: test-and-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: GITHUB_REF_NAME
+          script: |
+            set -e
+            APP_DIR="/srv/apps/echo"
+            TAG="${GITHUB_REF_NAME}"
+
+            echo "==> Deploying Echo backend version: ${TAG}"
+
+            # Ensure application directory structure exists
+            mkdir -p "${APP_DIR}/data/uploads"
+            cd "${APP_DIR}"
+
+            # Check for compose.yml
+            if [ ! -f compose.yml ] && [ ! -f docker-compose.yml ]; then
+              echo "Error: compose.yml not found in ${APP_DIR} on the VPS."
+              echo "Please copy compose.prod.yml to ${APP_DIR}/compose.yml during one-time setup."
+              exit 1
+            fi
+
+            # Ensure .env exists
+            if [ ! -f .env ]; then
+              echo "Creating initial .env file..."
+              touch .env
+            fi
+
+            # Update or append ECHO_VERSION in .env
+            if grep -q '^ECHO_VERSION=' .env; then
+              sed -i "s/^ECHO_VERSION=.*/ECHO_VERSION=${TAG}/" .env
+            else
+              echo "ECHO_VERSION=${TAG}" >> .env
+            fi
+
+            # Pull target versioned image from GHCR
+            echo "==> Pulling image for version ${TAG}..."
+            docker compose pull backend
+
+            # Recreate backend container with the new version
+            echo "==> Starting backend container..."
+            docker compose up -d backend
+
+            # Verify health endpoint
+            echo "==> Verifying backend health..."
+            HEALTHY=0
+            for i in $(seq 1 15); do
+              HEALTH_RESPONSE=$(curl -s -f http://127.0.0.1:3001/api/health || true)
+              if echo "${HEALTH_RESPONSE}" | grep -q '"status":"ok"'; then
+                echo "==> Backend is healthy! Response: ${HEALTH_RESPONSE}"
+                HEALTHY=1
+                break
+              fi
+              echo "Waiting for backend to become healthy (attempt $i/15)..."
+              sleep 2
+            done
+
+            if [ "${HEALTHY}" -ne 1 ]; then
+              echo "==> Error: Health check failed after 30 seconds!"
+              echo "Backend container logs:"
+              docker compose logs --tail=50 backend
+              exit 1
+            fi
+
+            echo "==> Backend deployment completed successfully for version ${TAG}"
