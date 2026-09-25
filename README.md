@@ -6,13 +6,22 @@ Built with React, Atlas Design System, Express, and SQLite.
 
 ## Repository Structure
 
+The frontend and backend are maintained in the same repository as fully independent applications (no root workspace or shared package manager root).
+
 ```
 echo/
-├── backend/        # Express API + SQLite database
-├── frontend/       # React SPA (Vite)
-├── data/           # Persistent data (SQLite DB + media uploads)
-├── docs/           # Global standards and workflow docs
-└── docker-compose.yml
+├── frontend/           # React SPA (Vite + Atlas DS)
+│   ├── package.json
+│   ├── pnpm-lock.yaml
+│   └── .env.example
+├── backend/            # Express REST API + SQLite database
+│   ├── package.json
+│   ├── pnpm-lock.yaml
+│   └── .env.example
+├── docs/               # Global standards and workflow docs
+├── .github/            # CI/CD workflows (CI checks & VPS backend release)
+├── compose.prod.yml    # Source of truth for production VPS Compose deployment
+└── docker-compose.yml  # Local multi-service development Compose
 ```
 
 ## Getting Started
@@ -20,20 +29,75 @@ echo/
 ### Prerequisites
 
 - Node.js 20+
-- npm 10+
+- pnpm 10+
 
-### Install
+---
+
+## Frontend
+
+The frontend is an independent React SPA deployable directly to Vercel or locally with Vite.
+
+### Installation & Development
 
 ```bash
-npm install
+cd frontend
+pnpm install
+pnpm run dev
 ```
 
-### Development
+The frontend dev server starts at `http://localhost:5173`.
 
-Start both the API server and frontend dev server together:
+### Typecheck & Build
 
 ```bash
-npm run dev
+cd frontend
+pnpm run typecheck
+pnpm run build
+```
+
+### Vercel Deployment
+
+- **Root Directory:** `frontend`
+- **Framework Preset:** Vite
+- **Build Command:** `pnpm run build`
+- **Output Directory:** `dist`
+- **Environment Variables:**
+  - `VITE_API_URL`: `https://api-echo.tresnaid.space`
+
+---
+
+## Backend
+
+The backend is an independent Express REST API with SQLite persistence and media processing.
+
+### Installation & Development
+
+```bash
+cd backend
+pnpm install
+pnpm run dev
+```
+
+The API server starts at `http://localhost:3001`.
+
+### Typecheck, Tests & Build
+
+```bash
+cd backend
+pnpm run typecheck
+pnpm run test
+pnpm run build
+pnpm run start
+```
+
+---
+
+## Local Development with Docker Compose
+
+To run both services together using Docker:
+
+```bash
+docker compose up --build
 ```
 
 | Service  | URL                    |
@@ -41,33 +105,18 @@ npm run dev
 | Frontend | http://localhost:5173  |
 | Backend  | http://localhost:3001  |
 
-Run them individually:
+---
 
-```bash
-npm run dev:server   # backend only
-npm run dev:client   # frontend only
-```
+## Production VPS Deployment
 
-### Production (Docker)
+The production backend runs on a VPS at `/srv/apps/echo/` using a prebuilt container image from GitHub Container Registry (GHCR):
 
-```bash
-docker compose up --build
-```
+- `compose.prod.yml` defines the container service and is synchronized by GitHub Actions on release tags (`v*-be`).
+- Persistent SQLite database and uploads live in `/srv/apps/echo/data/` on the VPS and are preserved across deployments.
+- No manual VPS filesystem changes are required.
 
-See [`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md) for service-specific details.
-
-## Scripts
-
-| Command              | Description                          |
-| -------------------- | ------------------------------------ |
-| `npm run dev`        | Start both services concurrently     |
-| `npm run dev:server` | Start backend only                   |
-| `npm run dev:client` | Start frontend only                  |
-| `npm run build`      | Build the frontend for production    |
-| `npm run start`      | Start the compiled backend server    |
-| `npm run test`       | Run backend test suite               |
-| `npm run typecheck`  | Type-check both workspaces           |
+---
 
 ## Design System
 
-Echo uses the [Atlas Design System](https://github.com/gumelartresnadwinanda/atlas) (`@tresnaid/atlas`) for all UI components, tokens, and theming.
+Echo uses the [Atlas Design System](https://github.com/gumelartresnadwinanda/atlas) (`@tresnaid/atlas`) for UI components, tokens, and theming.

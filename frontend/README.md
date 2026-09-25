@@ -7,62 +7,75 @@ React SPA for the Echo prompt library. Built with Vite and the [Atlas Design Sys
 - **Framework:** React 19
 - **Bundler:** Vite 6
 - **Language:** TypeScript
+- **Package Manager:** pnpm
 - **Design System:** Atlas (`@tresnaid/atlas`)
 
 ## Structure
 
 ```
-src/
-├── main.tsx              # App entry point
-├── App.tsx               # Root component — layout, routing, state
-├── providers.tsx         # ThemeProvider + AnnouncementProvider setup
-├── api/
-│   ├── config.ts         # API base URL resolution + media URL helpers
-│   ├── prompts.ts        # Prompt API calls
-│   └── collections.ts    # Collection API calls
-├── components/
-│   ├── prompts/          # PromptCard, PromptGrid, PromptFormModal, PromptDetailModal, FilterBar, DeletePromptDialog
-│   └── collections/      # SidebarNavigation, CreateCollectionModal, RenameCollectionModal, DeleteCollectionDialog
-└── types/                # Shared TypeScript types
+frontend/
+├── src/
+│   ├── main.tsx              # App entry point
+│   ├── App.tsx               # Root component — layout, routing, state
+│   ├── providers.tsx         # ThemeProvider + AnnouncementProvider setup
+│   ├── api/
+│   │   ├── config.ts         # API base URL resolution + media URL helpers
+│   │   ├── prompts.ts        # Prompt API calls
+│   │   └── collections.ts    # Collection API calls
+│   ├── components/
+│   │   ├── prompts/          # PromptCard, PromptGrid, PromptFormModal, PromptDetailModal, FilterBar, DeletePromptDialog
+│   │   └── collections/      # SidebarNavigation, CreateCollectionModal, RenameCollectionModal, DeleteCollectionDialog
+│   └── types/                # TypeScript types
+├── package.json
+├── pnpm-lock.yaml
+├── .env.example
+├── tsconfig.json
+├── vite.config.ts
+└── Dockerfile
 ```
 
 ## Development
 
 ```bash
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
-The dev server starts at `http://localhost:5173` and proxies API requests to the backend.
+The dev server starts at `http://localhost:5173` and proxies API requests to the backend (`http://localhost:3001`).
 
-### Connecting to the backend
+### Connecting to a Custom Backend
 
 Set `VITE_API_URL` to point at the backend:
 
 ```bash
-VITE_API_URL=http://localhost:3001 npm run dev
+VITE_API_URL=https://api-echo.tresnaid.space pnpm run dev
 ```
 
-If `VITE_API_URL` is not set, API calls are made relative to the current origin (useful when served behind a reverse proxy).
+If `VITE_API_URL` is empty, API calls are made relative to the current origin (or proxied via Vite in development).
 
 ## Scripts
 
-| Command            | Description                              |
-| ------------------ | ---------------------------------------- |
-| `npm run dev`      | Start Vite dev server with hot reload    |
-| `npm run build`    | Type-check and build to `dist/`          |
-| `npm run typecheck`| Type-check without emitting              |
+| Command             | Description                              |
+| ------------------- | ---------------------------------------- |
+| `pnpm run dev`      | Start Vite dev server with hot reload    |
+| `pnpm run build`    | Type-check and build SPA to `dist/`      |
+| `pnpm run typecheck`| Run TypeScript compiler without emitting |
+
+## Vercel Deployment
+
+Configure your project in the Vercel Dashboard:
+
+- **Root Directory:** `frontend`
+- **Framework Preset:** Vite
+- **Build Command:** `pnpm run build`
+- **Output Directory:** `dist`
+- **Install Command:** `pnpm install`
+- **Environment Variables:**
+  - `VITE_API_URL`: `https://api-echo.tresnaid.space`
 
 ## Production (Docker)
 
 ```bash
-# From the repo root
-docker compose up --build frontend
-```
-
-The built SPA is served via Nginx on port 80 (mapped to `5173` by default).
-
-Pass `VITE_API_URL` at build time to configure the backend URL:
-
-```bash
-VITE_API_URL=https://api.example.com docker compose up --build frontend
+# Build standalone frontend container
+docker build --build-arg VITE_API_URL=https://api-echo.tresnaid.space -t echo-frontend .
 ```
