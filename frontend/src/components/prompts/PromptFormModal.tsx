@@ -518,16 +518,27 @@ export function PromptFormModal({
                         }}
                       >
                         {item.media_type === 'image' ? (
-                          <img
-                            src={getMediaUrl(item.thumbnail_url || item.medium_url || item.url)}
-                            alt={item.caption || item.file_name || 'Media preview'}
+                          <div
                             style={{
                               width: '100%',
                               height: '84px',
-                              objectFit: 'cover',
-                              display: 'block',
+                              backgroundColor: '#0f172a',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
                             }}
-                          />
+                          >
+                            <img
+                              src={getMediaUrl(item.thumbnail_url || item.medium_url || item.url)}
+                              alt={item.caption || item.file_name || 'Media preview'}
+                              style={{
+                                maxWidth: '100%',
+                                maxHeight: '84px',
+                                objectFit: 'contain',
+                                display: 'block',
+                              }}
+                            />
+                          </div>
                         ) : (
                           <div
                             style={{

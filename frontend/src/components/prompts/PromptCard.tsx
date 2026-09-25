@@ -153,7 +153,7 @@ export function PromptCard({
             width: '100%',
             overflow: 'hidden',
             backgroundColor: primaryMedia.media_type === 'video' ? '#0f172a' : 'var(--atlas-color-bg-subtle, #f1f5f9)',
-            ...(primaryMedia.aspect_ratio ? { aspectRatio: String(primaryMedia.aspect_ratio) } : {}),
+            ...(primaryMedia.aspect_ratio ? { aspectRatio: String(primaryMedia.aspect_ratio).replace(':', '/') } : {}),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -169,12 +169,11 @@ export function PromptCard({
                 width: '100%',
                 height: 'auto',
                 display: 'block',
-                transition: 'transform 0.3s ease',
-                transform: isHovered ? 'scale(1.03)' : 'none',
+                objectFit: 'contain',
               }}
             />
           ) : (
-            <>
+            <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {primaryMedia.thumbnail_url ? (
                 <img
                   src={getMediaUrl(primaryMedia.thumbnail_url)}
@@ -185,9 +184,8 @@ export function PromptCard({
                     width: '100%',
                     height: 'auto',
                     display: 'block',
-                    opacity: 0.88,
-                    transition: 'transform 0.3s ease',
-                    transform: isHovered ? 'scale(1.03)' : 'none',
+                    objectFit: 'contain',
+                    opacity: 0.9,
                   }}
                 />
               ) : (
@@ -212,7 +210,7 @@ export function PromptCard({
                 <PlayIcon size={10} />
                 <span>VIDEO</span>
               </div>
-            </>
+            </div>
           )}
 
           {/* Multiple Media Indicator */}

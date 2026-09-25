@@ -212,7 +212,7 @@ export function PromptDetailModal({
             <div
               style={{
                 width: '100%',
-                maxHeight: 'min(420px, 45vh)',
+                maxHeight: 'min(500px, 50vh)',
                 borderRadius: 'var(--atlas-radius-md, 6px)',
                 overflow: 'hidden',
                 display: 'flex',
@@ -227,7 +227,9 @@ export function PromptDetailModal({
                   alt={activeMedia.caption || prompt.title}
                   style={{
                     maxWidth: '100%',
-                    maxHeight: 'min(420px, 45vh)',
+                    maxHeight: 'min(500px, 50vh)',
+                    width: 'auto',
+                    height: 'auto',
                     objectFit: 'contain',
                     display: 'block',
                   }}
@@ -241,8 +243,11 @@ export function PromptDetailModal({
                   poster={activeMedia.medium_url || activeMedia.thumbnail_url ? getMediaUrl(activeMedia.medium_url || activeMedia.thumbnail_url) : undefined}
                   src={getMediaUrl(activeMedia.url)}
                   style={{
+                    maxWidth: '100%',
+                    maxHeight: 'min(500px, 50vh)',
                     width: '100%',
-                    maxHeight: 'min(420px, 45vh)',
+                    height: 'auto',
+                    objectFit: 'contain',
                     backgroundColor: '#0f172a',
                     display: 'block',
                   }}
