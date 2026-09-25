@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@tresnaid/atlas':
         specifier: latest
-        version: 0.0.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        version: 0.0.2(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@types/react':
         specifier: ^19.0.8
         version: 19.3.0
@@ -424,8 +424,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@tresnaid/atlas@0.0.1':
-    resolution: {integrity: sha512-YuLaTGKmsoCUzJHw0Z+nFiVtzHRSFY006kub0xI/r+VYSPyFdB56SDR+RTg9N7aOS3bCDz/Tm2F9Pi5fj8YApA==}
+  '@tresnaid/atlas@0.0.2':
+    resolution: {integrity: sha512-V6syGR94C54Es0vq5UzfoleRJt852oMnQnzlpzflVSEZJ/hiowI1RCYm6NNWDCThzUSDD54XFEnglRa7E9eeYQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: '>=18.0.0'
@@ -938,7 +938,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.63.5':
     optional: true
 
-  '@tresnaid/atlas@0.0.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@tresnaid/atlas@0.0.2(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
