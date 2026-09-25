@@ -1,4 +1,5 @@
-import { SearchInput, Button, Tag } from '@tresnaid/atlas';
+import React from 'react';
+import { SearchInput, Button, Tag, FilterPills, FilterPillItem } from '@tresnaid/atlas';
 import { Category } from '../../types';
 
 interface FilterBarProps {
@@ -9,8 +10,113 @@ interface FilterBarProps {
   selectedTag: string;
   onTagChange: (tag: string) => void;
   categories: Category[];
-  availableTags: string[];
+  availableTags?: string[];
+  totalResults?: number;
 }
+
+function TextIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M17 6.1H3" />
+      <path d="M21 12.1H3" />
+      <path d="M15.1 18H3" />
+    </svg>
+  );
+}
+
+function CodeIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="16 18 22 12 16 6" />
+      <polyline points="8 6 2 12 8 18" />
+    </svg>
+  );
+}
+
+function ImageIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+      <circle cx="9" cy="9" r="2" />
+      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+    </svg>
+  );
+}
+
+function VideoIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="m22 8-6 4 6 4V8Z" />
+      <rect width="14" height="12" x="2" y="6" rx="2" ry="2" />
+    </svg>
+  );
+}
+
+function SparklesIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z" />
+    </svg>
+  );
+}
+
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  all: <SparklesIcon size={14} />,
+  text: <TextIcon size={14} />,
+  code: <CodeIcon size={14} />,
+  image: <ImageIcon size={14} />,
+  video: <VideoIcon size={14} />,
+};
 
 export function FilterBar({
   search,
@@ -29,17 +135,45 @@ export function FilterBar({
     onTagChange('');
   };
 
+  // Build filter pills items
+  const filterItems: FilterPillItem[] = [
+    {
+      id: '',
+      label: 'All Media',
+      icon: CATEGORY_ICONS.all,
+    },
+    ...categories.map((cat) => ({
+      id: cat.id,
+      label: cat.name,
+      icon: CATEGORY_ICONS[cat.id.toLowerCase()] || <TextIcon size={14} />,
+    })),
+  ];
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      {/* Search Input & Reset Row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <div style={{ position: 'relative', width: '100%', maxWidth: '280px' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.75rem',
+        width: '100%',
+      }}
+    >
+      {/* Top Search & Reset Row */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.625rem',
+          width: '100%',
+        }}
+      >
+        <div style={{ flex: '1 1 320px', maxWidth: '480px' }}>
           <SearchInput
             value={search}
             onValueChange={onSearchChange}
             onClear={() => onSearchChange('')}
-            placeholder="Search prompts..."
-            size="sm"
+            placeholder="Search prompts by title, description, or tag..."
+            size="md"
           />
         </div>
 
@@ -48,88 +182,63 @@ export function FilterBar({
             variant="ghost"
             size="sm"
             onClick={handleClearAll}
-            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', flexShrink: 0 }}
+            style={{
+              padding: '0.375rem 0.625rem',
+              fontSize: '0.8125rem',
+              color: 'var(--atlas-color-text-secondary, #475569)',
+              flexShrink: 0,
+            }}
           >
-            Reset
+            Clear Filters
           </Button>
         )}
       </div>
 
-      {/* Category Tabs Filter Under Search */}
+      {/* Category Filter Pills & Active Tag Chip Row */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.375rem',
+          gap: '0.5rem',
+          flexWrap: 'wrap',
           overflowX: 'auto',
-          paddingBottom: '0.125rem',
           WebkitOverflowScrolling: 'touch',
-          maxWidth: '100%',
+          paddingBottom: '2px',
         }}
       >
-        <button
-          type="button"
-          onClick={() => onCategoryChange('')}
-          style={{
-            position: 'relative',
-            padding: '0.25rem 0.625rem',
-            fontSize: '0.75rem',
-            fontWeight: selectedCategory === '' ? 600 : 500,
-            borderRadius: 'var(--atlas-radius-sm, 4px)',
-            border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-            borderTop: '3px solid #64748b',
-            backgroundColor: selectedCategory === '' ? 'var(--atlas-color-bg-subtle, #f1f5f9)' : '#ffffff',
-            color: selectedCategory === '' ? 'var(--atlas-color-text-primary, #0f172a)' : 'var(--atlas-color-text-secondary, #475569)',
-            cursor: 'pointer',
-            flexShrink: 0,
-            transition: 'background-color 0.15s ease, color 0.15s ease',
-          }}
-        >
-          All
-        </button>
+        <FilterPills
+          items={filterItems}
+          value={selectedCategory}
+          onChange={(newId) => onCategoryChange(newId)}
+          size="sm"
+          variant="pills"
+          aria-label="Filter by prompt category"
+        />
 
-        {categories.map((cat) => {
-          const catColors: Record<string, string> = {
-            text: '#3b82f6',
-            code: '#8b5cf6',
-            image: '#10b981',
-            video: '#f59e0b',
-          };
-          const accentColor = catColors[cat.id.toLowerCase()] || '#64748b';
-          const isSelected = selectedCategory === cat.id;
-
-          return (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => onCategoryChange(isSelected ? '' : cat.id)}
+        {/* Active Tag Filter Indicator */}
+        {selectedTag && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+              marginLeft: '0.25rem',
+              flexShrink: 0,
+            }}
+          >
+            <span
               style={{
-                position: 'relative',
-                padding: '0.25rem 0.625rem',
                 fontSize: '0.75rem',
-                fontWeight: isSelected ? 600 : 500,
-                borderRadius: 'var(--atlas-radius-sm, 4px)',
-                border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-                borderTop: `3px solid ${accentColor}`,
-                backgroundColor: isSelected ? 'var(--atlas-color-bg-subtle, #f1f5f9)' : '#ffffff',
-                color: isSelected ? 'var(--atlas-color-text-primary, #0f172a)' : 'var(--atlas-color-text-secondary, #475569)',
-                cursor: 'pointer',
-                flexShrink: 0,
-                transition: 'background-color 0.15s ease, color 0.15s ease',
+                color: 'var(--atlas-color-text-muted, #64748b)',
+                fontWeight: 500,
               }}
             >
-              {cat.name}
-            </button>
-          );
-        })}
-
-        {/* Active Tag Chip (only shown when a tag filter is active) */}
-        {selectedTag && (
-          <div style={{ marginLeft: '0.25rem', flexShrink: 0 }}>
+              Tag:
+            </span>
             <Tag
               size="sm"
               variant="solid"
-              intent="neutral"
+              intent="primary"
               onRemove={() => onTagChange('')}
             >
               #{selectedTag}

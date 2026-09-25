@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Dialog,
-  Stack,
   Text,
   Badge,
   Tag,
@@ -20,11 +19,11 @@ interface PromptDetailModalProps {
   onTagClick?: (tag: string) => void;
 }
 
-const CATEGORY_INTENTS: Record<string, 'info' | 'success' | 'warning' | 'danger' | 'neutral'> = {
-  text: 'info',
-  code: 'neutral',
-  image: 'success',
-  video: 'warning',
+const CATEGORY_META: Record<string, { intent: 'info' | 'neutral' | 'success' | 'warning' | 'danger'; label: string }> = {
+  text: { intent: 'info', label: 'Text' },
+  code: { intent: 'neutral', label: 'Code' },
+  image: { intent: 'success', label: 'Image' },
+  video: { intent: 'warning', label: 'Video' },
 };
 
 function PlayIcon({ size = 12 }: { size?: number }) {
@@ -61,6 +60,26 @@ function ImageIcon({ size = 12 }: { size?: number }) {
   );
 }
 
+function ExternalLinkIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  );
+}
+
 export function PromptDetailModal({
   prompt,
   isOpen,
@@ -73,9 +92,8 @@ export function PromptDetailModal({
 
   if (!prompt) return null;
 
-  const categoryIntent = prompt.category_id
-    ? CATEGORY_INTENTS[prompt.category_id.toLowerCase()] || 'info'
-    : 'neutral';
+  const categoryKey = (prompt.category_id || 'text').toLowerCase();
+  const categoryInfo = CATEGORY_META[categoryKey] || CATEGORY_META.text;
 
   const mediaList = prompt.media || [];
   const activeMedia: PromptMedia | undefined = mediaList[selectedMediaIdx] || mediaList[0];
@@ -92,7 +110,16 @@ export function PromptDetailModal({
       title={prompt.title}
       size="lg"
       footer={
-        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            width: '100%',
+            alignItems: 'center',
+            gap: '0.75rem',
+            flexWrap: 'wrap',
+          }}
+        >
           <Button
             variant="ghost"
             isDanger
@@ -104,44 +131,94 @@ export function PromptDetailModal({
             Delete Prompt
           </Button>
 
-          <Button
-            variant="primary"
-            onClick={() => {
-              onClose();
-              onEdit(prompt);
-            }}
-          >
-            Edit Prompt
-          </Button>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <Button
+              variant="outline"
+              onClick={onClose}
+            >
+              Done
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                onClose();
+                onEdit(prompt);
+              }}
+            >
+              Edit Prompt
+            </Button>
+          </div>
         </div>
       }
     >
-      <Stack direction="vertical" gap="4">
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.25rem',
+          maxHeight: 'calc(80vh - 120px)',
+          overflowY: 'auto',
+          paddingRight: '2px',
+        }}
+      >
+        {/* Metadata & Taxonomy Header Strip */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.625rem',
+            paddingBottom: '0.5rem',
+            borderBottom: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <Badge variant="subtle" intent={categoryInfo.intent} size="md">
+              {prompt.category_name || categoryInfo.label}
+            </Badge>
+
+            {prompt.collection_name && (
+              <Badge variant="outline" intent="neutral" size="md">
+                📁 {prompt.collection_name}
+              </Badge>
+            )}
+          </div>
+
+          <Text size="xs" color="muted" style={{ fontWeight: 500 }}>
+            Created on {new Date(prompt.created_at).toLocaleDateString(undefined, {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </Text>
+        </div>
+
         {/* Media Showcase / Viewer */}
         {mediaList.length > 0 && activeMedia && (
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '0.5rem',
-              borderRadius: 'var(--atlas-radius-md, 6px)',
+              gap: '0.625rem',
+              borderRadius: 'var(--atlas-radius-lg, 8px)',
               overflow: 'hidden',
               backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
               border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
               padding: '0.75rem',
             }}
           >
-            {/* Active Media Container */}
+            {/* Active Media Canvas */}
             <div
               style={{
                 width: '100%',
-                maxHeight: 'min(380px, 45vh)',
-                borderRadius: 'var(--atlas-radius-sm, 4px)',
+                maxHeight: 'min(420px, 45vh)',
+                borderRadius: 'var(--atlas-radius-md, 6px)',
                 overflow: 'hidden',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: activeMedia.media_type === 'video' ? '#0f172a' : '#000000',
+                backgroundColor: activeMedia.media_type === 'video' ? '#0f172a' : '#090d16',
               }}
             >
               {activeMedia.media_type === 'image' ? (
@@ -150,7 +227,7 @@ export function PromptDetailModal({
                   alt={activeMedia.caption || prompt.title}
                   style={{
                     maxWidth: '100%',
-                    maxHeight: 'min(380px, 45vh)',
+                    maxHeight: 'min(420px, 45vh)',
                     objectFit: 'contain',
                     display: 'block',
                   }}
@@ -165,7 +242,7 @@ export function PromptDetailModal({
                   src={getMediaUrl(activeMedia.url)}
                   style={{
                     width: '100%',
-                    maxHeight: 'min(380px, 45vh)',
+                    maxHeight: 'min(420px, 45vh)',
                     backgroundColor: '#0f172a',
                     display: 'block',
                   }}
@@ -179,15 +256,16 @@ export function PromptDetailModal({
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                padding: '0 0.25rem',
+                padding: '0.125rem 0.25rem',
+                gap: '0.5rem',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
                 <Badge variant="subtle" intent={activeMedia.media_type === 'video' ? 'warning' : 'info'} size="sm">
                   {activeMedia.media_type.toUpperCase()}
                 </Badge>
                 {activeMedia.caption && (
-                  <Text size="xs" color="secondary">
+                  <Text size="xs" color="secondary" truncate>
                     {activeMedia.caption}
                   </Text>
                 )}
@@ -198,12 +276,18 @@ export function PromptDetailModal({
                 target="_blank"
                 rel="noreferrer noopener"
                 style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
                   fontSize: '0.75rem',
+                  fontWeight: 500,
                   color: 'var(--atlas-color-text-brand, #2563eb)',
                   textDecoration: 'none',
+                  flexShrink: 0,
                 }}
               >
-                Open original
+                <span>Full resolution</span>
+                <ExternalLinkIcon size={11} />
               </a>
             </div>
 
@@ -216,6 +300,7 @@ export function PromptDetailModal({
                   overflowX: 'auto',
                   paddingTop: '0.25rem',
                   paddingBottom: '0.25rem',
+                  WebkitOverflowScrolling: 'touch',
                 }}
               >
                 {mediaList.map((m, idx) => {
@@ -227,10 +312,10 @@ export function PromptDetailModal({
                       onClick={() => setSelectedMediaIdx(idx)}
                       style={{
                         position: 'relative',
-                        width: '56px',
-                        height: '42px',
+                        width: '60px',
+                        height: '44px',
                         flexShrink: 0,
-                        borderRadius: '4px',
+                        borderRadius: 'var(--atlas-radius-sm, 4px)',
                         overflow: 'hidden',
                         padding: 0,
                         border: isSelected
@@ -238,6 +323,7 @@ export function PromptDetailModal({
                           : '1px solid var(--atlas-color-border-subtle, #cbd5e1)',
                         cursor: 'pointer',
                         backgroundColor: '#0f172a',
+                        transition: 'all 0.15s ease',
                       }}
                     >
                       {m.thumbnail_url || m.url ? (
@@ -289,67 +375,67 @@ export function PromptDetailModal({
           </div>
         )}
 
-        {/* Metadata Bar */}
-        <Stack direction="horizontal" align="center" justify="between" wrap="wrap" gap="2">
-          <Stack direction="horizontal" align="center" gap="2">
-            {prompt.category_id ? (
-              <Badge variant="subtle" intent={categoryIntent}>
-                {prompt.category_name || prompt.category_id.toUpperCase()}
-              </Badge>
-            ) : (
-              <Badge variant="subtle" intent="neutral">
-                TEXT
-              </Badge>
-            )}
-
-            {prompt.collection_name && (
-              <Badge variant="outline" intent="neutral">
-                {prompt.collection_name}
-              </Badge>
-            )}
-          </Stack>
-
-          <Text size="xs" color="muted">
-            Created on {new Date(prompt.created_at).toLocaleDateString(undefined, {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })}
-          </Text>
-        </Stack>
-
-        {/* Description */}
+        {/* Short Description */}
         {prompt.description && (
-          <div>
-            <Text size="xs" color="muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: '0.25rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <span
+              style={{
+                fontSize: '0.6875rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                color: 'var(--atlas-color-text-muted, #64748b)',
+              }}
+            >
               Description
-            </Text>
+            </span>
             <Text size="sm" color="secondary" style={{ lineHeight: 1.6 }}>
               {prompt.description}
             </Text>
           </div>
         )}
 
-        {/* Raw Prompt Text with 1-click Copy via CodeSnippet */}
-        <div>
+        {/* Exact Raw Prompt Text with 1-click Copy via CodeSnippet */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span
+              style={{
+                fontSize: '0.6875rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                color: 'var(--atlas-color-text-muted, #64748b)',
+              }}
+            >
+              Prompt Text
+            </span>
+          </div>
           <CodeSnippet
-            title="Prompt Text"
+            title="Raw Prompt"
             text={prompt.prompt_text}
             language={prompt.category_name || (prompt.category_id ? prompt.category_id.toUpperCase() : 'TEXT')}
             variant="subtle"
             scrollable
             showCopyButton
-            copyLabel="Copy Text"
+            copyLabel="Copy Prompt"
             copiedLabel="Copied!"
           />
         </div>
 
-        {/* Usage Instructions / Description */}
+        {/* Usage Instructions */}
         {prompt.usage_description && (
-          <div>
-            <Text size="xs" color="muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: '0.25rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+            <span
+              style={{
+                fontSize: '0.6875rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                color: 'var(--atlas-color-text-muted, #64748b)',
+              }}
+            >
               Usage Instructions
-            </Text>
+            </span>
             <div
               style={{
                 padding: '0.875rem 1rem',
@@ -357,7 +443,7 @@ export function PromptDetailModal({
                 backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
                 border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
                 fontSize: '0.875rem',
-                lineHeight: 1.5,
+                lineHeight: 1.55,
                 color: 'var(--atlas-color-text-secondary, #334155)',
                 whiteSpace: 'pre-wrap',
               }}
@@ -367,17 +453,25 @@ export function PromptDetailModal({
           </div>
         )}
 
-        {/* Tags */}
+        {/* Interactive Tags */}
         {prompt.tags && prompt.tags.length > 0 && (
-          <div>
-            <Text size="xs" color="muted" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: '0.375rem' }}>
-              Tags
-            </Text>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+            <span
+              style={{
+                fontSize: '0.6875rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                color: 'var(--atlas-color-text-muted, #64748b)',
+              }}
+            >
+              Tags ({prompt.tags.length})
+            </span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
               {prompt.tags.map((tag, idx) => (
                 <Tag
                   key={idx}
-                  size="sm"
+                  size="md"
                   variant="subtle"
                   intent="neutral"
                   onSelect={
@@ -396,7 +490,7 @@ export function PromptDetailModal({
             </div>
           </div>
         )}
-      </Stack>
+      </div>
     </Dialog>
   );
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ThemeProvider, AnnouncementProvider } from '@tresnaid/atlas';
 import '@tresnaid/atlas/styles.css';
+import './index.css';
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -11,3 +12,4 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     </ThemeProvider>
   );
 }
+
