@@ -202,36 +202,35 @@ export function PromptDetailModal({
               flexDirection: 'column',
               gap: '0.625rem',
               borderRadius: 'var(--atlas-radius-lg, 8px)',
-              overflow: 'hidden',
               backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
               border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
               padding: '0.75rem',
+              flexShrink: 0,
             }}
           >
-            {/* Active Media Canvas */}
+            {/* Active Media Container */}
             <div
               style={{
                 width: '100%',
-                maxHeight: 'min(500px, 50vh)',
-                borderRadius: 'var(--atlas-radius-md, 6px)',
-                overflow: 'hidden',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: activeMedia.media_type === 'video' ? '#0f172a' : '#090d16',
+                padding: '0.25rem 0',
               }}
             >
               {activeMedia.media_type === 'image' ? (
                 <img
-                  src={getMediaUrl(activeMedia.medium_url || activeMedia.url)}
+                  src={getMediaUrl(activeMedia.url || activeMedia.medium_url || activeMedia.thumbnail_url)}
                   alt={activeMedia.caption || prompt.title}
                   style={{
                     maxWidth: '100%',
-                    maxHeight: 'min(500px, 50vh)',
+                    maxHeight: 'min(520px, 55vh)',
                     width: 'auto',
                     height: 'auto',
                     objectFit: 'contain',
                     display: 'block',
+                    borderRadius: 'var(--atlas-radius-md, 6px)',
+                    boxShadow: '0 1px 3px 0 rgba(15, 23, 42, 0.08)',
                   }}
                 />
               ) : (
@@ -244,12 +243,13 @@ export function PromptDetailModal({
                   src={getMediaUrl(activeMedia.url)}
                   style={{
                     maxWidth: '100%',
-                    maxHeight: 'min(500px, 50vh)',
-                    width: '100%',
+                    maxHeight: 'min(520px, 55vh)',
+                    width: 'auto',
                     height: 'auto',
-                    objectFit: 'contain',
                     backgroundColor: '#0f172a',
                     display: 'block',
+                    borderRadius: 'var(--atlas-radius-md, 6px)',
+                    boxShadow: '0 1px 3px 0 rgba(15, 23, 42, 0.08)',
                   }}
                 />
               )}
