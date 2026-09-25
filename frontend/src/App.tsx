@@ -218,8 +218,27 @@ export function App() {
             {/* Brand / Title & Subtitle */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-                <Heading level={1} style={{ fontSize: isMobile ? '1.375rem' : '1.5rem', fontWeight: 700, letterSpacing: '-0.02em', margin: 0 }}>
-                  Echo
+                <Heading
+                  level={1}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    fontSize: isMobile ? '1.375rem' : '1.5rem',
+                    fontWeight: 700,
+                    letterSpacing: '-0.02em',
+                    margin: 0,
+                  }}
+                >
+                  <img
+                    src="/echo-mark.svg"
+                    alt=""
+                    width={isMobile ? 30 : 34}
+                    height={isMobile ? 30 : 34}
+                    aria-hidden="true"
+                    style={{ display: 'block', flexShrink: 0 }}
+                  />
+                  <span>Echo</span>
                 </Heading>
                 <Badge variant="subtle" intent="info" size="sm">
                   MVP
@@ -490,9 +509,19 @@ export function App() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap' }}>
-              <Text size="sm" weight="semibold" style={{ color: 'var(--atlas-color-text-primary, #0f172a)' }}>
-                Echo
-              </Text>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4375rem' }}>
+                <img
+                  src="/echo-mark.svg"
+                  alt=""
+                  width={24}
+                  height={24}
+                  aria-hidden="true"
+                  style={{ display: 'block', flexShrink: 0 }}
+                />
+                <Text size="sm" weight="semibold" style={{ color: 'var(--atlas-color-text-primary, #0f172a)' }}>
+                  Echo
+                </Text>
+              </div>
               <Text size="xs" color="muted">
                 • Local-first prompt library
               </Text>
