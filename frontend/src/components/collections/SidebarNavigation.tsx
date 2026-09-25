@@ -3,7 +3,7 @@ import {
   NavList,
   NavItem,
   IconButton,
-} from '@atlas/ds';
+} from '@tresnaid/atlas';
 import { Collection, CollectionCounts, SelectedCollectionView } from '../../types';
 import { CreateCollectionModal } from './CreateCollectionModal';
 import { RenameCollectionModal } from './RenameCollectionModal';

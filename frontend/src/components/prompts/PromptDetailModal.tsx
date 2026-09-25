@@ -7,7 +7,7 @@ import {
   Tag,
   Button,
   CodeSnippet,
-} from '@atlas/ds';
+} from '@tresnaid/atlas';
 import { Prompt, PromptMedia } from '../../types';
 import { getMediaUrl } from '../../api/config';
 
