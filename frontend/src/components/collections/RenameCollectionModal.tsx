@@ -60,8 +60,12 @@ export function RenameCollectionModal({
   return (
     <Dialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) handleClose();
+        else onOpenChange(true);
+      }}
       title="Rename Collection"
+      description="Enter a new title for this prompt collection."
       size="sm"
       footer={
         <Stack direction="horizontal" justify="end" gap="3">
@@ -69,7 +73,7 @@ export function RenameCollectionModal({
             Cancel
           </Button>
           <Button variant="primary" onClick={() => handleSubmit()} isLoading={submitting}>
-            Save
+            Save Changes
           </Button>
         </Stack>
       }

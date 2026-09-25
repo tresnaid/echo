@@ -38,6 +38,45 @@ function TrashIcon({ size = 13 }: { size?: number }) {
   );
 }
 
+function UploadIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
+  );
+}
+
+function LinkIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  );
+}
+
 interface PromptFormModalProps {
   prompt?: Prompt | null;
   collections: Collection[];
@@ -222,7 +261,7 @@ export function PromptFormModal({
 
       const payload = {
         title: title.trim(),
-        prompt_text: promptText, // exact raw prompt text
+        prompt_text: promptText, // exact raw prompt text preserved
         description: description.trim() || null,
         usage_description: usageDescription.trim() || null,
         collection_id: collectionId ? parseInt(collectionId, 10) : null,
@@ -259,8 +298,8 @@ export function PromptFormModal({
         title={isEditing ? 'Edit Prompt' : 'Create New Prompt'}
         description={
           isEditing
-            ? 'Update your prompt text, descriptions, media attachments, and optional organization tags.'
-            : 'Add a reusable prompt to your library. Organization and media attachments are optional.'
+            ? 'Update your prompt text, descriptions, media attachments, and optional tags.'
+            : 'Add a structured, reusable prompt to your personal prompt library.'
         }
         size="lg"
         footer={
@@ -283,10 +322,17 @@ export function PromptFormModal({
           </Stack>
         }
       >
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            maxHeight: 'calc(80vh - 140px)',
+            overflowY: 'auto',
+            paddingRight: '4px',
+          }}
+        >
           <Stack direction="vertical" gap="4">
             {errors.general && (
-              <Text color="muted" style={{ color: 'var(--atlas-color-danger, #ef4444)' }}>
+              <Text color="muted" style={{ color: 'var(--atlas-color-danger, #ef4444)', fontSize: '0.875rem' }}>
                 {errors.general}
               </Text>
             )}
@@ -309,7 +355,7 @@ export function PromptFormModal({
             <Field
               label="Prompt Text"
               isRequired
-              description="The exact prompt to be copied and used."
+              description="The exact raw prompt to be copied and used."
               errorMessage={errors.prompt_text}
             >
               <Textarea
@@ -318,12 +364,13 @@ export function PromptFormModal({
                   setPromptText(e.target.value);
                   if (errors.prompt_text) setErrors({ ...errors, prompt_text: undefined });
                 }}
-                placeholder="Enter prompt instructions, code template, or generative prompt..."
+                placeholder="Enter prompt instructions, code template, or generative instructions..."
                 rows={6}
                 disabled={submitting}
                 style={{
                   fontFamily: 'var(--atlas-font-mono, monospace)',
                   fontSize: '0.875rem',
+                  lineHeight: 1.5,
                 }}
               />
             </Field>
@@ -331,7 +378,7 @@ export function PromptFormModal({
             {/* Organization row: Category & Collection */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
               {/* Category */}
-              <Field label="Category" description="Optional prompt medium type">
+              <Field label="Category" description="Optional medium type">
                 <Select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
@@ -347,7 +394,7 @@ export function PromptFormModal({
               </Field>
 
               {/* Collection */}
-              <Field label="Collection" description="Optional organizational group">
+              <Field label="Collection" description="Optional organizational folder">
                 <Select
                   value={collectionId}
                   onChange={handleCollectionChange}
@@ -359,7 +406,7 @@ export function PromptFormModal({
                       {col.name}
                     </option>
                   ))}
-                  <option value="__CREATE_NEW__">Create new collection...</option>
+                  <option value="__CREATE_NEW__">+ Create new collection...</option>
                 </Select>
               </Field>
             </div>
@@ -367,7 +414,7 @@ export function PromptFormModal({
             {/* Media Attachments Section */}
             <Field
               label="Photos & Videos"
-              description="Upload local photos/videos (auto-generates thumbnails) or add media URLs"
+              description="Attach media examples or reference images (thumbnails auto-generated)"
             >
               <Stack direction="vertical" gap="3">
                 {/* Hidden File Input */}
@@ -381,7 +428,7 @@ export function PromptFormModal({
                 />
 
                 {/* Upload & Link Action Buttons */}
-                <Stack direction="horizontal" gap="2" wrap="wrap">
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <Button
                     type="button"
                     variant="outline"
@@ -389,8 +436,10 @@ export function PromptFormModal({
                     onClick={() => fileInputRef.current?.click()}
                     isLoading={uploading}
                     disabled={submitting}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                   >
-                    {uploading ? 'Processing Media...' : 'Upload Photo / Video'}
+                    <UploadIcon size={14} />
+                    <span>{uploading ? 'Processing Media...' : 'Upload File'}</span>
                   </Button>
                   <Button
                     type="button"
@@ -398,14 +447,16 @@ export function PromptFormModal({
                     size="sm"
                     onClick={() => setShowUrlInput(!showUrlInput)}
                     disabled={submitting || uploading}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                   >
-                    {showUrlInput ? 'Cancel URL' : 'Add Media from URL'}
+                    <LinkIcon size={14} />
+                    <span>{showUrlInput ? 'Cancel URL' : 'Add from URL'}</span>
                   </Button>
-                </Stack>
+                </div>
 
                 {/* Optional Media URL Form */}
                 {showUrlInput && (
-                  <Card variant="outline" style={{ padding: '0.75rem' }}>
+                  <Card variant="outline" style={{ padding: '0.75rem', backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)' }}>
                     <Stack direction="vertical" gap="2">
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
                         <Select
@@ -443,7 +494,7 @@ export function PromptFormModal({
                   </Card>
                 )}
 
-                {/* Media Attachment Previews */}
+                {/* Media Attachment Previews Grid */}
                 {mediaList.length > 0 && (
                   <div
                     style={{
@@ -458,7 +509,7 @@ export function PromptFormModal({
                         key={idx}
                         style={{
                           position: 'relative',
-                          borderRadius: 'var(--atlas-radius-sm, 4px)',
+                          borderRadius: 'var(--atlas-radius-md, 6px)',
                           border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
                           overflow: 'hidden',
                           backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
@@ -467,21 +518,32 @@ export function PromptFormModal({
                         }}
                       >
                         {item.media_type === 'image' ? (
-                          <img
-                            src={getMediaUrl(item.thumbnail_url || item.medium_url || item.url)}
-                            alt={item.caption || item.file_name || 'Media preview'}
+                          <div
                             style={{
                               width: '100%',
-                              height: '80px',
-                              objectFit: 'cover',
-                              display: 'block',
+                              height: '84px',
+                              backgroundColor: '#0f172a',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
                             }}
-                          />
+                          >
+                            <img
+                              src={getMediaUrl(item.thumbnail_url || item.medium_url || item.url)}
+                              alt={item.caption || item.file_name || 'Media preview'}
+                              style={{
+                                maxWidth: '100%',
+                                maxHeight: '84px',
+                                objectFit: 'contain',
+                                display: 'block',
+                              }}
+                            />
+                          </div>
                         ) : (
                           <div
                             style={{
                               width: '100%',
-                              height: '80px',
+                              height: '84px',
                               backgroundColor: '#0f172a',
                               color: '#ffffff',
                               display: 'flex',
@@ -489,6 +551,7 @@ export function PromptFormModal({
                               justifyContent: 'center',
                               fontSize: '0.75rem',
                               fontWeight: 600,
+                              letterSpacing: '0.04em',
                             }}
                           >
                             VIDEO
@@ -497,11 +560,12 @@ export function PromptFormModal({
 
                         <div
                           style={{
-                            padding: '0.25rem 0.375rem',
+                            padding: '0.375rem 0.5rem',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
+                            borderTop: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
                           }}
                         >
                           <Badge variant="subtle" size="sm" intent={item.media_type === 'video' ? 'warning' : 'info'}>
@@ -512,7 +576,7 @@ export function PromptFormModal({
                             variant="ghost"
                             isDanger
                             aria-label="Remove media"
-                            title="Remove media"
+                            title="Remove media attachment"
                             icon={<TrashIcon size={12} />}
                             onClick={() => handleRemoveMedia(idx)}
                             style={{
@@ -520,6 +584,7 @@ export function PromptFormModal({
                               minHeight: '22px',
                               width: '22px',
                               height: '22px',
+                              borderRadius: 'var(--atlas-radius-sm, 4px)',
                             }}
                           />
                         </div>
@@ -531,7 +596,7 @@ export function PromptFormModal({
             </Field>
 
             {/* Tags Input */}
-            <Field label="Tags" description="Press Enter or comma to add tags">
+            <Field label="Tags" description="Type a tag and press Enter or comma">
               <Stack direction="vertical" gap="2">
                 <Input
                   value={tagInput}
@@ -544,7 +609,7 @@ export function PromptFormModal({
                   disabled={submitting}
                 />
                 {tags.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.25rem' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginTop: '0.25rem' }}>
                     {tags.map((tag, idx) => (
                       <Tag
                         key={idx}
@@ -553,7 +618,7 @@ export function PromptFormModal({
                         intent="neutral"
                         onRemove={() => handleRemoveTag(idx)}
                       >
-                        {tag}
+                        #{tag}
                       </Tag>
                     ))}
                   </div>
@@ -562,21 +627,21 @@ export function PromptFormModal({
             </Field>
 
             {/* Optional Short Description */}
-            <Field label="Short Description" description="Brief summary shown on prompt cards">
+            <Field label="Short Description" description="Summary displayed on prompt cards">
               <Input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g. Best practices for App Router architecture"
+                placeholder="e.g. Comprehensive architectural instructions for App Router"
                 disabled={submitting}
               />
             </Field>
 
-            {/* Optional Usage Description */}
-            <Field label="Usage Instructions" description="Optional guidance on parameters or when to use this prompt">
+            {/* Optional Usage Instructions */}
+            <Field label="Usage Instructions" description="Optional parameters, placeholders, or usage notes">
               <Textarea
                 value={usageDescription}
                 onChange={(e) => setUsageDescription(e.target.value)}
-                placeholder="e.g. Provide the component diff in the designated slot..."
+                placeholder="e.g. Replace [MODEL] with your target model..."
                 rows={3}
                 disabled={submitting}
               />
@@ -585,7 +650,7 @@ export function PromptFormModal({
         </form>
       </Dialog>
 
-      {/* Inline Collection Creation Dialog */}
+      {/* Inline Collection Creation Modal */}
       <CreateCollectionModal
         open={createCollectionOpen}
         onOpenChange={setCreateCollectionOpen}

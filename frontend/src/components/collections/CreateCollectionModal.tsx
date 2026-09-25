@@ -51,7 +51,10 @@ export function CreateCollectionModal({
   return (
     <Dialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) handleClose();
+        else onOpenChange(true);
+      }}
       title="Create Collection"
       description="Organize your reusable prompts into custom collections."
       size="sm"
@@ -84,8 +87,8 @@ export function CreateCollectionModal({
               disabled={submitting}
             />
           </Field>
-          <Text size="sm" color="muted">
-            You can always rename or delete collections later without losing your prompts.
+          <Text size="sm" color="muted" style={{ lineHeight: 1.5 }}>
+            Prompts can easily be moved or uncollected later without deleting prompt content.
           </Text>
         </Stack>
       </form>

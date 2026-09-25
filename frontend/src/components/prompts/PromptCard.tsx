@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Heading,
   Text,
+  Badge,
   IconButton,
+  Tag,
 } from '@tresnaid/atlas';
 import { Prompt } from '../../types';
 import { getMediaUrl } from '../../api/config';
@@ -14,7 +16,6 @@ interface PromptCardProps {
   onTagClick?: (tag: string) => void;
   onOpenDetails?: (prompt: Prompt) => void;
 }
-
 
 function PlayIcon({ size = 12 }: { size?: number }) {
   return (
@@ -67,15 +68,16 @@ function CheckIcon({ size = 14 }: { size?: number }) {
   );
 }
 
-const CATEGORY_STYLES: Record<string, { accent: string }> = {
-  text: { accent: '#3b82f6' },
-  code: { accent: '#8b5cf6' },
-  image: { accent: '#10b981' },
-  video: { accent: '#f59e0b' },
+const CATEGORY_META: Record<string, { intent: 'info' | 'neutral' | 'success' | 'warning' | 'danger'; label: string; accentColor: string }> = {
+  text: { intent: 'info', label: 'Text', accentColor: '#3b82f6' },
+  code: { intent: 'neutral', label: 'Code', accentColor: '#8b5cf6' },
+  image: { intent: 'success', label: 'Image', accentColor: '#10b981' },
+  video: { intent: 'warning', label: 'Video', accentColor: '#f59e0b' },
 };
 
 export function PromptCard({
   prompt,
+  onTagClick,
   onOpenDetails,
 }: PromptCardProps) {
   const [copied, setCopied] = useState(false);
@@ -87,46 +89,58 @@ export function PromptCard({
       // Copy exact raw prompt text without modification
       await navigator.clipboard.writeText(prompt.prompt_text);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 1800);
     } catch (err) {
       console.error('Failed to copy to clipboard:', err);
     }
   };
 
   const categoryKey = (prompt.category_id || 'text').toLowerCase();
-  const categoryStyle = CATEGORY_STYLES[categoryKey] || CATEGORY_STYLES.text;
+  const categoryInfo = CATEGORY_META[categoryKey] || CATEGORY_META.text;
   const primaryMedia = prompt.media && prompt.media.length > 0 ? prompt.media[0] : null;
 
   return (
-    <div
+    <article
+      tabIndex={0}
+      role="button"
+      aria-label={`Inspect prompt: ${prompt.title}`}
       style={{
         display: 'flex',
         flexDirection: 'column',
-        borderRadius: 'var(--atlas-radius-md, 6px)',
+        borderRadius: 'var(--atlas-radius-lg, 8px)',
         backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
-        border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
+        border: isHovered
+          ? '1px solid var(--atlas-color-border-focus, #93c5fd)'
+          : '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
         boxShadow: isHovered
-          ? 'var(--atlas-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.08))'
-          : 'var(--atlas-shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.04))',
+          ? '0 8px 20px -4px rgba(15, 23, 42, 0.08), 0 4px 8px -2px rgba(15, 23, 42, 0.04)'
+          : '0 1px 3px 0 rgba(15, 23, 42, 0.04)',
         transform: isHovered ? 'translateY(-2px)' : 'none',
-        transition: 'box-shadow 0.15s ease, transform 0.15s ease',
+        transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
         cursor: 'pointer',
         overflow: 'hidden',
         width: '100%',
         boxSizing: 'border-box',
+        position: 'relative',
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (onOpenDetails) onOpenDetails(prompt);
+        }
+      }}
       onClick={() => {
         if (onOpenDetails) onOpenDetails(prompt);
       }}
     >
-      {/* Permanent Category Color Accent Stripe */}
+      {/* Top Category Accent Line */}
       <div
         style={{
           width: '100%',
           height: '3px',
-          backgroundColor: categoryStyle.accent,
+          backgroundColor: categoryInfo.accentColor,
           flexShrink: 0,
         }}
       />
@@ -137,9 +151,7 @@ export function PromptCard({
           style={{
             position: 'relative',
             width: '100%',
-            overflow: 'hidden',
             backgroundColor: primaryMedia.media_type === 'video' ? '#0f172a' : 'var(--atlas-color-bg-subtle, #f1f5f9)',
-            ...(primaryMedia.aspect_ratio ? { aspectRatio: String(primaryMedia.aspect_ratio) } : {}),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -155,10 +167,11 @@ export function PromptCard({
                 width: '100%',
                 height: 'auto',
                 display: 'block',
+                objectFit: 'contain',
               }}
             />
           ) : (
-            <>
+            <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {primaryMedia.thumbnail_url ? (
                 <img
                   src={getMediaUrl(primaryMedia.thumbnail_url)}
@@ -169,7 +182,8 @@ export function PromptCard({
                     width: '100%',
                     height: 'auto',
                     display: 'block',
-                    opacity: 0.85,
+                    objectFit: 'contain',
+                    opacity: 0.9,
                   }}
                 />
               ) : (
@@ -181,29 +195,30 @@ export function PromptCard({
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
-                  backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                  backgroundColor: 'rgba(15, 23, 42, 0.82)',
                   color: '#ffffff',
                   padding: '4px 8px',
                   borderRadius: '12px',
                   fontSize: '0.6875rem',
                   fontWeight: 600,
                   letterSpacing: '0.04em',
-                  backdropFilter: 'blur(4px)',
+                  backdropFilter: 'blur(6px)',
                 }}
               >
                 <PlayIcon size={10} />
                 <span>VIDEO</span>
               </div>
-            </>
+            </div>
           )}
 
+          {/* Multiple Media Indicator */}
           {prompt.media && prompt.media.length > 1 && (
             <div
               style={{
                 position: 'absolute',
                 bottom: '6px',
                 right: '6px',
-                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                backgroundColor: 'rgba(15, 23, 42, 0.85)',
                 color: '#ffffff',
                 padding: '2px 6px',
                 borderRadius: '4px',
@@ -218,61 +233,72 @@ export function PromptCard({
         </div>
       ) : null}
 
-      {/* Main Content Body: Title + Copy Button & Description */}
+      {/* Main Content Body */}
       <div
         style={{
           padding: '0.875rem 1rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.375rem',
+          gap: '0.5rem',
+          flexGrow: 1,
         }}
       >
+        {/* Category & Collection Bar with Quick Copy */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '0.625rem',
+            gap: '0.5rem',
           }}
         >
-          <Heading
-            level={3}
-            style={{
-              fontSize: '0.9375rem',
-              lineHeight: 1.4,
-              fontWeight: 600,
-              color: 'var(--atlas-color-text-primary, #0f172a)',
-              margin: 0,
-              flex: 1,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-            }}
-          >
-            {prompt.title}
-          </Heading>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap', minWidth: 0 }}>
+            <Badge variant="subtle" intent={categoryInfo.intent} size="sm">
+              {categoryInfo.label}
+            </Badge>
+
+            {prompt.collection_name && (
+              <span
+                style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 500,
+                  color: 'var(--atlas-color-text-muted, #64748b)',
+                  backgroundColor: 'var(--atlas-color-bg-subtle, #f1f5f9)',
+                  padding: '1px 6px',
+                  borderRadius: '4px',
+                  maxWidth: '120px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+                title={`Collection: ${prompt.collection_name}`}
+              >
+                {prompt.collection_name}
+              </span>
+            )}
+          </div>
 
           <IconButton
             size="sm"
             variant="ghost"
             aria-label={copied ? 'Copied to clipboard' : 'Copy prompt text'}
-            title={copied ? 'Copied!' : 'Copy prompt text'}
-            icon={copied ? <CheckIcon size={15} /> : <CopyIcon size={15} />}
+            title={copied ? 'Copied!' : 'Copy raw prompt text'}
+            icon={copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
             onClick={handleCopy}
             style={{
-              minWidth: '30px',
-              minHeight: '30px',
-              width: '30px',
-              height: '30px',
+              minWidth: '28px',
+              minHeight: '28px',
+              width: '28px',
+              height: '28px',
               borderRadius: 'var(--atlas-radius-md, 6px)',
               backgroundColor: copied
                 ? '#dcfce7'
-                : 'var(--atlas-color-bg-subtle, #f1f5f9)',
+                : isHovered
+                ? 'var(--atlas-color-bg-subtle, #f1f5f9)'
+                : 'transparent',
               border: copied
                 ? '1px solid #86efac'
-                : '1px solid var(--atlas-color-border-subtle, #cbd5e1)',
+                : '1px solid transparent',
               color: copied
                 ? '#15803d'
                 : 'var(--atlas-color-text-secondary, #475569)',
@@ -281,6 +307,27 @@ export function PromptCard({
           />
         </div>
 
+        {/* Prompt Title */}
+        <Heading
+          level={3}
+          style={{
+            fontSize: '0.9375rem',
+            lineHeight: 1.4,
+            fontWeight: 600,
+            letterSpacing: '-0.01em',
+            color: 'var(--atlas-color-text-primary, #0f172a)',
+            margin: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+          }}
+        >
+          {prompt.title}
+        </Heading>
+
+        {/* Short Description */}
         {prompt.description && (
           <Text
             size="sm"
@@ -288,21 +335,70 @@ export function PromptCard({
             style={{
               fontSize: '0.8125rem',
               lineHeight: 1.45,
+              color: 'var(--atlas-color-text-secondary, #475569)',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
+              margin: 0,
             }}
           >
             {prompt.description}
           </Text>
         )}
+
+        {/* Tags Footer (if any) */}
+        {prompt.tags && prompt.tags.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '0.25rem',
+              marginTop: 'auto',
+              paddingTop: '0.25rem',
+            }}
+          >
+            {prompt.tags.slice(0, 3).map((tag, idx) => (
+              <span
+                key={idx}
+                onClick={
+                  onTagClick
+                    ? (e) => {
+                        e.stopPropagation();
+                        onTagClick(tag);
+                      }
+                    : undefined
+                }
+              >
+                <Tag
+                  size="sm"
+                  variant="subtle"
+                  intent="neutral"
+                  style={{
+                    fontSize: '0.6875rem',
+                    padding: '0 4px',
+                    cursor: onTagClick ? 'pointer' : 'default',
+                  }}
+                >
+                  #{tag}
+                </Tag>
+              </span>
+            ))}
+            {prompt.tags.length > 3 && (
+              <span
+                style={{
+                  fontSize: '0.6875rem',
+                  color: 'var(--atlas-color-text-muted, #94a3b8)',
+                  alignSelf: 'center',
+                }}
+              >
+                +{prompt.tags.length - 3}
+              </span>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+    </article>
   );
 }
-
-
-
-

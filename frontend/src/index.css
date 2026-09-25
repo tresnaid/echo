@@ -1,0 +1,104 @@
+/* Echo Application Styles & Micro-Interactions */
+
+:root {
+  --echo-header-height: 56px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--atlas-color-bg-canvas, #f8fafc);
+  color: var(--atlas-color-text-primary, #0f172a);
+  font-family: var(--atlas-font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Fluid Apple-inspired active state feedback */
+button:active:not(:disabled),
+[role="button"]:active:not([aria-disabled="true"]),
+a:active {
+  transform: scale(0.98);
+  transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom smooth scrollbar for horizontal chip bars and code snippets */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
+
+/* Focus visibility */
+:focus-visible {
+  outline: 2px solid var(--atlas-color-border-focus, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* Category Accent colors */
+.echo-cat-text {
+  --cat-accent: #3b82f6;
+  --cat-bg: rgba(59, 130, 246, 0.08);
+}
+
+.echo-cat-code {
+  --cat-accent: #8b5cf6;
+  --cat-bg: rgba(139, 92, 246, 0.08);
+}
+
+.echo-cat-image {
+  --cat-accent: #10b981;
+  --cat-bg: rgba(16, 185, 129, 0.08);
+}
+
+.echo-cat-video {
+  --cat-accent: #f59e0b;
+  --cat-bg: rgba(245, 158, 11, 0.08);
+}
+
+/* Responsive layout utilities */
+.echo-hide-on-mobile {
+  display: flex;
+}
+
+.echo-show-on-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .echo-hide-on-mobile {
+    display: none !important;
+  }
+  .echo-show-on-mobile {
+    display: flex !important;
+  }
+}
