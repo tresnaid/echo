@@ -12,7 +12,7 @@ import {
   Badge,
   Card,
   IconButton,
-} from '@atlas/ds';
+} from '@tresnaid/atlas';
 import { Prompt, Collection, Category, PromptMedia } from '../../types';
 import { createPrompt, updatePrompt, fetchCategories, uploadMediaFiles } from '../../api/prompts';
 import { getMediaUrl } from '../../api/config';

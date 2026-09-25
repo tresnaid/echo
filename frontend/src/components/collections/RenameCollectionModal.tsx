@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, Field, Input, Button, Stack } from '@atlas/ds';
+import { Dialog, Field, Input, Button, Stack } from '@tresnaid/atlas';
 import { renameCollection } from '../../api/collections';
 import { Collection } from '../../types';
 

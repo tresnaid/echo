@@ -7,7 +7,7 @@ import {
   Badge,
   Button,
   Dialog,
-} from '@atlas/ds';
+} from '@tresnaid/atlas';
 import { Collection, CollectionCounts, SelectedCollectionView, Prompt, Category } from './types';
 import { fetchCollections } from './api/collections';
 import { fetchPrompts, fetchCategories, fetchTags } from './api/prompts';
@@ -221,9 +221,7 @@ export function App() {
                 <Heading level={1} style={{ fontSize: isMobile ? '1.375rem' : '1.5rem', fontWeight: 700, letterSpacing: '-0.02em', margin: 0 }}>
                   Echo
                 </Heading>
-                <Badge variant="subtle" intent="info" size="sm">
-                  MVP
-                </Badge>
+
               </div>
 
               {!isMobile && (
@@ -238,7 +236,7 @@ export function App() {
                     maxWidth: '450px',
                   }}
                 >
-                  Local-first prompt library for storing, finding, and copying prompts.
+                  Prompt library for storing, finding, and copying prompts.
                 </Text>
               )}
             </div>
@@ -494,7 +492,7 @@ export function App() {
                 Echo
               </Text>
               <Text size="xs" color="muted">
-                • Local-first prompt library
+                • Prompt library
               </Text>
               <Badge variant="subtle" intent="neutral" size="sm">
                 v0.1.0
@@ -505,12 +503,7 @@ export function App() {
               <Text size="xs" color="muted">
                 Atlas Design System
               </Text>
-              <Text size="xs" color="muted">
-                •
-              </Text>
-              <Text size="xs" color="muted">
-                SQLite & Express Local Storage
-              </Text>
+
             </div>
           </div>
         </Container>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertDialog } from '@atlas/ds';
+import { AlertDialog } from '@tresnaid/atlas';
 import { deletePrompt } from '../../api/prompts';
 import { Prompt } from '../../types';
 

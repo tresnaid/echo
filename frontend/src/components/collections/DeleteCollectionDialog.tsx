@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertDialog } from '@atlas/ds';
+import { AlertDialog } from '@tresnaid/atlas';
 import { deleteCollection } from '../../api/collections';
 import { Collection } from '../../types';
 

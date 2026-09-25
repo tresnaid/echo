@@ -1,4 +1,4 @@
-import { SearchInput, Button, Tag } from '@atlas/ds';
+import { SearchInput, Button, Tag } from '@tresnaid/atlas';
 import { Category } from '../../types';
 
 interface FilterBarProps {

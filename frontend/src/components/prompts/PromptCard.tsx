@@ -3,7 +3,7 @@ import {
   Heading,
   Text,
   IconButton,
-} from '@atlas/ds';
+} from '@tresnaid/atlas';
 import { Prompt } from '../../types';
 import { getMediaUrl } from '../../api/config';
 

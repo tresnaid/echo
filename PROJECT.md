@@ -11,7 +11,7 @@ Echo is a prompt library for storing, organizing, finding, inspecting, and quick
 Single-user local prompt engineer, developer, or creator who needs quick access to structured prompts.
 
 **Summary:**
-A local-first web application built with React and Atlas Design System backed by persistent database storage, allowing rapid prompt creation, organization via collections and tags, full-text search, multi-criteria filtering, and one-click raw prompt copying.
+A web application built with React and Atlas Design System backed by persistent database storage, allowing rapid prompt creation, organization via collections and tags, full-text search, multi-criteria filtering, and one-click raw prompt copying.
 
 ## Scope
 
@@ -33,7 +33,7 @@ A local-first web application built with React and Atlas Design System backed by
 * Prompt detail modal exposing complete information and actions (Copy, Edit, Delete) while preserving browse/filter/search context.
 * Soft-deletion: Prompts are soft-deleted in the database and completely excluded from normal application behavior (no trash UI).
 * Persistent database storage (browser local storage is not the primary data store).
-* Integration with the Atlas design system (`@atlas/ds`).
+* Integration with the Atlas design system (`@tresnaid/atlas`).
 * Photo and video media attachments (local uploads to `data/uploads/` and external media URLs) for prompts, with card previews and full detail modal inspection.
 
 ### Out of Scope
@@ -48,7 +48,7 @@ A local-first web application built with React and Atlas Design System backed by
 
 ## Core Requirements
 
-* **Atlas Design System:** The frontend is built in React using Atlas (`@atlas/ds`) components, patterns, tokens, and styling. Gaps in Atlas follow the fallback policy (Atlas issue + local fallback + Echo tracking issue).
+* **Atlas Design System:** The frontend is built in React using Atlas (`@tresnaid/atlas`) components, patterns, tokens, and styling. Gaps in Atlas follow the fallback policy (Atlas issue + local fallback + Echo tracking issue).
 * **Copy Fidelity:** Copying a prompt copies the exact raw prompt text without modification or trimming.
 * **Non-Destructive Collection Deletion:** Deleting a collection moves its prompts to Uncollected; prompts are never deleted when their parent collection is deleted.
 * **Context Preservation:** Opening and closing prompt detail modals preserves all active search queries, selected filters, and collection views.
@@ -57,9 +57,9 @@ A local-first web application built with React and Atlas Design System backed by
 
 ## Technical Context
 
-* **Application type:** Local-first Web Application (React frontend + lightweight backend/API).
-* **Primary stack:** React, TypeScript, Node.js / Express, SQLite (better-sqlite3 / Prisma / drizzle / sql), Atlas Design System (`@atlas/ds`).
-* **External services:** None (local-only MVP).
+* **Application type:** Web Application (React frontend + lightweight backend/API).
+* **Primary stack:** React, TypeScript, Node.js / Express, SQLite (better-sqlite3 / Prisma / drizzle / sql), Atlas Design System (`@tresnaid/atlas`).
+* **External services:** None (MVP).
 * **Design system:** Atlas (`https://github.com/gumelartresnadwinanda/atlas`).
 
 ## Project-Specific Instructions
@@ -90,4 +90,4 @@ None currently required beyond `PROJECT.md`.
 
 ## Current State
 
-MVP completed. Persistent SQLite storage, Collection Management, Prompt CRUD Operations with Soft-Deletion, Search & Multi-criteria Filtering, Prompt Detail Modal with browsing context preservation, Photo & Video Media Attachments with thumbnail generation, and Comprehensive Test Suite are fully implemented and verified. All official Atlas Design System components (`@atlas/ds` Masonry, SearchInput, CodeSnippet, NavList, NavItem) have been fully integrated and local fallbacks retired (issue #24 closed).
+MVP completed. Persistent SQLite storage, Collection Management, Prompt CRUD Operations with Soft-Deletion, Search & Multi-criteria Filtering, Prompt Detail Modal with browsing context preservation, Photo & Video Media Attachments with thumbnail generation, and Comprehensive Test Suite are fully implemented and verified. All official Atlas Design System components (`@tresnaid/atlas` Masonry, SearchInput, CodeSnippet, NavList, NavItem) have been fully integrated and local fallbacks retired (issue #24 closed).

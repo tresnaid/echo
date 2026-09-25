@@ -1,4 +1,4 @@
-import { Card, Stack, Heading, Text, Button, Masonry } from '@atlas/ds';
+import { Card, Stack, Heading, Text, Button, Masonry } from '@tresnaid/atlas';
 import { Prompt } from '../../types';
 import { PromptCard } from './PromptCard';
 

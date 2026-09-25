@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, Field, Input, Button, Stack, Text } from '@atlas/ds';
+import { Dialog, Field, Input, Button, Stack, Text } from '@tresnaid/atlas';
 import { createCollection } from '../../api/collections';
 import { Collection } from '../../types';
 

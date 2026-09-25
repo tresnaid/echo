@@ -1,6 +1,6 @@
 import React from 'react';
-import { ThemeProvider, AnnouncementProvider } from '@atlas/ds';
-import '@atlas/ds/styles.css';
+import { ThemeProvider, AnnouncementProvider } from '@tresnaid/atlas';
+import '@tresnaid/atlas/styles.css';
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
