@@ -151,9 +151,7 @@ export function PromptCard({
           style={{
             position: 'relative',
             width: '100%',
-            overflow: 'hidden',
             backgroundColor: primaryMedia.media_type === 'video' ? '#0f172a' : 'var(--atlas-color-bg-subtle, #f1f5f9)',
-            ...(primaryMedia.aspect_ratio ? { aspectRatio: String(primaryMedia.aspect_ratio).replace(':', '/') } : {}),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
