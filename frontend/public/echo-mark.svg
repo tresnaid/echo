@@ -7,5 +7,7 @@
     </linearGradient>
   </defs>
   <rect width="64" height="64" rx="16" fill="url(#echo-gradient)"/>
-  <path d="M19 17v30M19 18h28M19 32h22M19 46h16" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M16 17v30M16 18h19M16 32h16M16 46h19" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M39 22c5 5 5 15 0 20" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+  <path d="M47 16c9 9 9 23 0 32" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
 </svg>
