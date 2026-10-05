@@ -1,122 +1,126 @@
 # Echo
 
-A prompt library for storing, organizing, finding, and copying reusable prompts across multiple types — text, code, image, and video.
+A multi-modal prompt library for cataloging, parameterizing, discovering, and deploying reusable AI prompts across text, code, image, and video generation workflows.
 
-Built with React, Atlas Design System, Express, and SQLite.
+[![Live App](https://img.shields.io/badge/Live_App-echo.tresnaid.space-2b6cb0?style=flat-square)](https://echo.tresnaid.space/)
+[![Design System](https://img.shields.io/badge/UI_Library-@tresnaid/atlas-informational?style=flat-square)](https://atlas.tresnaid.space/)
+[![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat-square)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Express](https://img.shields.io/badge/Express-4.21-black?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
+[![SQLite](https://img.shields.io/badge/SQLite-better--sqlite3-003B57?style=flat-square)](https://github.com/WiseLibs/better-sqlite3)
+
+---
+
+## Overview
+
+Prompt engineering requires structure, versioning, and fast retrieval. **Echo** serves as a personal prompt repository that organizes complex prompts into structured cards with syntax highlighting, parameter variables, modal previews, and one-click clipboard copying.
+
+It also serves as a reference production implementation of the **Atlas Design System** (`@tresnaid/atlas`), leveraging its accessible component primitives, design tokens, and CSS layers.
+
+### Key Highlights
+- **Multi-Modal Organization:** Dedicated categories and metadata fields for Text (LLMs, system instructions, few-shot), Code, Image generation (Midjourney, DALL-E, Stable Diffusion), and Generative Video.
+- **Atlas Design System Integration:** Built with `@tresnaid/atlas` components (`Card`, `Button`, `Badge`, `Stack`, `Input`, `ThemeProvider`), adhering to WCAG 2.2 AA accessibility standards.
+- **Fast Full-Text Search:** Instant client and server filtering by title, prompt body, modality tags, and keywords.
+- **Decoupled Architecture:** Independent frontend SPA (Vite + React 19) and backend REST API (Express + SQLite) for independent deployment and zero coupling.
+- **Containerized Production Deployment:** Production backend packaged as Docker containers on GitHub Container Registry (GHCR) and deployed to a VPS with persistent SQLite storage.
+
+---
+
+## Tech Stack
+
+| Area | Technologies |
+| :--- | :--- |
+| **Frontend** | React 19, TypeScript, Vite 6, Atlas Design System (`@tresnaid/atlas`) |
+| **Backend** | Node.js, Express, TypeScript, Zod, Multer, Sharp (Image Processing) |
+| **Database** | SQLite (`better-sqlite3`) with schema migrations and seed scripts |
+| **Testing & Tooling** | Vitest, Supertest, TSX, ESLint, Prettier |
+| **DevOps & Hosting** | Vercel (Frontend), Docker Compose + GHCR + VPS (Backend) |
+
+---
 
 ## Repository Structure
 
-The frontend and backend are maintained in the same repository as fully independent applications (no root workspace or shared package manager root).
+The frontend and backend are maintained within the same repository as independent applications without a shared root workspace:
 
-```
+```text
 echo/
-├── frontend/           # React SPA (Vite + Atlas DS)
+├── frontend/           # React 19 SPA (Vite + Atlas Design System)
+│   ├── src/            # Components, views, hooks, and services
 │   ├── package.json
-│   ├── pnpm-lock.yaml
 │   └── .env.example
-├── backend/            # Express REST API + SQLite database
+├── backend/            # Express REST API with SQLite persistence
+│   ├── src/            # Controllers, routes, DB migrations, seed scripts
 │   ├── package.json
-│   ├── pnpm-lock.yaml
 │   └── .env.example
-├── docs/               # Global standards and workflow docs
-├── .github/            # CI/CD workflows (CI checks & VPS backend release)
-├── compose.prod.yml    # Source of truth for production VPS Compose deployment
+├── docs/               # Architecture standards and deployment runbooks
+├── .github/            # GitHub Actions CI/CD workflows
+├── compose.prod.yml    # Production Docker Compose specification for VPS
 └── docker-compose.yml  # Local multi-service development Compose
 ```
+
+---
 
 ## Getting Started
 
 ### Prerequisites
-
 - Node.js 20+
-- pnpm 10+
+- pnpm 10+ (or npm)
+- Docker (optional, for containerized local development)
 
 ---
 
-## Frontend
+### Local Development (Manual)
 
-The frontend is an independent React SPA deployable directly to Vercel or locally with Vite.
-
-### Installation & Development
-
-```bash
-cd frontend
-pnpm install
-pnpm run dev
-```
-
-The frontend dev server starts at `http://localhost:5173`.
-
-### Typecheck & Build
-
-```bash
-cd frontend
-pnpm run typecheck
-pnpm run build
-```
-
-### Vercel Deployment
-
-- **Root Directory:** `frontend`
-- **Framework Preset:** Vite
-- **Build Command:** `pnpm run build`
-- **Output Directory:** `dist`
-- **Environment Variables:**
-  - `VITE_API_URL`: `https://api-echo.tresnaid.space`
-
----
-
-## Backend
-
-The backend is an independent Express REST API with SQLite persistence and media processing.
-
-### Installation & Development
+#### 1. Backend Setup
 
 ```bash
 cd backend
 pnpm install
-pnpm run dev
+pnpm run seed    # (Optional) Seed the database with starter prompts
+pnpm run dev     # Starts Express server at http://localhost:3001
 ```
 
-The API server starts at `http://localhost:3001`.
+#### 2. Frontend Setup
 
-### Typecheck, Tests & Build
+In a separate terminal:
 
 ```bash
-cd backend
-pnpm run typecheck
-pnpm run test
-pnpm run build
-pnpm run start
+cd frontend
+pnpm install
+pnpm run dev     # Starts Vite dev server at http://localhost:5173
 ```
 
 ---
 
-## Local Development with Docker Compose
+### Local Development (Docker Compose)
 
-To run both services together using Docker:
+To start both services together with Docker:
 
 ```bash
 docker compose up --build
 ```
 
-| Service  | URL                    |
-| -------- | ---------------------- |
-| Frontend | http://localhost:5173  |
-| Backend  | http://localhost:3001  |
+| Service | Local Address |
+| :--- | :--- |
+| **Frontend** | `http://localhost:5173` |
+| **Backend API** | `http://localhost:3001` |
 
 ---
 
-## Production VPS Deployment
+## Production Deployment
 
-The production backend runs on a VPS at `/srv/apps/echo/` using a prebuilt container image from GitHub Container Registry (GHCR):
+### Frontend (Vercel)
+The frontend is statically compiled and deployed to Vercel:
+- **Production URL:** [https://echo.tresnaid.space/](https://echo.tresnaid.space/)
+- **Framework Preset:** Vite
+- **Root Directory:** `frontend`
+- **Build Command:** `pnpm run build`
+- **Output Directory:** `dist`
+- **Environment Variable:** `VITE_API_URL=https://api-echo.tresnaid.space`
 
-- `compose.prod.yml` defines the container service and is synchronized by GitHub Actions on release tags (`v*-be`).
-- Persistent SQLite database and uploads live in `/srv/apps/echo/data/` on the VPS and are preserved across deployments.
-- No manual VPS filesystem changes are required.
-
----
-
-## Design System
-
-Echo uses the [Atlas Design System](https://github.com/gumelartresnadwinanda/atlas) (`@tresnaid/atlas`) for UI components, tokens, and theming.
+### Backend (VPS via Docker & GHCR)
+The production backend runs as an isolated container at `/srv/apps/echo/`:
+- **Production API:** `https://api-echo.tresnaid.space`
+- Images are automatically built and published to GHCR via GitHub Actions on release tags (`v*-be`).
+- Database and uploaded assets are persisted under `/srv/apps/echo/data/` across container rebuilds.
