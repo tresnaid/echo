@@ -125,9 +125,9 @@ jobs:
           chmod 0600 "${secrets_file}"
 
           if ! jq -e \
-            '.project == "echo" and .environment == "production"' \
+            '.project == "echo-backend" and .environment == "production"' \
             "${secrets_file}" >/dev/null; then
-            echo "::error::EnvHub token is not scoped to echo/production."
+            echo "::error::EnvHub token is not scoped to echo-backend/production."
             exit 1
           fi
 
@@ -135,7 +135,7 @@ jobs:
             if ! jq -e --arg name "${name}" \
               '(.secrets[$name] // "") | strings | select(length > 0)' \
               "${secrets_file}" >/dev/null; then
-              echo "::error::EnvHub secret ${name} is required in echo/production."
+              echo "::error::EnvHub secret ${name} is required in echo-backend/production."
               exit 1
             fi
           done

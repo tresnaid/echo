@@ -9,7 +9,7 @@ uses separate machine identities.
 
 ## Production deployment identity
 
-Create this in EnvHub under project `echo`, environment `production`:
+Create this in EnvHub under project `echo-backend`, environment `production`:
 
 | Field | Exact value |
 | --- | --- |
@@ -33,9 +33,9 @@ later, add its exact `job_workflow_ref` claim at that time.
 
 At deployment time GitHub signs an OIDC assertion. EnvHub validates the claims
 and returns a five-minute access token. The workflow uses it first to retrieve
-the VPS SSH values from `echo/production`, then sends the same masked token to
-that SSH session so the VPS can retrieve the backend runtime values. The token
-is not stored as a GitHub Secret or VPS file.
+the VPS SSH values from `echo-backend/production`, then sends the same masked
+token to that SSH session so the VPS can retrieve the backend runtime values.
+The token is not stored as a GitHub Secret or VPS file.
 
 This identity therefore authorizes access to both categories in the same
 environment:
@@ -90,7 +90,8 @@ echo-local-tresna-laptop
 echo-local-ci-test-device
 ```
 
-Each identity must be scoped to `echo/development`, never `echo/production`.
+Each identity must be scoped to `echo-backend/development`, never
+`echo-backend/production`.
 The token is displayed only once. Store it in the operating system credential
 manager or another owner-only secret store, export it as `ENVHUB_TOKEN` only
 for the development session, and never save it in Echo's files, shell history,
@@ -102,7 +103,7 @@ terminal:
 ```sh
 envhub identity machine create \
   --server https://env.tresnaid.space \
-  --project echo \
+  --project echo-backend \
   --environment development \
   --name echo-local-tresna-laptop
 ```
