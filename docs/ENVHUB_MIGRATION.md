@@ -58,33 +58,30 @@ the only version source.
 
 ## 2. Install the pinned EnvHub CLI on the VPS
 
-Connect to the VPS as the deployment user and run:
+The EnvHub repository is private, so its GitHub release URL cannot be downloaded
+with unauthenticated `curl`. The running EnvHub container already contains the
+correct binary. Extract that exact binary instead:
 
 ```sh
-version=0.2.1
-case "$(uname -m)" in
-  x86_64) arch=amd64 ;;
-  aarch64|arm64) arch=arm64 ;;
-  *) echo "Unsupported architecture: $(uname -m)" >&2; exit 1 ;;
-esac
+cd /srv/apps/envhub
+container_id="$(docker compose ps -q envhub)"
+if [ -z "${container_id}" ]; then
+  echo "The EnvHub container is not running" >&2
+  exit 1
+fi
 
 work_dir="$(mktemp -d)"
-curl --fail --location --output "${work_dir}/envhub_${version}_linux_${arch}" \
-  "https://github.com/gumelartresnadwinanda/envhub/releases/download/v${version}/envhub_${version}_linux_${arch}"
-curl --fail --location --output "${work_dir}/SHA256SUMS" \
-  "https://github.com/gumelartresnadwinanda/envhub/releases/download/v${version}/SHA256SUMS"
-
-(
-  cd "${work_dir}"
-  grep " envhub_${version}_linux_${arch}$" SHA256SUMS | sha256sum --check --strict
-)
-sudo install -m 0755 "${work_dir}/envhub_${version}_linux_${arch}" /usr/local/bin/envhub
+docker cp "${container_id}:/usr/local/bin/envhub" "${work_dir}/envhub"
+"${work_dir}/envhub" version
+sudo install -m 0755 "${work_dir}/envhub" /usr/local/bin/envhub
+rm -rf "${work_dir}"
 envhub version
 ```
 
-The last command must print `envhub 0.2.1`. The release workflow deliberately
-stops before changing the running container if the CLI is missing or has a
-different version.
+Both version commands must print `envhub 0.2.1`. This method needs no GitHub
+token and guarantees that the host CLI matches the running EnvHub server image.
+The Echo release workflow stops before changing the running container if the
+CLI is missing or has a different version.
 
 ## 3. Back up the current VPS deployment
 
