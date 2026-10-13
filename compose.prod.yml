@@ -11,17 +11,17 @@
 
 services:
   backend:
-    image: ghcr.io/tresnaid/echo:${ECHO_VERSION}
+    image: ghcr.io/tresnaid/echo:${ECHO_VERSION:?release tag is required}
     container_name: echo-backend
     restart: unless-stopped
     ports:
-      - "${BACKEND_BIND:-127.0.0.1:3001}:3001"
+      - "127.0.0.1:3001:3001"
     environment:
       - PORT=3001
       - NODE_ENV=production
       - DATABASE_PATH=/app/data/echo.db
       - UPLOADS_PATH=/app/data/uploads
-      - CORS_ORIGIN=${CORS_ORIGIN:-}
+      - CORS_ORIGIN=${CORS_ORIGIN:?provide CORS_ORIGIN through EnvHub}
     volumes:
       - ./data:/app/data
     healthcheck:

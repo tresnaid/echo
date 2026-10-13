@@ -86,7 +86,10 @@ Before delivery, verify the project using:
 
 ## Project Documentation
 
-None currently required beyond `PROJECT.md`.
+* `docs/ENVHUB_MIGRATION.md` documents production configuration ownership,
+  cutover, verification, rollback, and local development with EnvHub.
+* `docs/ENVHUB_IDENTITIES.md` documents the exact production OIDC identity and
+  the lifecycle for optional local machine identities.
 
 ## Current State
 
