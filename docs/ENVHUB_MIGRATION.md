@@ -8,8 +8,10 @@ without changing either deployment boundary:
   the VPS.
 
 The backend workflow uses GitHub OIDC to obtain a five-minute EnvHub token.
-No EnvHub credential is persisted in GitHub Secrets or on the VPS.
-`ECHO_VERSION` is deployment metadata from the Git tag, not an EnvHub value.
+That token retrieves both the VPS transport values and backend runtime values.
+No user-managed deployment credential is persisted in GitHub Secrets or on the
+VPS. `ECHO_VERSION` is deployment metadata from the Git tag, not an EnvHub
+value.
 
 ## What lives where
 
@@ -17,13 +19,19 @@ No EnvHub credential is persisted in GitHub Secrets or on the VPS.
 | --- | --- | --- |
 | `VITE_API_URL` | EnvHub `echo/frontend-production` | Vercel fetches it during the production build; Vite then embeds the public URL into browser assets. |
 | `CORS_ORIGIN` | EnvHub `echo/production` | It is mutable backend runtime configuration. |
+| `VPS_HOST`, `VPS_USER`, `VPS_PORT` | EnvHub `echo/production` | They identify the production SSH destination. |
+| `VPS_SSH_PRIVATE_KEY` | EnvHub `echo/production` | It authenticates the short-lived GitHub runner to the VPS. |
+| `VPS_SSH_KNOWN_HOSTS` | EnvHub `echo/production` | It pins the VPS host key so the runner does not trust an unknown server. |
 | `ECHO_VERSION` | The `vX.Y.Z-be` Git tag | It selects the immutable GHCR image for that release. |
 | `PORT`, `NODE_ENV`, `DATABASE_PATH`, `UPLOADS_PATH` | `compose.prod.yml` | These are fixed container layout constants. |
-| VPS host, SSH user and SSH key | Existing GitHub Secrets | They are transport credentials used before EnvHub can run on the remote host. |
 
 Future backend credentials belong in EnvHub. Infrastructure constants and
 public frontend settings remain separate from backend secrets even though both
 are managed in EnvHub.
+
+The workflow still uses GitHub's automatic, per-job `github.token` to publish
+the image to GHCR. That token is created by GitHub for the job and is not a
+repository or environment secret configured by the project owner.
 
 ## Prerequisites
 
@@ -31,7 +39,8 @@ are managed in EnvHub.
 - EnvHub URL `https://env.tresnaid.space`.
 - Echo GitHub repository ID `1383221212` and owner ID `32062861`.
 - Existing GitHub `Production` environment.
-- Existing `VPS_HOST`, `VPS_USER`, and `VPS_SSH_KEY` repository secrets.
+- An unencrypted SSH private deploy key whose public key is authorized for the
+  deployment user on the VPS.
 - A backup location outside `/srv/apps/echo` that only the VPS owner can read.
 
 Identity values and their purpose are documented separately in
@@ -43,14 +52,46 @@ In the EnvHub dashboard:
 
 1. Create or open project `echo`.
 2. Create or open environment `production`.
-3. Add `CORS_ORIGIN` with this value:
+3. Add the backend runtime value:
 
    ```text
-   https://echo.tresnaid.space
+   CORS_ORIGIN=https://echo.tresnaid.space
    ```
 
-4. Save it, then edit it once in the dashboard to confirm updates work.
-5. Create the `echo-github-production` GitHub identity exactly as described in
+4. Add these VPS deployment values:
+
+   | Name | Value |
+   | --- | --- |
+   | `VPS_HOST` | `43.134.169.70` |
+   | `VPS_USER` | `tresnaid` |
+   | `VPS_PORT` | `22`, unless SSH actually listens on another port |
+   | `VPS_SSH_PRIVATE_KEY` | The complete unencrypted private key, including its `BEGIN` and `END` lines |
+   | `VPS_SSH_KNOWN_HOSTS` | The complete verified `known_hosts` line for the VPS |
+
+   Values in this table are either real public connection values or a
+   description of the real secret to paste. Do not literally save the
+   descriptive text in the last two rows.
+
+5. Obtain and verify `VPS_SSH_KNOWN_HOSTS` from a trusted computer:
+
+   ```sh
+   ssh-keyscan -H -t ed25519 43.134.169.70 > echo-vps-known-hosts
+   ssh-keygen -lf echo-vps-known-hosts
+   ```
+
+   Compare that fingerprint with the host-key fingerprint printed on the VPS:
+
+   ```sh
+   sudo ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
+   ```
+
+   Only after they match, paste the contents of `echo-vps-known-hosts` into
+   `VPS_SSH_KNOWN_HOSTS`. This check prevents a different server from
+   impersonating the VPS during deployment.
+
+6. Save each value. Editing an existing value is allowed; a revoked identity
+   name is unrelated to these value names.
+7. Create the `echo-github-production` GitHub identity exactly as described in
    [ENVHUB_IDENTITIES.md](ENVHUB_IDENTITIES.md).
 
 Do not add `ECHO_VERSION` to EnvHub. The tag that triggered the deployment is
@@ -133,29 +174,40 @@ latest Vercel production deployment after changing `VITE_API_URL`.
 
 ## 5. Merge and release
 
-At the time of this migration, the latest backend tag is `v0.0.2-be`, so the
-planned next tag is `v0.0.3-be`. After this change is reviewed and merged into
-`main`, confirm that tag is still unused and create it from the merged commit:
+After this change is reviewed and merged into `main`, inspect the existing
+backend tags and choose the next unused patch version. For example, if
+`v0.0.4-be` is the newest tag, use `v0.0.5-be`:
 
 ```sh
 git switch main
 git pull --ff-only
-git tag --list v0.0.3-be
-git tag v0.0.3-be
-git push origin v0.0.3-be
+git tag --list 'v*-be' --sort=-v:refname
+git tag --list v0.0.5-be
+git tag v0.0.5-be
+git push origin v0.0.5-be
 ```
 
-The first command must print nothing. If it prints `v0.0.3-be`, choose the next
-unused patch version instead. The new tag starts the existing backend workflow,
-which now:
+The exact-tag check (`git tag --list v0.0.5-be` in the example) must print
+nothing. If it prints the tag, choose the next unused patch version instead.
+The new tag starts the existing backend workflow, which now:
 
 1. tests and builds the backend image;
 2. exchanges GitHub OIDC for a five-minute EnvHub token;
-3. copies `compose.prod.yml` to `/srv/apps/echo`;
-4. runs Compose through `envhub run`;
-5. explicitly uses `--env-file /dev/null`, so a legacy `.env` cannot affect the
+3. fetches the VPS address, user, port, private key, and pinned host key from
+   EnvHub into temporary runner files;
+4. copies `compose.prod.yml` to `/srv/apps/echo` using strict SSH host-key
+   checking;
+5. passes the same short-lived token to the VPS and runs Compose through
+   `envhub run`;
+6. explicitly uses `--env-file /dev/null`, so a legacy `.env` cannot affect the
    release;
-6. checks `http://127.0.0.1:3001/api/health` before reporting success.
+7. checks `http://127.0.0.1:3001/api/health` before reporting success.
+
+The SSH private key and the complete EnvHub response exist only in the
+ephemeral runner's restricted temporary directory and are deleted when the
+step exits. Although the same production response is also fetched by
+`envhub run` on the VPS, Compose forwards only explicitly declared application
+variables such as `CORS_ORIGIN` into the container.
 
 ## 6. Verify the cutover
 
@@ -192,8 +244,10 @@ policy.
 
 ## Rollback
 
-If the OIDC exchange or EnvHub fetch fails, the workflow stops before
-`docker compose up`; the currently running Echo container remains active.
+If the OIDC exchange, EnvHub fetch, SSH validation, copy, or remote deployment
+fails, the workflow stops before replacing a healthy container whenever
+possible. The currently running Echo container remains active for failures
+that occur before `docker compose up`.
 
 To restore the previous file-based deployment manually:
 

@@ -167,11 +167,19 @@ describe('Standalone & Separate Deployment Support', () => {
         expect(content).toContain('id-token: write');
         expect(content).toContain('environment: Production');
         expect(content).toContain('/v1/auth/github-actions/exchange');
+        expect(content).toContain('/v1/runtime/secrets');
+        expect(content).toContain('VPS_SSH_PRIVATE_KEY');
+        expect(content).toContain('VPS_SSH_KNOWN_HOSTS');
+        expect(content).toContain('StrictHostKeyChecking=yes');
+        expect(content).toContain('UserKnownHostsFile=');
         expect(content).toContain('envhub run --server');
         expect(content).toContain('release_version="$1"');
         expect(content).toContain('export ECHO_VERSION="${release_version}"');
+        expect(content).toContain('unset VPS_SSH_PRIVATE_KEY VPS_SSH_KNOWN_HOSTS');
         expect(content).toContain("' sh \"${TAG}\"");
         expect(content).toContain('docker compose --env-file /dev/null');
+        expect(content).not.toContain('appleboy/');
+        expect(content).not.toContain('${{ secrets.');
         expect(content).not.toContain('sed -i');
         expect(content).not.toContain('persistent .env');
       }
