@@ -15,14 +15,15 @@ No EnvHub credential is persisted in GitHub Secrets or on the VPS.
 
 | Value | Source | Reason |
 | --- | --- | --- |
-| `VITE_API_URL` | Vercel project configuration | Vite embeds it into public browser assets at build time; it is not a secret. |
+| `VITE_API_URL` | EnvHub `echo/frontend-production` | Vercel fetches it during the production build; Vite then embeds the public URL into browser assets. |
 | `CORS_ORIGIN` | EnvHub `echo/production` | It is mutable backend runtime configuration. |
 | `ECHO_VERSION` | The `vX.Y.Z-be` Git tag | It selects the immutable GHCR image for that release. |
 | `PORT`, `NODE_ENV`, `DATABASE_PATH`, `UPLOADS_PATH` | `compose.prod.yml` | These are fixed container layout constants. |
 | VPS host, SSH user and SSH key | Existing GitHub Secrets | They are transport credentials used before EnvHub can run on the remote host. |
 
 Future backend credentials belong in EnvHub. Infrastructure constants and
-public frontend settings do not need to be moved there.
+public frontend settings remain separate from backend secrets even though both
+are managed in EnvHub.
 
 ## Prerequisites
 
@@ -57,33 +58,30 @@ the only version source.
 
 ## 2. Install the pinned EnvHub CLI on the VPS
 
-Connect to the VPS as the deployment user and run:
+The EnvHub repository is private, so its GitHub release URL cannot be downloaded
+with unauthenticated `curl`. The running EnvHub container already contains the
+correct binary. Extract that exact binary instead:
 
 ```sh
-version=0.2.1
-case "$(uname -m)" in
-  x86_64) arch=amd64 ;;
-  aarch64|arm64) arch=arm64 ;;
-  *) echo "Unsupported architecture: $(uname -m)" >&2; exit 1 ;;
-esac
+cd /srv/apps/envhub
+container_id="$(docker compose ps -q envhub)"
+if [ -z "${container_id}" ]; then
+  echo "The EnvHub container is not running" >&2
+  exit 1
+fi
 
 work_dir="$(mktemp -d)"
-curl --fail --location --output "${work_dir}/envhub_${version}_linux_${arch}" \
-  "https://github.com/gumelartresnadwinanda/envhub/releases/download/v${version}/envhub_${version}_linux_${arch}"
-curl --fail --location --output "${work_dir}/SHA256SUMS" \
-  "https://github.com/gumelartresnadwinanda/envhub/releases/download/v${version}/SHA256SUMS"
-
-(
-  cd "${work_dir}"
-  grep " envhub_${version}_linux_${arch}$" SHA256SUMS | sha256sum --check --strict
-)
-sudo install -m 0755 "${work_dir}/envhub_${version}_linux_${arch}" /usr/local/bin/envhub
+docker cp "${container_id}:/usr/local/bin/envhub" "${work_dir}/envhub"
+"${work_dir}/envhub" version
+sudo install -m 0755 "${work_dir}/envhub" /usr/local/bin/envhub
+rm -rf "${work_dir}"
 envhub version
 ```
 
-The last command must print `envhub 0.2.1`. The release workflow deliberately
-stops before changing the running container if the CLI is missing or has a
-different version.
+Both version commands must print `envhub 0.2.1`. This method needs no GitHub
+token and guarantees that the host CLI matches the running EnvHub server image.
+The Echo release workflow stops before changing the running container if the
+CLI is missing or has a different version.
 
 ## 3. Back up the current VPS deployment
 
@@ -105,18 +103,33 @@ The backup path is `/srv/backups/echo-before-envhub`. The SQLite database and up
 `/srv/apps/echo/data` and are not replaced by this migration. Back them up using
 the VPS's normal data backup procedure before release.
 
-## 4. Check Vercel without moving its value
+## 4. Move Vercel build configuration to EnvHub
 
-In the Vercel Echo project, confirm:
+In EnvHub:
+
+1. Create environment `frontend-production` under project `echo`.
+2. Add `VITE_API_URL=https://api-echo.tresnaid.space`.
+3. Create the `echo-vercel-production` machine identity described in
+   [ENVHUB_IDENTITIES.md](ENVHUB_IDENTITIES.md).
+4. Copy its one-time token directly into Vercel as a sensitive Production-only
+   variable named `ENVHUB_TOKEN`.
+
+In the Vercel Echo project, keep:
 
 - Root Directory: `frontend`
 - Build Command: `pnpm run build`
 - Output Directory: `dist`
-- Production `VITE_API_URL`: `https://api-echo.tresnaid.space`
 
-Do not give the browser an EnvHub token. `VITE_API_URL` is public after every
-Vite build regardless of where it was stored. Keeping it in Vercel avoids
-adding a permanent EnvHub machine credential merely to copy a public URL.
+After `ENVHUB_TOKEN` is saved, remove the old Vercel `VITE_API_URL`. The Node
+build wrapper fetches the frontend value from EnvHub's runtime endpoint, unsets
+the token, and then runs Vite. The browser receives only `VITE_API_URL`; it
+never receives the EnvHub token. No EnvHub CLI download is needed in Vercel.
+
+Do this before merging the frontend EnvHub integration PR. Otherwise Vercel's
+automatic build will fail closed because `ENVHUB_TOKEN` is missing.
+
+An EnvHub value change is not itself a Vercel deployment trigger. Redeploy the
+latest Vercel production deployment after changing `VITE_API_URL`.
 
 ## 5. Merge and release
 

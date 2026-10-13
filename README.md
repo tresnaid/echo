@@ -117,10 +117,12 @@ The frontend is statically compiled and deployed to Vercel:
 - **Root Directory:** `frontend`
 - **Build Command:** `pnpm run build`
 - **Output Directory:** `dist`
-- **Environment Variable:** `VITE_API_URL=https://api-echo.tresnaid.space`
+- **EnvHub scope:** `echo/frontend-production`
+- **Vercel bootstrap variable:** sensitive Production-only `ENVHUB_TOKEN`
 
-`VITE_API_URL` is public build-time configuration, not a secret. It remains in
-Vercel and is intentionally not fetched from EnvHub.
+Vercel fetches `VITE_API_URL` from EnvHub during `pnpm run build`. Vite embeds
+that public URL into the frontend bundle; the EnvHub token is unset before Vite
+runs and is never sent to the browser.
 
 ### Backend (VPS via Docker & GHCR)
 The production backend runs as an isolated container at `/srv/apps/echo/`:

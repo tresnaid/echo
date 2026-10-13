@@ -35,6 +35,37 @@ At deployment time GitHub signs an OIDC assertion. EnvHub validates the claims
 and returns a five-minute access token. The token is masked by GitHub Actions,
 sent only to that SSH session, and is not stored as a GitHub Secret or VPS file.
 
+## Vercel frontend build identity
+
+Create a separate EnvHub environment named `frontend-production` under project
+`echo`. It contains only public frontend build configuration:
+
+```text
+VITE_API_URL=https://api-echo.tresnaid.space
+```
+
+Then create this identity in that environment:
+
+| Field | Exact value |
+| --- | --- |
+| Type | Machine |
+| Name | `echo-vercel-production` |
+| Project | `echo` |
+| Environment | `frontend-production` |
+
+Copy the one-time token directly into the Echo Vercel project's Production
+environment variable named `ENVHUB_TOKEN`. Mark it sensitive and do not expose
+it to Preview or Development deployments.
+
+Vercel does not currently authenticate to EnvHub through the GitHub OIDC flow,
+so this is the single persistent bootstrap credential it requires. Separating
+the environment ensures the token cannot read current or future backend
+production secrets. The build wrapper calls EnvHub's runtime endpoint directly
+and unsets the token before Vite runs.
+
+Changing `VITE_API_URL` in EnvHub requires a new Vercel deployment because Vite
+embeds the value into static browser assets at build time.
+
 ## Local development identities
 
 Create a separate EnvHub `development` environment first. Then create one
@@ -78,6 +109,8 @@ envhub run -- pnpm --dir backend dev
   token in repository secrets.
 - Use a distinct machine identity for every local device so one device can be
   revoked without interrupting others.
+- Keep the Vercel identity scoped to `frontend-production`; never point it at
+  the backend `production` environment.
 - Revoke an identity immediately when a device is lost, a token may have been
   exposed, or an automation is retired.
 - Confirm the replacement identity works before revoking a planned rotation.
