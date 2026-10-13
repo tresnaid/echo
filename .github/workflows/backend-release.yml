@@ -161,9 +161,10 @@ jobs:
 
             # Step 3: Fetch runtime configuration into this process only. Docker
             # Compose is explicitly prevented from reading a legacy .env file.
-            export ECHO_VERSION="${TAG}"
             envhub run --server "${ENVHUB_SERVER}" -- sh -eu -c '
+              release_version="$1"
               unset ENVHUB_TOKEN ENVHUB_SERVER
+              export ECHO_VERSION="${release_version}"
 
               echo "==> Validating Docker Compose configuration..."
               docker compose --env-file /dev/null config >/dev/null
@@ -192,6 +193,6 @@ jobs:
                 docker compose --env-file /dev/null logs --tail=50 backend
                 exit 1
               fi
-            '
+            ' sh "${TAG}"
 
             echo "==> Deployment completed successfully for version ${TAG}"
