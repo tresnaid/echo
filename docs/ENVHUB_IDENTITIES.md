@@ -32,8 +32,21 @@ still scope the identity to this release job. If a reusable workflow is adopted
 later, add its exact `job_workflow_ref` claim at that time.
 
 At deployment time GitHub signs an OIDC assertion. EnvHub validates the claims
-and returns a five-minute access token. The token is masked by GitHub Actions,
-sent only to that SSH session, and is not stored as a GitHub Secret or VPS file.
+and returns a five-minute access token. The workflow uses it first to retrieve
+the VPS SSH values from `echo/production`, then sends the same masked token to
+that SSH session so the VPS can retrieve the backend runtime values. The token
+is not stored as a GitHub Secret or VPS file.
+
+This identity therefore authorizes access to both categories in the same
+environment:
+
+- application configuration such as `CORS_ORIGIN`;
+- deployment transport values `VPS_HOST`, `VPS_USER`, `VPS_PORT`,
+  `VPS_SSH_PRIVATE_KEY`, and `VPS_SSH_KNOWN_HOSTS`.
+
+The private key is written only to a permission-restricted temporary file on
+the ephemeral GitHub runner. Docker Compose passes only variables explicitly
+listed in `compose.prod.yml` to the Echo container.
 
 ## Vercel frontend build identity
 
