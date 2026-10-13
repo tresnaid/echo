@@ -168,6 +168,9 @@ describe('Standalone & Separate Deployment Support', () => {
         expect(content).toContain('environment: Production');
         expect(content).toContain('/v1/auth/github-actions/exchange');
         expect(content).toContain('envhub run --server');
+        expect(content).toContain('release_version="$1"');
+        expect(content).toContain('export ECHO_VERSION="${release_version}"');
+        expect(content).toContain("' sh \"${TAG}\"");
         expect(content).toContain('docker compose --env-file /dev/null');
         expect(content).not.toContain('sed -i');
         expect(content).not.toContain('persistent .env');
