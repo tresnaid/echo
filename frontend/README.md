@@ -71,7 +71,12 @@ Configure your project in the Vercel Dashboard:
 - **Output Directory:** `dist`
 - **Install Command:** `pnpm install`
 - **Environment Variables:**
-  - `VITE_API_URL`: `https://api-echo.tresnaid.space`
+  - `ENVHUB_TOKEN`: sensitive, Production only, from the
+    `echo-vercel-production` identity
+
+The production build fetches `VITE_API_URL` from EnvHub environment
+`echo/frontend-production`. See `../docs/ENVHUB_IDENTITIES.md` for identity
+setup and rotation.
 
 ## Production (Docker)
 

@@ -75,3 +75,13 @@ jobs:
       - name: Build frontend
         working-directory: ./frontend
         run: pnpm run build
+
+      - name: Verify Vercel builds fail closed without EnvHub
+        working-directory: ./frontend
+        env:
+          VERCEL: "1"
+        run: |
+          if pnpm run build; then
+            echo "::error::Vercel build unexpectedly succeeded without ENVHUB_TOKEN"
+            exit 1
+          fi
