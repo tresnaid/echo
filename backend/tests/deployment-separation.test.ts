@@ -151,10 +151,26 @@ describe('Standalone & Separate Deployment Support', () => {
       const composeProdPath = path.resolve(process.cwd(), '../compose.prod.yml');
       if (fs.existsSync(composeProdPath)) {
         const content = fs.readFileSync(composeProdPath, 'utf8');
-        expect(content).toContain('image: ghcr.io/tresnaid/echo:${ECHO_VERSION}');
+        expect(content).toContain('image: ghcr.io/tresnaid/echo:${ECHO_VERSION:?release tag is required}');
         expect(content).not.toContain('build:');
         expect(content).toContain('./data:/app/data');
-        expect(content).toContain('127.0.0.1');
+        expect(content).toContain('127.0.0.1:3001:3001');
+        expect(content).toContain('CORS_ORIGIN=${CORS_ORIGIN:?provide CORS_ORIGIN through EnvHub}');
+        expect(content).not.toContain('BACKEND_BIND');
+      }
+    });
+
+    it('deploys tagged releases through EnvHub without a persistent .env', () => {
+      const workflowPath = path.resolve(process.cwd(), '../.github/workflows/backend-release.yml');
+      if (fs.existsSync(workflowPath)) {
+        const content = fs.readFileSync(workflowPath, 'utf8');
+        expect(content).toContain('id-token: write');
+        expect(content).toContain('environment: Production');
+        expect(content).toContain('/v1/auth/github-actions/exchange');
+        expect(content).toContain('envhub run --server');
+        expect(content).toContain('docker compose --env-file /dev/null');
+        expect(content).not.toContain('sed -i');
+        expect(content).not.toContain('persistent .env');
       }
     });
   });

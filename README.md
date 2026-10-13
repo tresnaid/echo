@@ -119,8 +119,16 @@ The frontend is statically compiled and deployed to Vercel:
 - **Output Directory:** `dist`
 - **Environment Variable:** `VITE_API_URL=https://api-echo.tresnaid.space`
 
+`VITE_API_URL` is public build-time configuration, not a secret. It remains in
+Vercel and is intentionally not fetched from EnvHub.
+
 ### Backend (VPS via Docker & GHCR)
 The production backend runs as an isolated container at `/srv/apps/echo/`:
 - **Production API:** `https://api-echo.tresnaid.space`
 - Images are automatically built and published to GHCR via GitHub Actions on release tags (`v*-be`).
 - Database and uploaded assets are persisted under `/srv/apps/echo/data/` across container rebuilds.
+- Runtime configuration is fetched from EnvHub through GitHub OIDC; production does not use a persistent `.env` file.
+
+See [the EnvHub migration runbook](docs/ENVHUB_MIGRATION.md) and the separate
+[identity reference](docs/ENVHUB_IDENTITIES.md) for setup, release, rollback,
+and local development instructions.
