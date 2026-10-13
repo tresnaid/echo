@@ -168,6 +168,8 @@ describe('Standalone & Separate Deployment Support', () => {
         expect(content).toContain('environment: Production');
         expect(content).toContain('/v1/auth/github-actions/exchange');
         expect(content).toContain('/v1/runtime/secrets');
+        expect(content).toContain('.project == "echo-backend" and .environment == "production"');
+        expect(content).not.toContain('.project == "echo" and .environment == "production"');
         expect(content).toContain('VPS_SSH_PRIVATE_KEY');
         expect(content).toContain('VPS_SSH_KNOWN_HOSTS');
         expect(content).toContain('StrictHostKeyChecking=yes');

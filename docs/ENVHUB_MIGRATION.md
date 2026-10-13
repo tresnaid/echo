@@ -18,10 +18,10 @@ value.
 | Value | Source | Reason |
 | --- | --- | --- |
 | `VITE_API_URL` | EnvHub `echo/frontend-production` | Vercel fetches it during the production build; Vite then embeds the public URL into browser assets. |
-| `CORS_ORIGIN` | EnvHub `echo/production` | It is mutable backend runtime configuration. |
-| `VPS_HOST`, `VPS_USER`, `VPS_PORT` | EnvHub `echo/production` | They identify the production SSH destination. |
-| `VPS_SSH_PRIVATE_KEY` | EnvHub `echo/production` | It authenticates the short-lived GitHub runner to the VPS. |
-| `VPS_SSH_KNOWN_HOSTS` | EnvHub `echo/production` | It pins the VPS host key so the runner does not trust an unknown server. |
+| `CORS_ORIGIN` | EnvHub `echo-backend/production` | It is mutable backend runtime configuration. |
+| `VPS_HOST`, `VPS_USER`, `VPS_PORT` | EnvHub `echo-backend/production` | They identify the production SSH destination. |
+| `VPS_SSH_PRIVATE_KEY` | EnvHub `echo-backend/production` | It authenticates the short-lived GitHub runner to the VPS. |
+| `VPS_SSH_KNOWN_HOSTS` | EnvHub `echo-backend/production` | It pins the VPS host key so the runner does not trust an unknown server. |
 | `ECHO_VERSION` | The `vX.Y.Z-be` Git tag | It selects the immutable GHCR image for that release. |
 | `PORT`, `NODE_ENV`, `DATABASE_PATH`, `UPLOADS_PATH` | `compose.prod.yml` | These are fixed container layout constants. |
 
@@ -50,7 +50,7 @@ Identity values and their purpose are documented separately in
 
 In the EnvHub dashboard:
 
-1. Create or open project `echo`.
+1. Create or open project `echo-backend`.
 2. Create or open environment `production`.
 3. Add the backend runtime value:
 
