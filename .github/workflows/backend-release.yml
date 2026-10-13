@@ -143,8 +143,10 @@ jobs:
           vps_host="$(jq -er '.secrets.VPS_HOST' "${secrets_file}")"
           vps_user="$(jq -er '.secrets.VPS_USER' "${secrets_file}")"
           vps_port="$(jq -er '.secrets.VPS_PORT' "${secrets_file}")"
-          jq -er '.secrets.VPS_SSH_PRIVATE_KEY' "${secrets_file}" > "${key_file}"
-          jq -er '.secrets.VPS_SSH_KNOWN_HOSTS' "${secrets_file}" > "${known_hosts_file}"
+          jq -er '.secrets.VPS_SSH_PRIVATE_KEY' "${secrets_file}" |
+            tr -d '\r' > "${key_file}"
+          jq -er '.secrets.VPS_SSH_KNOWN_HOSTS' "${secrets_file}" |
+            tr -d '\r' > "${known_hosts_file}"
           chmod 0600 "${key_file}" "${known_hosts_file}"
 
           if [[ ! "${vps_host}" =~ ^[A-Za-z0-9.-]+$ ]]; then

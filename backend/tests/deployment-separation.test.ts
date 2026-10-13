@@ -172,6 +172,7 @@ describe('Standalone & Separate Deployment Support', () => {
         expect(content).not.toContain('.project == "echo" and .environment == "production"');
         expect(content).toContain('VPS_SSH_PRIVATE_KEY');
         expect(content).toContain('VPS_SSH_KNOWN_HOSTS');
+        expect(content).toContain("tr -d '\\r'");
         expect(content).toContain('StrictHostKeyChecking=yes');
         expect(content).toContain('UserKnownHostsFile=');
         expect(content).toContain('envhub run --server');
