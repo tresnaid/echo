@@ -35,7 +35,7 @@ repository or environment secret configured by the project owner.
 
 ## Prerequisites
 
-- EnvHub server and CLI version `0.2.1`.
+- EnvHub server and CLI version `0.2.2`.
 - EnvHub URL `https://env.tresnaid.space`.
 - Echo GitHub repository ID `1383221212` and owner ID `32062861`.
 - Existing GitHub `Production` environment.
@@ -119,7 +119,7 @@ rm -rf "${work_dir}"
 envhub version
 ```
 
-Both version commands must print `envhub 0.2.1`. This method needs no GitHub
+Both version commands must print `envhub 0.2.2`. This method needs no GitHub
 token and guarantees that the host CLI matches the running EnvHub server image.
 The Echo release workflow stops before changing the running container if the
 CLI is missing or has a different version.
