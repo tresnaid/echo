@@ -170,6 +170,7 @@ describe('Standalone & Separate Deployment Support', () => {
         expect(content).toContain('/v1/runtime/secrets');
         expect(content).toContain('.project == "echo-backend" and .environment == "production"');
         expect(content).not.toContain('.project == "echo" and .environment == "production"');
+        expect(content).toContain('ENVHUB_CLI_VERSION: "0.2.2"');
         expect(content).toContain('VPS_SSH_PRIVATE_KEY');
         expect(content).toContain('VPS_SSH_KNOWN_HOSTS');
         expect(content).toContain("tr -d '\\r'");

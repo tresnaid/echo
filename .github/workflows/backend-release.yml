@@ -90,7 +90,7 @@ jobs:
       id-token: write
     env:
       ENVHUB_SERVER: https://env.tresnaid.space
-      ENVHUB_CLI_VERSION: "0.2.1"
+      ENVHUB_CLI_VERSION: "0.2.2"
 
     steps:
       - name: Checkout repository
