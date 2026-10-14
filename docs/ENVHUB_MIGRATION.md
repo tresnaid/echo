@@ -35,7 +35,7 @@ repository or environment secret configured by the project owner.
 
 ## Prerequisites
 
-- EnvHub server and CLI version `0.2.2`.
+- EnvHub server version `0.2.2` or newer and CLI version `0.2.1` or newer.
 - EnvHub URL `https://env.tresnaid.space`.
 - Echo GitHub repository ID `1383221212` and owner ID `32062861`.
 - Existing GitHub `Production` environment.
@@ -97,7 +97,7 @@ In the EnvHub dashboard:
 Do not add `ECHO_VERSION` to EnvHub. The tag that triggered the deployment is
 the only version source.
 
-## 2. Install the pinned EnvHub CLI on the VPS
+## 2. Install a compatible EnvHub CLI on the VPS
 
 The EnvHub repository is private, so its GitHub release URL cannot be downloaded
 with unauthenticated `curl`. The running EnvHub container already contains the
@@ -119,10 +119,10 @@ rm -rf "${work_dir}"
 envhub version
 ```
 
-Both version commands must print `envhub 0.2.2`. This method needs no GitHub
-token and guarantees that the host CLI matches the running EnvHub server image.
-The Echo release workflow stops before changing the running container if the
-CLI is missing or has a different version.
+The first version command shows the version copied from the running EnvHub
+container. The final command must print `envhub 0.2.1` or newer. This method
+needs no GitHub token. The Echo release workflow stops before changing the
+running container if the CLI is missing, malformed, or older than `0.2.1`.
 
 ## 3. Back up the current VPS deployment
 

@@ -90,7 +90,7 @@ jobs:
       id-token: write
     env:
       ENVHUB_SERVER: https://env.tresnaid.space
-      ENVHUB_CLI_VERSION: "0.2.2"
+      ENVHUB_MIN_CLI_VERSION: "0.2.1"
 
     steps:
       - name: Checkout repository
@@ -190,15 +190,15 @@ jobs:
           remote_bootstrap='set -eu
           IFS= read -r TAG
           IFS= read -r ENVHUB_SERVER
-          IFS= read -r ENVHUB_CLI_VERSION
+          IFS= read -r ENVHUB_MIN_CLI_VERSION
           IFS= read -r ENVHUB_TOKEN
-          export TAG ENVHUB_SERVER ENVHUB_CLI_VERSION ENVHUB_TOKEN
+          export TAG ENVHUB_SERVER ENVHUB_MIN_CLI_VERSION ENVHUB_TOKEN
           exec sh -s'
           {
             printf '%s\n' \
               "${GITHUB_REF_NAME}" \
               "${ENVHUB_SERVER}" \
-              "${ENVHUB_CLI_VERSION}" \
+              "${ENVHUB_MIN_CLI_VERSION}" \
               "${token}"
             cat <<'REMOTE_SCRIPT'
           set -eu
@@ -211,8 +211,17 @@ jobs:
             echo "envhub CLI is not installed on the VPS. See docs/ENVHUB_MIGRATION.md." >&2
             exit 1
           fi
-          if [ "$(envhub version)" != "envhub ${ENVHUB_CLI_VERSION}" ]; then
-            echo "Expected envhub ${ENVHUB_CLI_VERSION} on the VPS; found $(envhub version)." >&2
+          installed_output="$(envhub version)"
+          installed_version="${installed_output#envhub }"
+          if [ "${installed_version}" = "${installed_output}" ] ||
+             ! printf '%s\n' "${installed_version}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Unable to read a semantic version from: ${installed_output}" >&2
+            exit 1
+          fi
+          oldest_version="$(printf '%s\n%s\n' \
+            "${ENVHUB_MIN_CLI_VERSION}" "${installed_version}" | sort -V | head -n 1)"
+          if [ "${oldest_version}" != "${ENVHUB_MIN_CLI_VERSION}" ]; then
+            echo "EnvHub CLI ${installed_version} is too old; version ${ENVHUB_MIN_CLI_VERSION} or newer is required." >&2
             exit 1
           fi
           if [ ! -f "${APP_DIR}/compose.prod.yml" ]; then
