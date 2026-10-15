@@ -87,8 +87,9 @@ export function App() {
   const isMobile = useIsMobile(840);
   const [viewMode, setViewMode] = useState<'landing' | 'library'>(() => {
     if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase();
       const params = new URLSearchParams(window.location.search);
-      if (params.get('view') === 'library' || window.location.hash === '#library') {
+      if (path.startsWith('/library') || path.startsWith('/app') || params.get('view') === 'library') {
         return 'library';
       }
     }
@@ -96,9 +97,18 @@ export function App() {
   });
 
   useEffect(() => {
-    const handlePopState = () => {
+    // Gracefully clean up any legacy ?view= query parameter
+    if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('view') === 'library' || window.location.hash === '#library') {
+      if (params.has('view')) {
+        const isLib = params.get('view') === 'library';
+        window.history.replaceState(null, '', isLib ? '/library' : '/');
+      }
+    }
+
+    const handlePopState = () => {
+      const path = window.location.pathname.toLowerCase();
+      if (path.startsWith('/library') || path.startsWith('/app')) {
         setViewMode('library');
       } else {
         setViewMode('landing');
@@ -110,19 +120,13 @@ export function App() {
 
   const handleOpenLibrary = () => {
     setViewMode('library');
-    const url = new URL(window.location.href);
-    url.searchParams.set('view', 'library');
-    window.history.pushState(null, '', url.toString());
+    window.history.pushState(null, '', '/library');
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const handleOpenLanding = () => {
     setViewMode('landing');
-    const url = new URL(window.location.href);
-    url.searchParams.delete('view');
-    url.hash = '';
-    const cleanUrl = url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '');
-    window.history.pushState(null, '', cleanUrl);
+    window.history.pushState(null, '', '/');
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
@@ -262,7 +266,36 @@ export function App() {
   const hasActiveFilters = Boolean(search.trim() || selectedCategory || selectedTag);
 
   if (viewMode === 'landing') {
-    return <LandingPage onOpenApp={handleOpenLibrary} />;
+    return (
+      <>
+        <LandingPage
+          onOpenApp={handleOpenLibrary}
+          prompts={prompts}
+          categories={categories}
+          availableTags={availableTags}
+          onOpenDetails={(prompt) => setDetailPrompt(prompt)}
+        />
+        <PromptDetailModal
+          prompt={detailPrompt}
+          isOpen={Boolean(detailPrompt)}
+          onClose={() => setDetailPrompt(null)}
+          onEdit={(prompt) => {
+            setDetailPrompt(null);
+            handleOpenLibrary();
+            handleOpenEditPrompt(prompt);
+          }}
+          onDelete={(prompt) => {
+            setDetailPrompt(null);
+            handleOpenLibrary();
+            setDeletingPrompt(prompt);
+          }}
+          onTagClick={(tag) => {
+            setSelectedTag(tag);
+            handleOpenLibrary();
+          }}
+        />
+      </>
+    );
   }
 
   return (
@@ -303,6 +336,8 @@ export function App() {
             {/* Brand / Logo */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
               <div
+                role="button"
+                tabIndex={0}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -310,7 +345,15 @@ export function App() {
                   cursor: 'pointer',
                   userSelect: 'none',
                 }}
-                onClick={() => setSelectedView('all')}
+                onClick={handleOpenLanding}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleOpenLanding();
+                  }
+                }}
+                title="Echo — Click to return to Overview"
+                aria-label="Echo — Return to Overview"
               >
                 <img
                   src="/echo-logo.svg"
@@ -336,36 +379,61 @@ export function App() {
                 </Heading>
               </div>
 
-              {!isMobile && (
-                <Text
-                  color="secondary"
-                  size="xs"
-                  truncate
-                  style={{
-                    borderLeft: '1px solid var(--atlas-color-border-subtle, #cbd5e1)',
-                    paddingLeft: '0.75rem',
-                    color: 'var(--atlas-color-text-muted, #64748b)',
-                    maxWidth: '420px',
-                    lineHeight: 1.4,
-                  }}
-                >
-                  Prompt library for storing, organizing, and 1-click copying.
-                </Text>
-              )}
             </div>
 
-            {/* Actions: Overview return, Health indicator & Create Prompt */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexShrink: 0 }}>
-              <Button
-                variant="secondary"
-                size={isMobile ? 'sm' : 'md'}
-                onClick={handleOpenLanding}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                title="Return to Echo Overview & Portfolio Showcase"
-              >
-                <span>← Overview</span>
-              </Button>
+            {/* Center Navigation in Library Header */}
+            {!isMobile && (
+              <nav style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }} aria-label="Library Navigation">
+                <button
+                  type="button"
+                  onClick={handleOpenLanding}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                    color: 'var(--atlas-color-text-secondary, #64748b)',
+                    transition: 'color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                >
+                  Showcase
+                </button>
+                <span
+                  style={{
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    color: 'var(--atlas-color-text-brand, #2563eb)',
+                    borderBottom: '2px solid var(--atlas-color-text-brand, #2563eb)',
+                    paddingBottom: '2px',
+                  }}
+                >
+                  Library
+                </span>
+                <a
+                  href="https://github.com/tresnaid/echo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    textDecoration: 'none',
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                    color: 'var(--atlas-color-text-secondary, #64748b)',
+                    transition: 'color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                >
+                  GitHub
+                </a>
+              </nav>
+            )}
 
+            {/* Actions: Health indicator & Create Prompt */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexShrink: 0 }}>
               {loading ? (
                 <Badge variant="subtle" intent="neutral" size="sm">
                   Connecting...
@@ -646,7 +714,7 @@ export function App() {
                     totalResults={prompts.length}
                   />
 
-                  {/* Prompt Grid / Catalog */}
+                  {/* Prompt Grid */}
                   <PromptGrid
                     prompts={prompts}
                     loading={promptsLoading}

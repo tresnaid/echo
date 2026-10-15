@@ -71,12 +71,12 @@ Rules:
     },
     {
       title: 'Isometric 3D App Icon Render',
-      description: 'Midjourney / Stable Diffusion prompt for clean, minimalist 3D clay isometric application icons with soft studio lighting.',
+      description: 'Prompt for clean, minimalist 3D clay isometric application icons with soft studio lighting.',
       usageDescription: 'Replace [OBJECT/CONCEPT] with your target icon concept (e.g. database disk, rocket, compass).',
       promptText: `Minimalist isometric 3D render of a [OBJECT/CONCEPT], smooth matte clay material, pastel gradient palette, subtle subsurface scattering, soft ambient occlusion, studio softbox lighting, clean solid neutral background, 8k resolution, octane render style --ar 1:1 --stylize 250`,
       category: 'image',
       collection: 'AI Image & Visual Arts',
-      tags: ['midjourney', '3d', 'iconography', 'isometric'],
+      tags: ['diffusion', '3d', 'iconography', 'isometric'],
       media: [
         {
           media_type: 'image',
@@ -107,12 +107,12 @@ Keep tone objective, direct, and free of fluff.
     },
     {
       title: 'Cinematic Drone Hyperlapse Establishing Shot',
-      description: 'Detailed prompt for video generation models (Sora, Runway Gen-3) creating sweeping architectural hyperlapses.',
+      description: 'Detailed prompt for generative video models creating sweeping architectural hyperlapses.',
       usageDescription: 'Replace [LOCATION/SETTING] with desired environment.',
       promptText: `Fpv drone cinematic hyperlapse smoothly ascending above [LOCATION/SETTING] during golden hour, long exposure motion blur on moving traffic below, sun rays breaking through modern glass facades, smooth gimbal roll, ultra realistic 4k 60fps cinematic film grain, color graded in warm teal and amber.`,
       category: 'video',
       collection: 'Video Generation & Motion',
-      tags: ['cinematic', 'drone', 'hyperlapse', 'sora'],
+      tags: ['cinematic', 'drone', 'hyperlapse', 'video'],
       media: [
         {
           media_type: 'video',
@@ -216,7 +216,7 @@ Topic to cover:
       promptText: `Continuous 360-degree turntable shot of [CHARACTER DESCRIPTION] standing in a neutral pose, neutral grey studio background, consistent lighting from all angles, smooth rotation speed, no morphing or flickering, 60fps high fidelity 3D animation.`,
       category: 'video',
       collection: 'Video Generation & Motion',
-      tags: ['character', 'animation', 'turnaround', 'runway'],
+      tags: ['character', 'animation', 'turnaround', 'motion'],
       media: [
         {
           media_type: 'video',
@@ -306,7 +306,7 @@ Sentence 3: Low-friction call to interest (no calendar link, simple open questio
       promptText: `Cinematic 4k drone orbit around rugged sea cliffs with crashing turquoise ocean waves, dramatic sea spray mist catching late afternoon sunlight, seagulls soaring beneath camera, ultra smooth flight trajectory, 60fps photorealistic nature documentary aesthetic.`,
       category: 'video',
       collection: 'Video Generation & Motion',
-      tags: ['drone', 'ocean', 'aerial', 'landscape', 'sora'],
+      tags: ['drone', 'ocean', 'aerial', 'landscape', 'cinematic'],
       media: [
         {
           media_type: 'video',
@@ -348,7 +348,7 @@ Sentence 3: Low-friction call to interest (no calendar link, simple open questio
       promptText: `Dynamic low-angle Russian arm camera tracking a sleek aerodynamic electric hypercar drifting through a high-speed mountain bend at twilight, active aerodynamic wing deploying, light trails from animated LED tail lamps, glowing carbon ceramic brake discs, ultra sharp 4k motion blur.`,
       category: 'video',
       collection: 'Video Generation & Motion',
-      tags: ['automotive', 'hypercar', 'tracking-shot', 'motion', 'runway'],
+      tags: ['automotive', 'hypercar', 'tracking-shot', 'motion', 'video'],
       media: [
         {
           media_type: 'video',

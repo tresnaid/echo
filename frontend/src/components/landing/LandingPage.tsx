@@ -2,25 +2,38 @@ import './landing.css';
 import { LandingHeader } from './LandingHeader';
 import { LandingHero } from './LandingHero';
 import { InteractiveShowcase } from './InteractiveShowcase';
-import { WorkflowsSection } from './WorkflowsSection';
-import { HowItWorksSection } from './HowItWorksSection';
-import { ArchitectureSection } from './ArchitectureSection';
+import { EngineeringLedger } from './EngineeringLedger';
 import { LandingFooter } from './LandingFooter';
+import { Prompt, Category } from '../../types';
 
 interface LandingPageProps {
   onOpenApp: () => void;
+  prompts?: Prompt[];
+  categories?: Category[];
+  availableTags?: string[];
+  onOpenDetails?: (prompt: Prompt) => void;
 }
 
-export function LandingPage({ onOpenApp }: LandingPageProps) {
+export function LandingPage({
+  onOpenApp,
+  prompts,
+  categories,
+  availableTags,
+  onOpenDetails,
+}: LandingPageProps) {
   return (
     <div className="echo-landing">
       <LandingHeader onOpenApp={onOpenApp} />
       <main id="main-content">
         <LandingHero onOpenApp={onOpenApp} />
-        <InteractiveShowcase />
-        <WorkflowsSection />
-        <HowItWorksSection />
-        <ArchitectureSection />
+        <InteractiveShowcase
+          onOpenApp={onOpenApp}
+          prompts={prompts}
+          categories={categories}
+          availableTags={availableTags}
+          onOpenDetails={onOpenDetails}
+        />
+        <EngineeringLedger />
         <LandingFooter onOpenApp={onOpenApp} />
       </main>
     </div>
