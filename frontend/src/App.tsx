@@ -405,10 +405,8 @@ export function App() {
                 <span
                   style={{
                     fontSize: '0.8125rem',
-                    fontWeight: 600,
-                    color: 'var(--atlas-color-text-brand, #2563eb)',
-                    borderBottom: '2px solid var(--atlas-color-text-brand, #2563eb)',
-                    paddingBottom: '2px',
+                    fontWeight: 500,
+                    color: 'var(--atlas-color-text-primary, #0f172a)',
                   }}
                 >
                   Library

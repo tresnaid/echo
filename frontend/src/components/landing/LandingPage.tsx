@@ -1,4 +1,5 @@
 import './landing.css';
+import { CursorEffect } from './CursorEffect';
 import { LandingHeader } from './LandingHeader';
 import { LandingHero } from './LandingHero';
 import { InteractiveShowcase } from './InteractiveShowcase';
@@ -23,6 +24,7 @@ export function LandingPage({
 }: LandingPageProps) {
   return (
     <div className="echo-landing">
+      <CursorEffect />
       <LandingHeader onOpenApp={onOpenApp} />
       <main id="main-content">
         <LandingHero onOpenApp={onOpenApp} />
