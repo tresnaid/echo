@@ -7,10 +7,7 @@ export function LandingFooter({ onOpenApp }: LandingFooterProps) {
     <footer className="echo-colophon-section" role="contentinfo">
       <div>
         <p className="echo-colophon-text">
-          <strong>Echo</strong> — A multimodal AI prompt library and portfolio reference.
-        </p>
-        <p className="echo-colophon-text" style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#9ca3af' }}>
-          Engineered by <strong>Tresna (gumelartresnadwinanda)</strong> with the <strong>Atlas Design System</strong>.
+          <strong>Echo</strong> — Multimodal AI prompt library built with the Atlas Design System.
         </p>
       </div>
 
@@ -37,7 +34,7 @@ export function LandingFooter({ onOpenApp }: LandingFooterProps) {
           rel="noopener noreferrer"
           className="echo-colophon-link"
         >
-          GitHub Repository
+          GitHub
         </a>
       </div>
     </footer>

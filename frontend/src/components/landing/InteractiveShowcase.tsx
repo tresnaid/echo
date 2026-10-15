@@ -131,7 +131,7 @@ export function InteractiveShowcase() {
   };
 
   return (
-    <section id="showcase" className="echo-landing-section" aria-labelledby="showcase-heading">
+    <section id="showcase" className="echo-showcase-section" aria-labelledby="showcase-heading">
       <div className="echo-section-header">
         <h2 id="showcase-heading" className="echo-section-title">
           Interactive Prompt Showcase

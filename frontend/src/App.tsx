@@ -19,7 +19,6 @@ import { DeletePromptDialog } from './components/prompts/DeletePromptDialog';
 import { PromptDetailModal } from './components/prompts/PromptDetailModal';
 import { FilterBar } from './components/prompts/FilterBar';
 import { PromptGrid } from './components/prompts/PromptGrid';
-import { PromptShowcaseView } from './components/prompts/PromptShowcaseView';
 import { LandingPage } from './components/landing/LandingPage';
 
 interface HealthStatus {
@@ -88,8 +87,9 @@ export function App() {
   const isMobile = useIsMobile(840);
   const [viewMode, setViewMode] = useState<'landing' | 'library'>(() => {
     if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase();
       const params = new URLSearchParams(window.location.search);
-      if (params.get('view') === 'library' || window.location.hash === '#library') {
+      if (path.startsWith('/library') || path.startsWith('/app') || params.get('view') === 'library') {
         return 'library';
       }
     }
@@ -97,9 +97,18 @@ export function App() {
   });
 
   useEffect(() => {
-    const handlePopState = () => {
+    // Gracefully clean up any legacy ?view= query parameter
+    if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('view') === 'library' || window.location.hash === '#library') {
+      if (params.has('view')) {
+        const isLib = params.get('view') === 'library';
+        window.history.replaceState(null, '', isLib ? '/library' : '/');
+      }
+    }
+
+    const handlePopState = () => {
+      const path = window.location.pathname.toLowerCase();
+      if (path.startsWith('/library') || path.startsWith('/app')) {
         setViewMode('library');
       } else {
         setViewMode('landing');
@@ -111,19 +120,13 @@ export function App() {
 
   const handleOpenLibrary = () => {
     setViewMode('library');
-    const url = new URL(window.location.href);
-    url.searchParams.set('view', 'library');
-    window.history.pushState(null, '', url.toString());
+    window.history.pushState(null, '', '/library');
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const handleOpenLanding = () => {
     setViewMode('landing');
-    const url = new URL(window.location.href);
-    url.searchParams.delete('view');
-    url.hash = '';
-    const cleanUrl = url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '');
-    window.history.pushState(null, '', cleanUrl);
+    window.history.pushState(null, '', '/');
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
@@ -133,20 +136,6 @@ export function App() {
   const [counts, setCounts] = useState<CollectionCounts>({ all: 0, uncollected: 0 });
   const [categories, setCategories] = useState<Category[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const [libraryViewMode, setLibraryViewMode] = useState<'grid' | 'showcase'>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('echo_library_view_mode');
-      if (saved === 'showcase' || saved === 'grid') return saved;
-    }
-    return 'grid';
-  });
-
-  const handleSetLibraryViewMode = (mode: 'grid' | 'showcase') => {
-    setLibraryViewMode(mode);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('echo_library_view_mode', mode);
-    }
-  };
 
   // Browsing & Filtering state
   const [selectedView, setSelectedView] = useState<SelectedCollectionView>('all');
@@ -636,72 +625,6 @@ export function App() {
                           {prompts.length} {prompts.length === 1 ? 'prompt' : 'prompts'}
                         </Badge>
                       </div>
-
-                      {/* View Mode Toggle: Grid vs Showcase */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          background: 'var(--atlas-color-bg-subtle, #f1f5f9)',
-                          padding: '3px',
-                          borderRadius: '8px',
-                          border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-                        }}
-                        role="group"
-                        aria-label="Library View Mode"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => handleSetLibraryViewMode('grid')}
-                          style={{
-                            padding: '4px 10px',
-                            fontSize: '0.8125rem',
-                            fontWeight: libraryViewMode === 'grid' ? 600 : 500,
-                            color: libraryViewMode === 'grid' ? '#0f172a' : '#64748b',
-                            background: libraryViewMode === 'grid' ? '#ffffff' : 'transparent',
-                            borderRadius: '6px',
-                            border: 'none',
-                            boxShadow: libraryViewMode === 'grid' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            transition: 'all 0.15s ease',
-                          }}
-                          aria-pressed={libraryViewMode === 'grid'}
-                        >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-                          </svg>
-                          <span>Grid</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSetLibraryViewMode('showcase')}
-                          style={{
-                            padding: '4px 10px',
-                            fontSize: '0.8125rem',
-                            fontWeight: libraryViewMode === 'showcase' ? 600 : 500,
-                            color: libraryViewMode === 'showcase' ? '#0f172a' : '#64748b',
-                            background: libraryViewMode === 'showcase' ? '#ffffff' : 'transparent',
-                            borderRadius: '6px',
-                            border: 'none',
-                            boxShadow: libraryViewMode === 'showcase' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            transition: 'all 0.15s ease',
-                          }}
-                          aria-pressed={libraryViewMode === 'showcase'}
-                        >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <rect x="3" y="3" width="18" height="18" rx="2" /><line x1="9" y1="3" x2="9" y2="21" />
-                          </svg>
-                          <span>Showcase</span>
-                        </button>
-                      </div>
                     </div>
                   )}
 
@@ -718,32 +641,18 @@ export function App() {
                     totalResults={prompts.length}
                   />
 
-                  {/* Prompt Grid vs Showcase View */}
-                  {libraryViewMode === 'grid' ? (
-                    <PromptGrid
-                      prompts={prompts}
-                      loading={promptsLoading}
-                      hasActiveFilters={hasActiveFilters}
-                      onClearFilters={handleClearFilters}
-                      onCreatePrompt={handleOpenCreatePrompt}
-                      onEditPrompt={handleOpenEditPrompt}
-                      onDeletePrompt={setDeletingPrompt}
-                      onTagClick={(tag) => setSelectedTag(tag)}
-                      onOpenDetails={(prompt) => setDetailPrompt(prompt)}
-                    />
-                  ) : (
-                    <PromptShowcaseView
-                      prompts={prompts}
-                      loading={promptsLoading}
-                      hasActiveFilters={hasActiveFilters}
-                      onClearFilters={handleClearFilters}
-                      onCreatePrompt={handleOpenCreatePrompt}
-                      onEditPrompt={handleOpenEditPrompt}
-                      onDeletePrompt={setDeletingPrompt}
-                      onTagClick={(tag) => setSelectedTag(tag)}
-                      onOpenDetails={(prompt) => setDetailPrompt(prompt)}
-                    />
-                  )}
+                  {/* Prompt Grid */}
+                  <PromptGrid
+                    prompts={prompts}
+                    loading={promptsLoading}
+                    hasActiveFilters={hasActiveFilters}
+                    onClearFilters={handleClearFilters}
+                    onCreatePrompt={handleOpenCreatePrompt}
+                    onEditPrompt={handleOpenEditPrompt}
+                    onDeletePrompt={setDeletingPrompt}
+                    onTagClick={(tag) => setSelectedTag(tag)}
+                    onOpenDetails={(prompt) => setDetailPrompt(prompt)}
+                  />
                 </Stack>
               </div>
             </div>
