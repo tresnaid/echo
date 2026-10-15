@@ -2,9 +2,7 @@ import './landing.css';
 import { LandingHeader } from './LandingHeader';
 import { LandingHero } from './LandingHero';
 import { InteractiveShowcase } from './InteractiveShowcase';
-import { WorkflowsSection } from './WorkflowsSection';
-import { HowItWorksSection } from './HowItWorksSection';
-import { ArchitectureSection } from './ArchitectureSection';
+import { EngineeringLedger } from './EngineeringLedger';
 import { LandingFooter } from './LandingFooter';
 
 interface LandingPageProps {
@@ -18,9 +16,7 @@ export function LandingPage({ onOpenApp }: LandingPageProps) {
       <main id="main-content">
         <LandingHero onOpenApp={onOpenApp} />
         <InteractiveShowcase />
-        <WorkflowsSection />
-        <HowItWorksSection />
-        <ArchitectureSection />
+        <EngineeringLedger />
         <LandingFooter onOpenApp={onOpenApp} />
       </main>
     </div>
