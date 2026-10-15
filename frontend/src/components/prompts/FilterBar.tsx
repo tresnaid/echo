@@ -12,6 +12,14 @@ interface FilterBarProps {
   totalResults?: number;
 }
 
+const CATEGORY_LABELS: Record<string, string> = {
+  all: 'All Modalities',
+  text: 'Text & LLM',
+  code: 'Code Synthesis',
+  image: 'Image Synthesis',
+  video: 'Video Generation',
+};
+
 export function FilterBar({
   search,
   onSearchChange,
@@ -30,10 +38,10 @@ export function FilterBar({
   };
 
   const categoryOptions = [
-    { id: '', label: 'All' },
+    { id: '', label: CATEGORY_LABELS.all },
     ...categories.map((c) => ({
       id: c.id,
-      label: c.name,
+      label: CATEGORY_LABELS[c.id.toLowerCase()] || c.name,
     })),
   ];
 

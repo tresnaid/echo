@@ -667,64 +667,74 @@ export function App() {
 
               {/* Main Content & Product Catalog Area */}
               <div style={{ flexGrow: 1, minWidth: 0, width: '100%' }}>
-                <Stack direction="vertical" gap="4">
-                  {/* Desktop Section Header */}
-                  {!isMobile && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        flexWrap: 'wrap',
-                        gap: '0.75rem',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                        <Heading
-                          level={2}
-                          style={{
-                            fontSize: '1.25rem',
-                            fontWeight: 700,
-                            letterSpacing: '-0.02em',
-                            margin: 0,
-                            color: 'var(--atlas-color-text-primary, #0f172a)',
-                          }}
-                        >
-                          {activeViewLabel}
-                        </Heading>
-                        <Badge variant="subtle" intent="neutral" size="md">
-                          {prompts.length} {prompts.length === 1 ? 'prompt' : 'prompts'}
-                        </Badge>
+                <div
+                  style={{
+                    backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
+                    border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
+                    borderRadius: 'var(--atlas-radius-lg, 14px)',
+                    padding: isMobile ? '1.25rem 1rem' : '1.75rem 2rem 2.25rem',
+                    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+                  }}
+                >
+                  <Stack direction="vertical" gap="5">
+                    {/* Desktop Section Header */}
+                    {!isMobile && (
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap',
+                          gap: '0.75rem',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                          <Heading
+                            level={2}
+                            style={{
+                              fontSize: '1.25rem',
+                              fontWeight: 700,
+                              letterSpacing: '-0.02em',
+                              margin: 0,
+                              color: 'var(--atlas-color-text-primary, #0f172a)',
+                            }}
+                          >
+                            {activeViewLabel}
+                          </Heading>
+                          <Badge variant="subtle" intent="neutral" size="md">
+                            {prompts.length} {prompts.length === 1 ? 'prompt' : 'prompts'}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Filter Bar */}
-                  <FilterBar
-                    search={search}
-                    onSearchChange={setSearch}
-                    selectedCategory={selectedCategory}
-                    onCategoryChange={setSelectedCategory}
-                    selectedTag={selectedTag}
-                    onTagChange={setSelectedTag}
-                    categories={categories}
-                    availableTags={availableTags}
-                    totalResults={prompts.length}
-                  />
+                    {/* Filter Bar */}
+                    <FilterBar
+                      search={search}
+                      onSearchChange={setSearch}
+                      selectedCategory={selectedCategory}
+                      onCategoryChange={setSelectedCategory}
+                      selectedTag={selectedTag}
+                      onTagChange={setSelectedTag}
+                      categories={categories}
+                      availableTags={availableTags}
+                      totalResults={prompts.length}
+                    />
 
-                  {/* Prompt Grid */}
-                  <PromptGrid
-                    prompts={prompts}
-                    loading={promptsLoading}
-                    hasActiveFilters={hasActiveFilters}
-                    onClearFilters={handleClearFilters}
-                    onCreatePrompt={handleOpenCreatePrompt}
-                    onEditPrompt={handleOpenEditPrompt}
-                    onDeletePrompt={setDeletingPrompt}
-                    onTagClick={(tag) => setSelectedTag(tag)}
-                    onOpenDetails={(prompt) => setDetailPrompt(prompt)}
-                  />
-                </Stack>
+                    {/* Prompt Grid */}
+                    <PromptGrid
+                      prompts={prompts}
+                      loading={promptsLoading}
+                      hasActiveFilters={hasActiveFilters}
+                      onClearFilters={handleClearFilters}
+                      onCreatePrompt={handleOpenCreatePrompt}
+                      onEditPrompt={handleOpenEditPrompt}
+                      onDeletePrompt={setDeletingPrompt}
+                      onTagClick={(tag) => setSelectedTag(tag)}
+                      onOpenDetails={(prompt) => setDetailPrompt(prompt)}
+                    />
+                  </Stack>
+                </div>
               </div>
             </div>
           </Stack>
