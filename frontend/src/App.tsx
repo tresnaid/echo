@@ -20,6 +20,7 @@ import { PromptDetailModal } from './components/prompts/PromptDetailModal';
 import { FilterBar } from './components/prompts/FilterBar';
 import { PromptGrid } from './components/prompts/PromptGrid';
 import { LandingPage } from './components/landing/LandingPage';
+import { WorkbenchPage } from './components/workbench/WorkbenchPage';
 
 interface HealthStatus {
   status: string;
@@ -85,10 +86,13 @@ function useIsMobile(breakpoint = 840) {
 
 export function App() {
   const isMobile = useIsMobile(840);
-  const [viewMode, setViewMode] = useState<'landing' | 'library'>(() => {
+  const [viewMode, setViewMode] = useState<'landing' | 'library' | 'workbench'>(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
       const params = new URLSearchParams(window.location.search);
+      if (path.startsWith('/workbench') || params.get('view') === 'workbench') {
+        return 'workbench';
+      }
       if (path.startsWith('/library') || path.startsWith('/app') || params.get('view') === 'library') {
         return 'library';
       }
@@ -101,14 +105,17 @@ export function App() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.has('view')) {
-        const isLib = params.get('view') === 'library';
-        window.history.replaceState(null, '', isLib ? '/library' : '/');
+        const val = params.get('view');
+        const target = val === 'workbench' ? '/workbench' : val === 'library' ? '/library' : '/';
+        window.history.replaceState(null, '', target);
       }
     }
 
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase();
-      if (path.startsWith('/library') || path.startsWith('/app')) {
+      if (path.startsWith('/workbench')) {
+        setViewMode('workbench');
+      } else if (path.startsWith('/library') || path.startsWith('/app')) {
         setViewMode('library');
       } else {
         setViewMode('landing');
@@ -117,6 +124,12 @@ export function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  const handleOpenWorkbench = () => {
+    setViewMode('workbench');
+    window.history.pushState(null, '', '/workbench');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
 
   const handleOpenLibrary = () => {
     setViewMode('library');
@@ -267,32 +280,49 @@ export function App() {
 
   if (viewMode === 'landing') {
     return (
+      <LandingPage
+        onOpenApp={handleOpenLibrary}
+        onOpenWorkbench={handleOpenWorkbench}
+      />
+    );
+  }
+
+  if (viewMode === 'workbench') {
+    return (
       <>
-        <LandingPage
-          onOpenApp={handleOpenLibrary}
+        <WorkbenchPage
           prompts={prompts}
           categories={categories}
+          collections={collections}
           availableTags={availableTags}
-          onOpenDetails={(prompt) => setDetailPrompt(prompt)}
+          health={health}
+          loading={loading || promptsLoading}
+          onOpenCreatePrompt={handleOpenCreatePrompt}
+          onOpenEditPrompt={handleOpenEditPrompt}
+          onOpenLibrary={handleOpenLibrary}
+          onOpenLanding={handleOpenLanding}
         />
-        <PromptDetailModal
-          prompt={detailPrompt}
-          isOpen={Boolean(detailPrompt)}
-          onClose={() => setDetailPrompt(null)}
-          onEdit={(prompt) => {
-            setDetailPrompt(null);
-            handleOpenLibrary();
-            handleOpenEditPrompt(prompt);
+        <PromptFormModal
+          prompt={editingPrompt}
+          collections={collections}
+          defaultCollectionId={defaultCollectionForModal}
+          open={promptModalOpen}
+          onOpenChange={(open) => {
+            setPromptModalOpen(open);
+            if (!open) setEditingPrompt(null);
           }}
-          onDelete={(prompt) => {
-            setDetailPrompt(null);
-            handleOpenLibrary();
-            setDeletingPrompt(prompt);
+          onSaved={handlePromptSaved}
+          onCollectionCreated={() => {
+            loadMetadata();
           }}
-          onTagClick={(tag) => {
-            setSelectedTag(tag);
-            handleOpenLibrary();
+        />
+        <DeletePromptDialog
+          prompt={deletingPrompt}
+          open={Boolean(deletingPrompt)}
+          onOpenChange={(open) => {
+            if (!open) setDeletingPrompt(null);
           }}
+          onDeleted={handlePromptDeleted}
         />
       </>
     );
@@ -402,10 +432,28 @@ export function App() {
                 >
                   Showcase
                 </button>
+                <button
+                  type="button"
+                  onClick={handleOpenWorkbench}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                    color: 'var(--atlas-color-text-secondary, #64748b)',
+                    transition: 'color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                >
+                  Workbench
+                </button>
                 <span
                   style={{
                     fontSize: '0.8125rem',
-                    fontWeight: 500,
+                    fontWeight: 600,
                     color: 'var(--atlas-color-text-primary, #0f172a)',
                   }}
                 >

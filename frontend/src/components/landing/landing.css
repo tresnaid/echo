@@ -192,6 +192,32 @@
   transform: scale(0.97);
 }
 
+.echo-hero-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.65rem;
+  border-radius: var(--atlas-radius-md, 8px);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--atlas-color-text-primary, #0f172a);
+  background: #ffffff;
+  border: 1px solid var(--atlas-color-border-subtle, #e2e8f0);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.echo-hero-secondary:hover {
+  background: var(--atlas-color-bg-subtle, #f8fafc);
+  border-color: #cbd5e1;
+}
+
+.echo-hero-secondary:active {
+  transform: scale(0.97);
+}
+
 .echo-hero-scroll-cue {
   position: absolute;
   bottom: 2.25rem;

@@ -5,38 +5,28 @@ import { LandingHero } from './LandingHero';
 import { InteractiveShowcase } from './InteractiveShowcase';
 import { EngineeringLedger } from './EngineeringLedger';
 import { LandingFooter } from './LandingFooter';
-import { Prompt, Category } from '../../types';
 
 interface LandingPageProps {
   onOpenApp: () => void;
-  prompts?: Prompt[];
-  categories?: Category[];
-  availableTags?: string[];
-  onOpenDetails?: (prompt: Prompt) => void;
+  onOpenWorkbench: () => void;
 }
 
 export function LandingPage({
   onOpenApp,
-  prompts,
-  categories,
-  availableTags,
-  onOpenDetails,
+  onOpenWorkbench,
 }: LandingPageProps) {
   return (
     <div className="echo-landing">
       <CursorEffect />
-      <LandingHeader onOpenApp={onOpenApp} />
+      <LandingHeader onOpenApp={onOpenApp} onOpenWorkbench={onOpenWorkbench} />
       <main id="main-content">
-        <LandingHero onOpenApp={onOpenApp} />
+        <LandingHero onOpenApp={onOpenApp} onOpenWorkbench={onOpenWorkbench} />
         <InteractiveShowcase
           onOpenApp={onOpenApp}
-          prompts={prompts}
-          categories={categories}
-          availableTags={availableTags}
-          onOpenDetails={onOpenDetails}
+          onOpenWorkbench={onOpenWorkbench}
         />
         <EngineeringLedger />
-        <LandingFooter onOpenApp={onOpenApp} />
+        <LandingFooter onOpenApp={onOpenApp} onOpenWorkbench={onOpenWorkbench} />
       </main>
     </div>
   );
