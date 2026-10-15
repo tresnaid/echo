@@ -22,7 +22,7 @@ export function LandingHero({ onOpenApp }: LandingHeroProps) {
       </h1>
 
       <p className="echo-hero-description">
-        Echo stores, inspects, parameterizes, and copies prompts across Text, Code, Midjourney, and Generative Video with 100% byte fidelity. Designed with the Atlas Design System and backed by SQLite.
+        Echo stores, inspects, parameterizes, and copies prompts across Text, Code, Image Synthesis, and Generative Video with 100% byte fidelity. Designed with the Atlas Design System and backed by SQLite.
       </p>
 
       <div className="echo-hero-actions">

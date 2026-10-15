@@ -19,7 +19,7 @@ Prompt engineering requires structure, versioning, and fast retrieval. **Echo** 
 It also serves as a reference production implementation of the **Atlas Design System** (`@tresnaid/atlas`), leveraging its accessible component primitives, design tokens, and CSS layers.
 
 ### Key Highlights
-- **Multi-Modal Organization:** Dedicated categories and metadata fields for Text (LLMs, system instructions, few-shot), Code, Image generation (Midjourney, DALL-E, Stable Diffusion), and Generative Video.
+- **Multi-Modal Organization:** Dedicated categories and metadata fields for Text (LLMs, system instructions, few-shot), Code, Image generation (Diffusion and Text-to-Image models), and Generative Video.
 - **Atlas Design System Integration:** Built with `@tresnaid/atlas` components (`Card`, `Button`, `Badge`, `Stack`, `Input`, `ThemeProvider`), adhering to WCAG 2.2 AA accessibility standards.
 - **Fast Full-Text Search:** Instant client and server filtering by title, prompt body, modality tags, and keywords.
 - **Decoupled Architecture:** Independent frontend SPA (Vite + React 19) and backend REST API (Express + SQLite) for independent deployment and zero coupling.

@@ -266,7 +266,36 @@ export function App() {
   const hasActiveFilters = Boolean(search.trim() || selectedCategory || selectedTag);
 
   if (viewMode === 'landing') {
-    return <LandingPage onOpenApp={handleOpenLibrary} />;
+    return (
+      <>
+        <LandingPage
+          onOpenApp={handleOpenLibrary}
+          prompts={prompts}
+          categories={categories}
+          availableTags={availableTags}
+          onOpenDetails={(prompt) => setDetailPrompt(prompt)}
+        />
+        <PromptDetailModal
+          prompt={detailPrompt}
+          isOpen={Boolean(detailPrompt)}
+          onClose={() => setDetailPrompt(null)}
+          onEdit={(prompt) => {
+            setDetailPrompt(null);
+            handleOpenLibrary();
+            handleOpenEditPrompt(prompt);
+          }}
+          onDelete={(prompt) => {
+            setDetailPrompt(null);
+            handleOpenLibrary();
+            setDeletingPrompt(prompt);
+          }}
+          onTagClick={(tag) => {
+            setSelectedTag(tag);
+            handleOpenLibrary();
+          }}
+        />
+      </>
+    );
   }
 
   return (

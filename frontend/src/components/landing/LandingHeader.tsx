@@ -35,20 +35,6 @@ export function LandingHeader({ onOpenApp }: LandingHeaderProps) {
           <a href="#showcase" onClick={scrollTo('showcase')} className="echo-nav-link">
             Showcase
           </a>
-          <button
-            type="button"
-            onClick={onOpenApp}
-            className="echo-nav-link"
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
-              font: 'inherit',
-            }}
-          >
-            Library
-          </button>
           <a href="#specifications" onClick={scrollTo('specifications')} className="echo-nav-link">
             Specifications
           </a>

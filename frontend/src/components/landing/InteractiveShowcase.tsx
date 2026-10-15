@@ -1,4 +1,7 @@
 import { useState, useMemo } from 'react';
+import { PromptGrid } from '../prompts/PromptGrid';
+import { FilterBar } from '../prompts/FilterBar';
+import { Prompt, Category } from '../../types';
 
 interface ShowcasePrompt {
   id: string;
@@ -31,7 +34,7 @@ Do not emit introductory chatter or markdown code fences outside the JSON object
       { name: 'protocol_step', desc: 'Step execution hierarchy' },
       { name: 'rfc8259', desc: 'RFC-compliant raw JSON stream' },
     ],
-    usageTip: 'Ideal for Anthropic Claude 3.5 Sonnet and OpenAI o1/o3 reasoning runs requiring zero parse failures.',
+    usageTip: 'Ideal for advanced reasoning models requiring zero parse failures and strict JSON conformity.',
   },
   {
     id: 'code-1',
@@ -57,12 +60,12 @@ Do not emit introductory chatter or markdown code fences outside the JSON object
     title: 'Editorial 35mm Anamorphic Portrait',
     category: 'image',
     collectionName: 'AI Image & Visual Arts',
-    description: 'Cinematic portrait recipe featuring Kodak Portra 400 grain, volumetric golden lighting, and Midjourney parameters.',
+    description: 'Cinematic portrait recipe featuring Kodak Portra 400 grain, volumetric golden lighting, and diffusion parameters.',
     rawPrompt: `Cinematic editorial portrait of an architect examining structural blueprints in a brutalist concrete pavilion, golden hour side lighting, warm volumetric sun rays cutting through haze, 35mm anamorphic lens, f/1.8 shallow depth of field, natural skin texture, Kodak Portra 400 grain, subtle dust motes --ar 16:9 --style raw --v 6.1 --c 5`,
-    tags: ['midjourney-v6', 'portrait', 'anamorphic', 'lighting'],
+    tags: ['diffusion', 'portrait', 'anamorphic', 'lighting'],
     parameters: [
       { name: '--ar 16:9', desc: 'Cinematic widescreen aspect ratio' },
-      { name: '--style raw', desc: 'Disables default Midjourney synthetic smoothing' },
+      { name: '--style raw', desc: 'Disables default model synthetic smoothing' },
       { name: '--c 5', desc: 'Controlled chaos/variation factor' },
     ],
     usageTip: 'Using --style raw with physical film stock names (Portra 400) anchors diffusion models in authentic lens physics.',
@@ -75,12 +78,12 @@ Do not emit introductory chatter or markdown code fences outside the JSON object
     collectionName: 'Video Generation & Motion',
     description: 'Camera vector direction with continuous orbital rotation and vertigo zoom for generative video models.',
     rawPrompt: `FPV drone cinematic continuous shot, commencing with a fast forward flyover above a mist-covered sea cliff, transitioning smoothly into a clockwise 180-degree orbital rotation around a solitary lighthouse, twilight dusk ambiance, ocean waves crashing against rocks below, vertigo dolly zoom effect, 24fps motion blur, high dynamic range --motion 6 --camera orbit_right`,
-    tags: ['runway-gen3', 'camera-orbit', 'dolly-zoom', 'cinematic'],
+    tags: ['camera-orbit', 'dolly-zoom', 'cinematic', 'video'],
     parameters: [
       { name: '--motion 6', desc: 'Dynamic camera velocity parameter' },
       { name: '--camera', desc: 'Explicit 3D coordinate orbit path' },
     ],
-    usageTip: 'Specifying the flight trajectory from forward to orbit prevents diffusion cuts and scene disintegration.',
+    usageTip: 'Specifying the flight trajectory from forward to orbit prevents cuts and scene disintegration.',
     thumbnailUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80',
   },
   {
@@ -113,16 +116,106 @@ Do not emit introductory chatter or markdown code fences outside the JSON object
   },
 ];
 
+const FALLBACK_PROMPTS: Prompt[] = SAMPLE_PROMPTS.map((p, idx) => ({
+  id: idx + 1,
+  title: p.title,
+  description: p.description,
+  usage_description: p.usageTip,
+  prompt_text: p.rawPrompt,
+  category_id: p.category,
+  collection_id: 1,
+  collection_name: p.collectionName || 'Featured Prompts',
+  tags: p.tags,
+  media: p.thumbnailUrl
+    ? [
+        {
+          id: idx + 1,
+          prompt_id: idx + 1,
+          media_type: p.category === 'video' ? ('video' as const) : ('image' as const),
+          url: p.thumbnailUrl,
+          thumbnail_url: p.thumbnailUrl,
+          created_at: new Date().toISOString(),
+        },
+      ]
+    : undefined,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+}));
+
+const DEFAULT_CATEGORIES: Category[] = [
+  { id: 'text', name: 'Text' },
+  { id: 'code', name: 'Code' },
+  { id: 'image', name: 'Image' },
+  { id: 'video', name: 'Video' },
+];
+
 interface InteractiveShowcaseProps {
   onOpenApp?: () => void;
+  prompts?: Prompt[];
+  categories?: Category[];
+  availableTags?: string[];
+  onOpenDetails?: (prompt: Prompt) => void;
 }
 
-export function InteractiveShowcase({ onOpenApp }: InteractiveShowcaseProps) {
+export function InteractiveShowcase({
+  onOpenApp,
+  prompts,
+  categories,
+  availableTags,
+  onOpenDetails,
+}: InteractiveShowcaseProps) {
   const [activeTab, setActiveTab] = useState<'workbench' | 'library'>('workbench');
+  
+  // Workbench Inspector state
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activePromptId, setActivePromptId] = useState(SAMPLE_PROMPTS[0].id);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Library Grid View state (matches Library FilterBar state)
+  const [librarySearch, setLibrarySearch] = useState('');
+  const [libraryCategory, setLibraryCategory] = useState('');
+  const [libraryTag, setLibraryTag] = useState('');
+
+  // Source list for the library preview
+  const allLibraryPrompts = useMemo(() => {
+    return prompts && prompts.length > 0 ? prompts : FALLBACK_PROMPTS;
+  }, [prompts]);
+
+  const activeCategories = useMemo(() => {
+    return categories && categories.length > 0 ? categories : DEFAULT_CATEGORIES;
+  }, [categories]);
+
+  const activeTags = useMemo(() => {
+    if (availableTags && availableTags.length > 0) return availableTags;
+    const tagSet = new Set<string>();
+    allLibraryPrompts.forEach((p) => {
+      if (p.tags) p.tags.forEach((t) => tagSet.add(t));
+    });
+    return Array.from(tagSet);
+  }, [availableTags, allLibraryPrompts]);
+
+  const filteredLibraryPrompts = useMemo(() => {
+    return allLibraryPrompts.filter((p) => {
+      if (librarySearch.trim()) {
+        const q = librarySearch.toLowerCase();
+        const matchesTitle = p.title.toLowerCase().includes(q);
+        const matchesDesc = p.description ? p.description.toLowerCase().includes(q) : false;
+        const matchesText = p.prompt_text.toLowerCase().includes(q);
+        const matchesTag = p.tags ? p.tags.some((t) => t.toLowerCase().includes(q)) : false;
+        if (!matchesTitle && !matchesDesc && !matchesText && !matchesTag) {
+          return false;
+        }
+      }
+      if (libraryCategory && p.category_id !== libraryCategory) {
+        return false;
+      }
+      if (libraryTag && (!p.tags || !p.tags.includes(libraryTag))) {
+        return false;
+      }
+      return true;
+    });
+  }, [allLibraryPrompts, librarySearch, libraryCategory, libraryTag]);
 
   const filteredPrompts = useMemo(() => {
     return SAMPLE_PROMPTS.filter((p) => {
@@ -178,21 +271,6 @@ export function InteractiveShowcase({ onOpenApp }: InteractiveShowcaseProps) {
     }
   };
 
-  const getCategoryBadgeColor = (cat: string) => {
-    switch (cat) {
-      case 'text':
-        return '#2563eb';
-      case 'code':
-        return '#7c3aed';
-      case 'image':
-        return '#059669';
-      case 'video':
-        return '#d97706';
-      default:
-        return '#475569';
-    }
-  };
-
   return (
     <section id="showcase" className="echo-showcase-section" aria-labelledby="showcase-heading">
       <div className="echo-section-header">
@@ -238,41 +316,43 @@ export function InteractiveShowcase({ onOpenApp }: InteractiveShowcaseProps) {
       </div>
 
       <div className="echo-showcase-container">
-        {/* Top Control Bar */}
-        <div className="echo-showcase-toolbar">
-          <div className="echo-modality-tabs" role="tablist" aria-label="Filter by Modality">
-            {(['all', 'text', 'code', 'image', 'video'] as const).map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                role="tab"
-                aria-selected={selectedCategory === cat}
-                className={`echo-modality-tab ${selectedCategory === cat ? 'is-active' : ''}`}
-                onClick={() => setSelectedCategory(cat)}
-              >
-                {cat === 'all' && 'All Modalities'}
-                {cat === 'text' && 'Text & LLM'}
-                {cat === 'code' && 'Code Synthesis'}
-                {cat === 'image' && 'Image (Midjourney)'}
-                {cat === 'video' && 'Video (Runway/Sora)'}
-              </button>
-            ))}
-          </div>
+        {/* Top Control Bar (Only for Workbench Inspector mode) */}
+        {activeTab === 'workbench' && (
+          <div className="echo-showcase-toolbar">
+            <div className="echo-modality-tabs" role="tablist" aria-label="Filter by Modality">
+              {(['all', 'text', 'code', 'image', 'video'] as const).map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  role="tab"
+                  aria-selected={selectedCategory === cat}
+                  className={`echo-modality-tab ${selectedCategory === cat ? 'is-active' : ''}`}
+                  onClick={() => setSelectedCategory(cat)}
+                >
+                  {cat === 'all' && 'All Modalities'}
+                  {cat === 'text' && 'Text & LLM'}
+                  {cat === 'code' && 'Code Synthesis'}
+                  {cat === 'image' && 'Image Synthesis'}
+                  {cat === 'video' && 'Video Generation'}
+                </button>
+              ))}
+            </div>
 
-          <div className="echo-showcase-search">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search sample prompts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              aria-label="Search sample prompts"
-            />
+            <div className="echo-showcase-search">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search sample prompts..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search sample prompts"
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* View Mode 1: Workbench Master-Detail Inspector */}
         {activeTab === 'workbench' ? (
@@ -281,73 +361,32 @@ export function InteractiveShowcase({ onOpenApp }: InteractiveShowcaseProps) {
             <aside className="echo-showcase-sidebar" aria-label="Sample Prompts">
               <div className="echo-prompt-preview-list">
                 {filteredPrompts.length === 0 ? (
-                  <p style={{ fontSize: '0.8125rem', color: '#64748b', padding: '1rem', textAlign: 'center' }}>
-                    No prompts match your filter.
-                  </p>
+                  <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#64748b', fontSize: '0.8125rem' }}>
+                    No prompts match criteria
+                  </div>
                 ) : (
                   filteredPrompts.map((p) => {
-                    const isActive = p.id === activePrompt.id;
+                    const isSelected = activePrompt.id === p.id;
                     return (
-                      <div
+                      <button
                         key={p.id}
-                        className={`echo-prompt-preview-item ${isActive ? 'is-active' : ''}`}
+                        type="button"
+                        className={`echo-prompt-preview-item ${isSelected ? 'is-active' : ''}`}
                         onClick={() => setActivePromptId(p.id)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            setActivePromptId(p.id);
-                          }
-                        }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                          <span
-                            style={{
-                              fontSize: '0.6875rem',
-                              fontWeight: 700,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.04em',
-                              color: getCategoryBadgeColor(p.category),
-                            }}
-                          >
-                            {p.category}
-                          </span>
-                          <span style={{ fontSize: '0.6875rem', color: '#94a3b8' }}>
-                            #{p.tags[0]}
-                          </span>
-                        </div>
                         <div className="echo-preview-title">{p.title}</div>
                         <div className="echo-preview-desc">{p.description}</div>
-                      </div>
+                      </button>
                     );
                   })
                 )}
               </div>
             </aside>
 
-            {/* Active Prompt Details & Copy Action */}
-            <main className="echo-showcase-main" aria-label="Prompt Inspector">
+            {/* Prompt Terminal & Inspector Pane */}
+            <main className="echo-showcase-main" aria-label="Prompt Inspector Details">
               <div className="echo-showcase-main-header">
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                    <span
-                      style={{
-                        fontSize: '0.6875rem',
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        padding: '0.2rem 0.5rem',
-                        borderRadius: '4px',
-                        background: `${getCategoryBadgeColor(activePrompt.category)}18`,
-                        color: getCategoryBadgeColor(activePrompt.category),
-                      }}
-                    >
-                      {activePrompt.category} Prompt
-                    </span>
-                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                      100% Raw Copy Fidelity
-                    </span>
-                  </div>
                   <h3 className="echo-showcase-prompt-title">{activePrompt.title}</h3>
                   <p className="echo-showcase-prompt-desc">{activePrompt.description}</p>
                 </div>
@@ -385,7 +424,7 @@ export function InteractiveShowcase({ onOpenApp }: InteractiveShowcaseProps) {
               {/* Parameters & Tags Metadata */}
               <div className="echo-prompt-metadata-bar">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                  <span style={{ fontWeight: 600, color: '#374151' }}>Tags:</span>
+                  <span style={{ fontWeight: 600, color: 'var(--atlas-color-text-secondary, #475569)' }}>Tags:</span>
                   {activePrompt.tags.map((t) => (
                     <span key={t} className="echo-meta-tag">
                       #{t}
@@ -395,7 +434,7 @@ export function InteractiveShowcase({ onOpenApp }: InteractiveShowcaseProps) {
 
                 {activePrompt.parameters.length > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                    <span style={{ fontWeight: 600, color: '#374151' }}>Parameters:</span>
+                    <span style={{ fontWeight: 600, color: 'var(--atlas-color-text-secondary, #475569)' }}>Parameters:</span>
                     <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.75rem', color: '#64748b' }}>
                       {activePrompt.parameters.map((p) => p.name).join(', ')}
                     </span>
@@ -405,28 +444,50 @@ export function InteractiveShowcase({ onOpenApp }: InteractiveShowcaseProps) {
 
               <div
                 style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
+                  background: 'var(--atlas-color-bg-subtle, #f8fafc)',
+                  border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
+                  borderRadius: 'var(--atlas-radius-md, 8px)',
                   padding: '0.75rem 1rem',
                   fontSize: '0.8125rem',
-                  color: '#475569',
+                  color: 'var(--atlas-color-text-secondary, #475569)',
                 }}
               >
-                <strong style={{ color: '#0f172a' }}>Engineering Note:</strong> {activePrompt.usageTip}
+                <strong style={{ color: 'var(--atlas-color-text-primary, #0f172a)' }}>Engineering Note:</strong> {activePrompt.usageTip}
               </div>
             </main>
           </div>
         ) : (
-          /* View Mode 2: Real Prompt Library Grid Preview */
+          /* View Mode 2: Real Prompt Library Masonry Grid */
           <div style={{ padding: '2rem 2.25rem 2.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '1.5rem',
+                flexWrap: 'wrap',
+                gap: '1rem',
+              }}
+            >
               <div>
-                <h3 style={{ margin: '0 0 0.25rem', fontSize: '1.125rem', fontWeight: 700, color: 'var(--atlas-color-text-primary, #0f172a)' }}>
-                  Library Catalog Preview ({filteredPrompts.length} Prompts)
+                <h3
+                  style={{
+                    margin: '0 0 0.25rem',
+                    fontSize: '1.125rem',
+                    fontWeight: 700,
+                    color: 'var(--atlas-color-text-primary, #0f172a)',
+                  }}
+                >
+                  Live Library Catalog ({filteredLibraryPrompts.length} {filteredLibraryPrompts.length === 1 ? 'Prompt' : 'Prompts'})
                 </h3>
-                <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--atlas-color-text-secondary, #64748b)' }}>
-                  Organized with collections, tags, media attachments, and 1-click clipboard dispatch.
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '0.8125rem',
+                    color: 'var(--atlas-color-text-secondary, #64748b)',
+                  }}
+                >
+                  Browse the prompt library in a responsive masonry layout with category pills and tag filtering.
                 </p>
               </div>
 
@@ -449,7 +510,7 @@ export function InteractiveShowcase({ onOpenApp }: InteractiveShowcaseProps) {
                     gap: '6px',
                   }}
                 >
-                  <span>Launch Production Library Workspace</span>
+                  <span>Open Full Workspace</span>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <line x1="5" y1="12" x2="19" y2="12" />
                     <polyline points="12 5 19 12 12 19" />
@@ -458,155 +519,34 @@ export function InteractiveShowcase({ onOpenApp }: InteractiveShowcaseProps) {
               )}
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                gap: '1.25rem',
-              }}
-            >
-              {filteredPrompts.map((p) => {
-                const isCopied = copiedId === p.id;
-                return (
-                  <div
-                    key={p.id}
-                    style={{
-                      background: 'var(--atlas-color-bg-surface, #ffffff)',
-                      border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-                      borderRadius: '12px',
-                      padding: '1.25rem',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
-                      transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
-                    }}
-                  >
-                    <div>
-                      {/* Thumbnail Preview if available */}
-                      {p.thumbnailUrl && (
-                        <div
-                          style={{
-                            width: '100%',
-                            height: '140px',
-                            borderRadius: '8px',
-                            overflow: 'hidden',
-                            marginBottom: '0.875rem',
-                            background: '#f1f5f9',
-                          }}
-                        >
-                          <img
-                            src={p.thumbnailUrl}
-                            alt={p.title}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
-                        </div>
-                      )}
+            {/* Exact Same FilterBar as Library Page */}
+            <FilterBar
+              search={librarySearch}
+              onSearchChange={setLibrarySearch}
+              selectedCategory={libraryCategory}
+              onCategoryChange={setLibraryCategory}
+              selectedTag={libraryTag}
+              onTagChange={setLibraryTag}
+              categories={activeCategories}
+              availableTags={activeTags}
+              totalResults={filteredLibraryPrompts.length}
+            />
 
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <span
-                          style={{
-                            fontSize: '0.6875rem',
-                            fontWeight: 700,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.04em',
-                            padding: '0.2rem 0.5rem',
-                            borderRadius: '4px',
-                            background: `${getCategoryBadgeColor(p.category)}18`,
-                            color: getCategoryBadgeColor(p.category),
-                          }}
-                        >
-                          {p.category}
-                        </span>
-
-                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                          {p.collectionName}
-                        </span>
-                      </div>
-
-                      <h4
-                        style={{
-                          fontSize: '1rem',
-                          fontWeight: 700,
-                          margin: '0 0 0.35rem',
-                          color: 'var(--atlas-color-text-primary, #0f172a)',
-                          letterSpacing: '-0.015em',
-                        }}
-                      >
-                        {p.title}
-                      </h4>
-                      <p
-                        style={{
-                          fontSize: '0.8125rem',
-                          color: 'var(--atlas-color-text-secondary, #475569)',
-                          margin: '0 0 1rem',
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        {p.description}
-                      </p>
-                    </div>
-
-                    <div>
-                      {/* Tags */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '1rem' }}>
-                        {p.tags.slice(0, 3).map((tag) => (
-                          <span
-                            key={tag}
-                            style={{
-                              fontSize: '0.6875rem',
-                              background: '#f1f5f9',
-                              color: '#475569',
-                              padding: '0.15rem 0.45rem',
-                              borderRadius: '4px',
-                            }}
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(p.rawPrompt, p.id)}
-                        style={{
-                          width: '100%',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.4rem',
-                          padding: '0.45rem 0.75rem',
-                          borderRadius: '6px',
-                          fontSize: '0.8125rem',
-                          fontWeight: 600,
-                          border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-                          background: isCopied ? '#059669' : '#f8fafc',
-                          color: isCopied ? '#ffffff' : '#0f172a',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease',
-                        }}
-                      >
-                        {isCopied ? (
-                          <>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                            <span>Copied to Clipboard!</span>
-                          </>
-                        ) : (
-                          <>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                            </svg>
-                            <span>Copy Raw Prompt</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+            {/* Exact Same PromptGrid with Atlas Masonry as Library Page */}
+            <div style={{ marginTop: '1.5rem' }}>
+              <PromptGrid
+                prompts={filteredLibraryPrompts}
+                loading={false}
+                hasActiveFilters={Boolean(librarySearch.trim() || libraryCategory || libraryTag)}
+                onClearFilters={() => {
+                  setLibrarySearch('');
+                  setLibraryCategory('');
+                  setLibraryTag('');
+                }}
+                onCreatePrompt={onOpenApp || (() => {})}
+                onTagClick={(tag) => setLibraryTag(tag)}
+                onOpenDetails={onOpenDetails}
+              />
             </div>
           </div>
         )}
