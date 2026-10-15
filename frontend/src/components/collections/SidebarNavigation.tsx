@@ -95,7 +95,7 @@ function FolderIcon({ size = 15 }: { size?: number }) {
   );
 }
 
-function SparklesIcon({ size = 15 }: { size?: number }) {
+function AllPromptsIcon({ size = 15 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -108,7 +108,8 @@ function SparklesIcon({ size = 15 }: { size?: number }) {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z" />
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <path d="M7 8h10M7 12h10M7 16h6" />
     </svg>
   );
 }
@@ -216,7 +217,7 @@ export function SidebarNavigation({
         <NavList density="compact">
           {/* All Prompts */}
           <NavItem
-            icon={<SparklesIcon size={15} />}
+            icon={<AllPromptsIcon size={15} />}
             label="All Prompts"
             badge={
               <Badge

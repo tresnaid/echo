@@ -6,6 +6,7 @@ import {
   Button,
 } from '@tresnaid/atlas';
 import { Prompt, Category, Collection } from '../../types';
+import { getMediaUrl } from '../../api/config';
 import './workbench.css';
 
 function PlusIcon({ size = 14 }: { size?: number }) {
@@ -61,48 +62,6 @@ interface WorkbenchPageProps {
   onOpenEditPrompt: (prompt: Prompt) => void;
   onOpenLibrary: () => void;
   onOpenLanding: () => void;
-}
-
-interface ExtractedParam {
-  name: string;
-  type: 'variable' | 'placeholder' | 'flag';
-}
-
-function extractParameters(text: string): ExtractedParam[] {
-  const params: ExtractedParam[] = [];
-  const seen = new Set<string>();
-
-  // 1. Match {variable_name}
-  const varMatches = text.matchAll(/\{([a-zA-Z0-9_-]+)\}/g);
-  for (const match of varMatches) {
-    const raw = match[0];
-    if (!seen.has(raw)) {
-      seen.add(raw);
-      params.push({ name: raw, type: 'variable' });
-    }
-  }
-
-  // 2. Match [PLACEHOLDER]
-  const placeholderMatches = text.matchAll(/\[([A-Za-z0-9_\s/.-]+)\]/g);
-  for (const match of placeholderMatches) {
-    const raw = match[0];
-    if (!seen.has(raw) && raw.length < 50) {
-      seen.add(raw);
-      params.push({ name: raw, type: 'placeholder' });
-    }
-  }
-
-  // 3. Match --flags (e.g. --ar 16:9, --v 6.1, --style raw, --c 5)
-  const flagMatches = text.matchAll(/--([a-zA-Z0-9_-]+(?:\s+[^\s-]+)?)/g);
-  for (const match of flagMatches) {
-    const raw = match[0].trim();
-    if (!seen.has(raw)) {
-      seen.add(raw);
-      params.push({ name: raw, type: 'flag' });
-    }
-  }
-
-  return params;
 }
 
 export function WorkbenchPage({
@@ -163,12 +122,6 @@ export function WorkbenchPage({
     }
     return filteredPrompts.length > 0 ? filteredPrompts[0] : null;
   }, [activePromptId, filteredPrompts]);
-
-  // Extracted parameters for active prompt
-  const parameters = useMemo(() => {
-    if (!activePrompt) return [];
-    return extractParameters(activePrompt.prompt_text);
-  }, [activePrompt]);
 
   // Prompt stats
   const promptStats = useMemo(() => {
@@ -356,28 +309,22 @@ export function WorkbenchPage({
             <div>
               <h1 className="echo-workbench-heading">Workbench Inspector</h1>
               <p className="echo-workbench-subtitle">
-                Deep-inspect real database prompt anatomy, extract runtime variables, preview media attachments, and copy verbatim strings directly into your generation pipelines.
+                Deep-inspect prompt structure, preview media attachments, and copy verbatim strings directly into your generation pipelines.
               </p>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
               <div className="echo-workbench-stats-pill">
-                <span>Database: <strong>{prompts.length} Prompts</strong></span>
-                <span>•</span>
-                <span>Filtered: <strong>{filteredPrompts.length}</strong></span>
+                <span>
+                  {filteredPrompts.length === prompts.length ? (
+                    <strong>{prompts.length} Prompts</strong>
+                  ) : (
+                    <>
+                      <strong>{filteredPrompts.length}</strong> of <strong>{prompts.length} Prompts</strong>
+                    </>
+                  )}
+                </span>
               </div>
-
-              <button
-                type="button"
-                onClick={onOpenLibrary}
-                className="echo-secondary-btn"
-                style={{ padding: '0.45rem 0.85rem' }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-                </svg>
-                <span>Switch to Library Grid</span>
-              </button>
             </div>
           </div>
         </section>
@@ -486,8 +433,11 @@ export function WorkbenchPage({
                             {p.category_id}
                           </span>
                           {hasMedia && (
-                            <span title="Contains media attachments" style={{ color: '#64748b', fontSize: '0.75rem' }}>
-                              📷
+                            <span title="Contains media attachments" style={{ color: '#64748b', display: 'inline-flex' }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                <circle cx="12" cy="13" r="4" />
+                              </svg>
                             </span>
                           )}
                         </div>
@@ -571,18 +521,6 @@ export function WorkbenchPage({
                         </svg>
                         <span>Edit</span>
                       </button>
-
-                      <button
-                        type="button"
-                        className="echo-secondary-btn"
-                        onClick={onOpenLibrary}
-                        aria-label="View in library catalog"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-                        </svg>
-                        <span>Library</span>
-                      </button>
                     </div>
                   </div>
 
@@ -592,14 +530,16 @@ export function WorkbenchPage({
                       {activePrompt.media[0].media_type === 'video' ? (
                         <video
                           controls
-                          poster={activePrompt.media[0].thumbnail_url || undefined}
-                          src={activePrompt.media[0].url}
-                          style={{ maxHeight: '320px', width: '100%', objectFit: 'contain' }}
+                          playsInline
+                          preload="metadata"
+                          poster={activePrompt.media[0].thumbnail_url ? getMediaUrl(activePrompt.media[0].thumbnail_url) : undefined}
+                          src={getMediaUrl(activePrompt.media[0].url)}
                         />
                       ) : (
                         <img
-                          src={activePrompt.media[0].medium_url || activePrompt.media[0].url}
+                          src={getMediaUrl(activePrompt.media[0].url || activePrompt.media[0].medium_url || activePrompt.media[0].thumbnail_url)}
                           alt={activePrompt.media[0].caption || activePrompt.title}
+                          loading="lazy"
                         />
                       )}
                     </div>
@@ -632,37 +572,6 @@ export function WorkbenchPage({
                     <pre className="echo-terminal-code">
                       <code>{activePrompt.prompt_text}</code>
                     </pre>
-                  </div>
-
-                  {/* Dynamic Runtime Parameters Card */}
-                  <div className="echo-params-card">
-                    <h4 className="echo-params-title">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <polyline points="4 7 4 4 20 4 20 7" />
-                        <line x1="9" y1="20" x2="15" y2="20" />
-                        <line x1="12" y1="4" x2="12" y2="20" />
-                      </svg>
-                      <span>Extracted Parameters & Variables ({parameters.length})</span>
-                    </h4>
-
-                    {parameters.length > 0 ? (
-                      <div className="echo-params-chips">
-                        {parameters.map((p, idx) => (
-                          <div key={idx} className="echo-param-chip">
-                            <span>{p.name}</span>
-                            <span className="echo-param-type">
-                              {p.type === 'variable' && '(variable)'}
-                              {p.type === 'placeholder' && '(placeholder)'}
-                              {p.type === 'flag' && '(model flag)'}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
-                        Static prompt — no runtime variables <code>{`{var}`}</code>, bracketed placeholders <code>[SLOT]</code>, or command flags <code>--flag</code> detected in verbatim text.
-                      </p>
-                    )}
                   </div>
 
                   {/* Tags */}
@@ -703,7 +612,7 @@ export function WorkbenchPage({
                 </>
               ) : (
                 <div className="echo-workbench-empty">
-                  <p>Select a prompt from the sidebar to inspect its parameters and raw buffer.</p>
+                  <p>Select a prompt from the sidebar to inspect its raw buffer and details.</p>
                 </div>
               )}
             </main>

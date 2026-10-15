@@ -519,10 +519,10 @@
   line-height: 1.65;
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 300px;
-  overflow-y: auto;
+  min-height: 120px;
+  max-height: none;
+  overflow: visible;
   border: 1px solid #1e293b;
-  scrollbar-gutter: stable;
 }
 
 .echo-prompt-metadata-bar {

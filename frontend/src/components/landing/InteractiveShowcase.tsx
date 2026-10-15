@@ -10,7 +10,6 @@ interface ShowcasePrompt {
   description: string;
   rawPrompt: string;
   tags: string[];
-  parameters: { name: string; desc: string }[];
   usageTip: string;
   collectionName?: string;
   thumbnailUrl?: string;
@@ -30,10 +29,6 @@ const SAMPLE_PROMPTS: ShowcasePrompt[] = [
 4. Output your final response as a valid RFC8259 JSON payload conforming to the requested schema.
 Do not emit introductory chatter or markdown code fences outside the JSON object.`,
     tags: ['system-prompt', 'agent', 'json-schema', 'evals'],
-    parameters: [
-      { name: 'protocol_step', desc: 'Step execution hierarchy' },
-      { name: 'rfc8259', desc: 'RFC-compliant raw JSON stream' },
-    ],
     usageTip: 'Ideal for advanced reasoning models requiring zero parse failures and strict JSON conformity.',
   },
   {
@@ -49,10 +44,6 @@ Do not emit introductory chatter or markdown code fences outside the JSON object
 - Collect errors through an aggregate error channel and return a multierror.
 - Include unit tests verifying zero goroutine leaks with goleak.VerifyNone.`,
     tags: ['golang', 'concurrency', 'worker-pool', 'production'],
-    parameters: [
-      { name: '{buffer_size}', desc: 'Channel buffer depth' },
-      { name: '{worker_count}', desc: 'Parallel goroutine workers' },
-    ],
     usageTip: 'Perfect for distributed ingest pipelines and high-throughput background message workers.',
   },
   {
@@ -63,11 +54,6 @@ Do not emit introductory chatter or markdown code fences outside the JSON object
     description: 'Cinematic portrait recipe featuring Kodak Portra 400 grain, volumetric golden lighting, and diffusion parameters.',
     rawPrompt: `Cinematic editorial portrait of an architect examining structural blueprints in a brutalist concrete pavilion, golden hour side lighting, warm volumetric sun rays cutting through haze, 35mm anamorphic lens, f/1.8 shallow depth of field, natural skin texture, Kodak Portra 400 grain, subtle dust motes --ar 16:9 --style raw --v 6.1 --c 5`,
     tags: ['diffusion', 'portrait', 'anamorphic', 'lighting'],
-    parameters: [
-      { name: '--ar 16:9', desc: 'Cinematic widescreen aspect ratio' },
-      { name: '--style raw', desc: 'Disables default model synthetic smoothing' },
-      { name: '--c 5', desc: 'Controlled chaos/variation factor' },
-    ],
     usageTip: 'Using --style raw with physical film stock names (Portra 400) anchors diffusion models in authentic lens physics.',
     thumbnailUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
   },
@@ -79,10 +65,6 @@ Do not emit introductory chatter or markdown code fences outside the JSON object
     description: 'Camera vector direction with continuous orbital rotation and vertigo zoom for generative video models.',
     rawPrompt: `FPV drone cinematic continuous shot, commencing with a fast forward flyover above a mist-covered sea cliff, transitioning smoothly into a clockwise 180-degree orbital rotation around a solitary lighthouse, twilight dusk ambiance, ocean waves crashing against rocks below, vertigo dolly zoom effect, 24fps motion blur, high dynamic range --motion 6 --camera orbit_right`,
     tags: ['camera-orbit', 'dolly-zoom', 'cinematic', 'video'],
-    parameters: [
-      { name: '--motion 6', desc: 'Dynamic camera velocity parameter' },
-      { name: '--camera', desc: 'Explicit 3D coordinate orbit path' },
-    ],
     usageTip: 'Specifying the flight trajectory from forward to orbit prevents cuts and scene disintegration.',
     thumbnailUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80',
   },
@@ -94,9 +76,6 @@ Do not emit introductory chatter or markdown code fences outside the JSON object
     description: 'Authentic 80s instant film aesthetic with vintage chemical borders and organic light leaks.',
     rawPrompt: `Authentic 1980s Polaroid 600 film photograph of smiling candid portraits at an outdoor picnic, soft chromatic aberration, natural rainbow prism light flare across top corner, warm faded film stock color grading with authentic analog grain and vintage chemical border --ar 1:1 --v 6.1`,
     tags: ['vintage', 'polaroid', 'film', 'prism', 'analog'],
-    parameters: [
-      { name: '--ar 1:1', desc: 'Classic square Polaroid aspect ratio' },
-    ],
     usageTip: 'Specifying the exact camera model (Polaroid 600) guides the color temperature to warm organic shifts.',
     thumbnailUrl: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=600&q=80',
   },
@@ -108,9 +87,6 @@ Do not emit introductory chatter or markdown code fences outside the JSON object
     description: 'Abstract motion graphics scene with fluid simulations and iridescent particle dispersion.',
     rawPrompt: `3D kinetic typography floating in a zero-gravity void, high-speed fluid particle explosion radiating outward, iridescent glass refraction, volumetric caustic lighting, Octane render style, ultra-high resolution --motion 8`,
     tags: ['3d', 'vfx', 'typography', 'kinetic'],
-    parameters: [
-      { name: '--motion 8', desc: 'High motion intensity for kinetic fluid bursts' },
-    ],
     usageTip: 'High motion parameters work best when paired with zero-gravity camera vectors.',
     thumbnailUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
   },
@@ -302,7 +278,7 @@ interface InteractiveShowcaseProps {
 
 export function InteractiveShowcase({
   onOpenApp,
-  onOpenWorkbench,
+  onOpenWorkbench: _onOpenWorkbench,
   onOpenDetails,
 }: InteractiveShowcaseProps) {
   // 2 Ways of viewing prompt collection on landing page
@@ -409,7 +385,7 @@ export function InteractiveShowcase({
               Interactive Prompt Showcase & Library
             </h2>
             <p className="echo-section-description">
-              Experience Echo's prompt engineering fidelity, direct runtime parameter parsing, and 1-click clipboard dispatch across multimodal domains.
+              Experience Echo's prompt engineering fidelity, verbatim byte preservation, and 1-click clipboard dispatch across multimodal domains.
             </p>
           </div>
 
@@ -549,7 +525,7 @@ export function InteractiveShowcase({
                   <code>{activePrompt.rawPrompt}</code>
                 </pre>
 
-                {/* Parameters & Tags Metadata */}
+                {/* Tags Metadata */}
                 <div className="echo-prompt-metadata-bar">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                     <span style={{ fontWeight: 600, color: 'var(--atlas-color-text-secondary, #475569)' }}>Tags:</span>
@@ -559,15 +535,6 @@ export function InteractiveShowcase({
                       </span>
                     ))}
                   </div>
-
-                  {activePrompt.parameters.length > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                      <span style={{ fontWeight: 600, color: 'var(--atlas-color-text-secondary, #475569)' }}>Parameters:</span>
-                      <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.75rem', color: '#64748b' }}>
-                        {activePrompt.parameters.map((p) => p.name).join(', ')}
-                      </span>
-                    </div>
-                  )}
                 </div>
 
                 <div
@@ -619,32 +586,6 @@ export function InteractiveShowcase({
                   Explore sample multimodal prompts in a responsive masonry layout with category pills and tag filtering.
                 </p>
               </div>
-
-              {onOpenApp && (
-                <button
-                  type="button"
-                  onClick={onOpenApp}
-                  style={{
-                    background: 'var(--atlas-color-text-primary, #0f172a)',
-                    color: '#ffffff',
-                    border: 'none',
-                    padding: '0.5rem 1.15rem',
-                    borderRadius: '8px',
-                    fontSize: '0.8125rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}
-                >
-                  <span>Open Full Workspace</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                  </svg>
-                </button>
-              )}
             </div>
 
             {/* FilterBar with same modality tabs */}
@@ -678,83 +619,6 @@ export function InteractiveShowcase({
             </div>
           </div>
         )}
-
-        {/* Transition Callout Bar to Real Workbench / Library */}
-        <div
-          style={{
-            marginTop: '1.5rem',
-            padding: '1.25rem 1.75rem',
-            background: 'var(--atlas-color-bg-surface, #ffffff)',
-            border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-            borderRadius: 'var(--atlas-radius-lg, 12px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '1rem',
-            boxShadow: '0 1px 3px rgba(15, 23, 42, 0.03)',
-          }}
-        >
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--atlas-color-text-primary, #0f172a)', marginBottom: '0.2rem' }}>
-              Inspect live prompts with real database parameters
-            </div>
-            <div style={{ fontSize: '0.8125rem', color: 'var(--atlas-color-text-secondary, #64748b)' }}>
-              Open the dedicated Workbench Inspector for real data analysis, or browse the Masonry Library Workspace.
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            {onOpenWorkbench && (
-              <button
-                type="button"
-                onClick={onOpenWorkbench}
-                style={{
-                  background: 'var(--atlas-color-text-primary, #0f172a)',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '0.55rem 1.15rem',
-                  borderRadius: '8px',
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'background-color 0.15s ease',
-                }}
-              >
-                <span>Open Workbench Inspector</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
-              </button>
-            )}
-
-            {onOpenApp && (
-              <button
-                type="button"
-                onClick={onOpenApp}
-                style={{
-                  background: '#ffffff',
-                  color: 'var(--atlas-color-text-primary, #0f172a)',
-                  border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-                  padding: '0.55rem 1rem',
-                  borderRadius: '8px',
-                  fontSize: '0.8125rem',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                <span>Browse Library</span>
-              </button>
-            )}
-          </div>
-        </div>
       </div>
     </section>
   );

@@ -60,6 +60,24 @@ function ImageIcon({ size = 12 }: { size?: number }) {
   );
 }
 
+function FolderIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
+    </svg>
+  );
+}
+
 function ExternalLinkIcon({ size = 12 }: { size?: number }) {
   return (
     <svg
@@ -179,8 +197,14 @@ export function PromptDetailModal({
             </Badge>
 
             {prompt.collection_name && (
-              <Badge variant="outline" intent="neutral" size="md">
-                📁 {prompt.collection_name}
+              <Badge
+                variant="outline"
+                intent="neutral"
+                size="md"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+              >
+                <FolderIcon size={12} />
+                <span>{prompt.collection_name}</span>
               </Badge>
             )}
           </div>
