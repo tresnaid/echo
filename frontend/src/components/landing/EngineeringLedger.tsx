@@ -10,13 +10,13 @@ export function EngineeringLedger() {
       index: '02',
       title: '100% Copy Fidelity',
       description:
-        'Zero trimming, zero indentation mutation, and zero synthetic formatting. Exact whitespace and token structure are preserved for strict LLM system prompts and diffusion model parameters.',
+        'Zero trimming, zero indentation mutation, and zero synthetic formatting. Exact whitespace and token structure are preserved for strict LLM system prompts and diffusion model syntax.',
     },
     {
       index: '03',
       title: 'Multimodal First-Class Modeling',
       description:
-        'Unified schema support for Text, Code, Image, and Generative Video. Each modality pairs prompts with parameter documentation, preview assets, and model compatibility tags.',
+        'Unified schema support for Text, Code, Image, and Generative Video. Each modality pairs prompts with preview assets, taxonomy, and model compatibility tags.',
     },
     {
       index: '04',

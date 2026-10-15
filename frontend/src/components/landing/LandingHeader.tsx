@@ -32,10 +32,18 @@ export function LandingHeader({ onOpenApp }: LandingHeaderProps) {
         </div>
 
         <nav className="echo-landing-nav" aria-label="Main Navigation">
-          <a href="#showcase" onClick={scrollTo('showcase')} className="echo-nav-link">
-            Showcase
+          <a
+            href="#showcase"
+            onClick={scrollTo('showcase')}
+            className="echo-nav-link"
+          >
+            Interactive Showcase
           </a>
-          <a href="#specifications" onClick={scrollTo('specifications')} className="echo-nav-link">
+          <a
+            href="#specifications"
+            onClick={scrollTo('specifications')}
+            className="echo-nav-link"
+          >
             Specifications
           </a>
           <a

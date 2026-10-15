@@ -20,6 +20,7 @@ import { PromptDetailModal } from './components/prompts/PromptDetailModal';
 import { FilterBar } from './components/prompts/FilterBar';
 import { PromptGrid } from './components/prompts/PromptGrid';
 import { LandingPage } from './components/landing/LandingPage';
+import { WorkbenchPage } from './components/workbench/WorkbenchPage';
 
 interface HealthStatus {
   status: string;
@@ -85,10 +86,13 @@ function useIsMobile(breakpoint = 840) {
 
 export function App() {
   const isMobile = useIsMobile(840);
-  const [viewMode, setViewMode] = useState<'landing' | 'library'>(() => {
+  const [viewMode, setViewMode] = useState<'landing' | 'library' | 'workbench'>(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
       const params = new URLSearchParams(window.location.search);
+      if (path.startsWith('/workbench') || params.get('view') === 'workbench') {
+        return 'workbench';
+      }
       if (path.startsWith('/library') || path.startsWith('/app') || params.get('view') === 'library') {
         return 'library';
       }
@@ -101,14 +105,17 @@ export function App() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.has('view')) {
-        const isLib = params.get('view') === 'library';
-        window.history.replaceState(null, '', isLib ? '/library' : '/');
+        const val = params.get('view');
+        const target = val === 'workbench' ? '/workbench' : val === 'library' ? '/library' : '/';
+        window.history.replaceState(null, '', target);
       }
     }
 
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase();
-      if (path.startsWith('/library') || path.startsWith('/app')) {
+      if (path.startsWith('/workbench')) {
+        setViewMode('workbench');
+      } else if (path.startsWith('/library') || path.startsWith('/app')) {
         setViewMode('library');
       } else {
         setViewMode('landing');
@@ -117,6 +124,12 @@ export function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  const handleOpenWorkbench = () => {
+    setViewMode('workbench');
+    window.history.pushState(null, '', '/workbench');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
 
   const handleOpenLibrary = () => {
     setViewMode('library');
@@ -267,32 +280,49 @@ export function App() {
 
   if (viewMode === 'landing') {
     return (
+      <LandingPage
+        onOpenApp={handleOpenLibrary}
+        onOpenWorkbench={handleOpenWorkbench}
+      />
+    );
+  }
+
+  if (viewMode === 'workbench') {
+    return (
       <>
-        <LandingPage
-          onOpenApp={handleOpenLibrary}
+        <WorkbenchPage
           prompts={prompts}
           categories={categories}
+          collections={collections}
           availableTags={availableTags}
-          onOpenDetails={(prompt) => setDetailPrompt(prompt)}
+          health={health}
+          loading={loading || promptsLoading}
+          onOpenCreatePrompt={handleOpenCreatePrompt}
+          onOpenEditPrompt={handleOpenEditPrompt}
+          onOpenLibrary={handleOpenLibrary}
+          onOpenLanding={handleOpenLanding}
         />
-        <PromptDetailModal
-          prompt={detailPrompt}
-          isOpen={Boolean(detailPrompt)}
-          onClose={() => setDetailPrompt(null)}
-          onEdit={(prompt) => {
-            setDetailPrompt(null);
-            handleOpenLibrary();
-            handleOpenEditPrompt(prompt);
+        <PromptFormModal
+          prompt={editingPrompt}
+          collections={collections}
+          defaultCollectionId={defaultCollectionForModal}
+          open={promptModalOpen}
+          onOpenChange={(open) => {
+            setPromptModalOpen(open);
+            if (!open) setEditingPrompt(null);
           }}
-          onDelete={(prompt) => {
-            setDetailPrompt(null);
-            handleOpenLibrary();
-            setDeletingPrompt(prompt);
+          onSaved={handlePromptSaved}
+          onCollectionCreated={() => {
+            loadMetadata();
           }}
-          onTagClick={(tag) => {
-            setSelectedTag(tag);
-            handleOpenLibrary();
+        />
+        <DeletePromptDialog
+          prompt={deletingPrompt}
+          open={Boolean(deletingPrompt)}
+          onOpenChange={(open) => {
+            if (!open) setDeletingPrompt(null);
           }}
+          onDeleted={handlePromptDeleted}
         />
       </>
     );
@@ -383,49 +413,41 @@ export function App() {
 
             {/* Center Navigation in Library Header */}
             {!isMobile && (
-              <nav style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }} aria-label="Library Navigation">
-                <button
-                  type="button"
-                  onClick={handleOpenLanding}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    fontSize: '0.8125rem',
-                    fontWeight: 500,
-                    color: 'var(--atlas-color-text-secondary, #64748b)',
-                    transition: 'color 0.15s ease',
+              <nav className="echo-landing-nav" aria-label="Library Navigation">
+                <a
+                  href="/"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleOpenLanding();
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                  className="echo-nav-link"
                 >
                   Showcase
-                </button>
-                <span
-                  style={{
-                    fontSize: '0.8125rem',
-                    fontWeight: 600,
-                    color: 'var(--atlas-color-text-brand, #2563eb)',
-                    borderBottom: '2px solid var(--atlas-color-text-brand, #2563eb)',
-                    paddingBottom: '2px',
+                </a>
+                <a
+                  href="/workbench"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleOpenWorkbench();
                   }}
+                  className="echo-nav-link"
+                >
+                  Workbench
+                </a>
+                <a
+                  href="/library"
+                  onClick={(e) => {
+                    e.preventDefault();
+                  }}
+                  className="echo-nav-link is-active"
                 >
                   Library
-                </span>
+                </a>
                 <a
                   href="https://github.com/tresnaid/echo"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    textDecoration: 'none',
-                    fontSize: '0.8125rem',
-                    fontWeight: 500,
-                    color: 'var(--atlas-color-text-secondary, #64748b)',
-                    transition: 'color 0.15s ease',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                  className="echo-nav-link"
                 >
                   GitHub
                 </a>
@@ -669,64 +691,74 @@ export function App() {
 
               {/* Main Content & Product Catalog Area */}
               <div style={{ flexGrow: 1, minWidth: 0, width: '100%' }}>
-                <Stack direction="vertical" gap="4">
-                  {/* Desktop Section Header */}
-                  {!isMobile && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        flexWrap: 'wrap',
-                        gap: '0.75rem',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                        <Heading
-                          level={2}
-                          style={{
-                            fontSize: '1.25rem',
-                            fontWeight: 700,
-                            letterSpacing: '-0.02em',
-                            margin: 0,
-                            color: 'var(--atlas-color-text-primary, #0f172a)',
-                          }}
-                        >
-                          {activeViewLabel}
-                        </Heading>
-                        <Badge variant="subtle" intent="neutral" size="md">
-                          {prompts.length} {prompts.length === 1 ? 'prompt' : 'prompts'}
-                        </Badge>
+                <div
+                  style={{
+                    backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
+                    border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
+                    borderRadius: 'var(--atlas-radius-lg, 14px)',
+                    padding: isMobile ? '1.25rem 1rem' : '1.75rem 2rem 2.25rem',
+                    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+                  }}
+                >
+                  <Stack direction="vertical" gap="5">
+                    {/* Desktop Section Header */}
+                    {!isMobile && (
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap',
+                          gap: '0.75rem',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                          <Heading
+                            level={2}
+                            style={{
+                              fontSize: '1.25rem',
+                              fontWeight: 700,
+                              letterSpacing: '-0.02em',
+                              margin: 0,
+                              color: 'var(--atlas-color-text-primary, #0f172a)',
+                            }}
+                          >
+                            {activeViewLabel}
+                          </Heading>
+                          <Badge variant="subtle" intent="neutral" size="md">
+                            {prompts.length} {prompts.length === 1 ? 'prompt' : 'prompts'}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Filter Bar */}
-                  <FilterBar
-                    search={search}
-                    onSearchChange={setSearch}
-                    selectedCategory={selectedCategory}
-                    onCategoryChange={setSelectedCategory}
-                    selectedTag={selectedTag}
-                    onTagChange={setSelectedTag}
-                    categories={categories}
-                    availableTags={availableTags}
-                    totalResults={prompts.length}
-                  />
+                    {/* Filter Bar */}
+                    <FilterBar
+                      search={search}
+                      onSearchChange={setSearch}
+                      selectedCategory={selectedCategory}
+                      onCategoryChange={setSelectedCategory}
+                      selectedTag={selectedTag}
+                      onTagChange={setSelectedTag}
+                      categories={categories}
+                      availableTags={availableTags}
+                      totalResults={prompts.length}
+                    />
 
-                  {/* Prompt Grid */}
-                  <PromptGrid
-                    prompts={prompts}
-                    loading={promptsLoading}
-                    hasActiveFilters={hasActiveFilters}
-                    onClearFilters={handleClearFilters}
-                    onCreatePrompt={handleOpenCreatePrompt}
-                    onEditPrompt={handleOpenEditPrompt}
-                    onDeletePrompt={setDeletingPrompt}
-                    onTagClick={(tag) => setSelectedTag(tag)}
-                    onOpenDetails={(prompt) => setDetailPrompt(prompt)}
-                  />
-                </Stack>
+                    {/* Prompt Grid */}
+                    <PromptGrid
+                      prompts={prompts}
+                      loading={promptsLoading}
+                      hasActiveFilters={hasActiveFilters}
+                      onClearFilters={handleClearFilters}
+                      onCreatePrompt={handleOpenCreatePrompt}
+                      onEditPrompt={handleOpenEditPrompt}
+                      onDeletePrompt={setDeletingPrompt}
+                      onTagClick={(tag) => setSelectedTag(tag)}
+                      onOpenDetails={(prompt) => setDetailPrompt(prompt)}
+                    />
+                  </Stack>
+                </div>
               </div>
             </div>
           </Stack>
