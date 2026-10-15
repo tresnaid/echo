@@ -33,17 +33,36 @@ export function LandingHeader({ onOpenApp, onOpenWorkbench }: LandingHeaderProps
         </div>
 
         <nav className="echo-landing-nav" aria-label="Main Navigation">
-          <a href="#showcase" onClick={scrollTo('showcase')} className="echo-nav-link">
+          <a
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              scrollTo('showcase')(e);
+            }}
+            className="echo-nav-link is-active"
+          >
             Showcase
           </a>
-          <button
-            type="button"
-            onClick={onOpenWorkbench}
+          <a
+            href="/workbench"
+            onClick={(e) => {
+              e.preventDefault();
+              onOpenWorkbench();
+            }}
             className="echo-nav-link"
-            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit' }}
           >
             Workbench
-          </button>
+          </a>
+          <a
+            href="/library"
+            onClick={(e) => {
+              e.preventDefault();
+              onOpenApp();
+            }}
+            className="echo-nav-link"
+          >
+            Library
+          </a>
           <a href="#specifications" onClick={scrollTo('specifications')} className="echo-nav-link">
             Specifications
           </a>

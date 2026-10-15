@@ -413,65 +413,41 @@ export function App() {
 
             {/* Center Navigation in Library Header */}
             {!isMobile && (
-              <nav style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }} aria-label="Library Navigation">
-                <button
-                  type="button"
-                  onClick={handleOpenLanding}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    fontSize: '0.8125rem',
-                    fontWeight: 500,
-                    color: 'var(--atlas-color-text-secondary, #64748b)',
-                    transition: 'color 0.15s ease',
+              <nav className="echo-landing-nav" aria-label="Library Navigation">
+                <a
+                  href="/"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleOpenLanding();
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                  className="echo-nav-link"
                 >
                   Showcase
-                </button>
-                <button
-                  type="button"
-                  onClick={handleOpenWorkbench}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    fontSize: '0.8125rem',
-                    fontWeight: 500,
-                    color: 'var(--atlas-color-text-secondary, #64748b)',
-                    transition: 'color 0.15s ease',
+                </a>
+                <a
+                  href="/workbench"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleOpenWorkbench();
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                  className="echo-nav-link"
                 >
                   Workbench
-                </button>
-                <span
-                  style={{
-                    fontSize: '0.8125rem',
-                    fontWeight: 600,
-                    color: 'var(--atlas-color-text-primary, #0f172a)',
+                </a>
+                <a
+                  href="/library"
+                  onClick={(e) => {
+                    e.preventDefault();
                   }}
+                  className="echo-nav-link is-active"
                 >
                   Library
-                </span>
+                </a>
                 <a
                   href="https://github.com/tresnaid/echo"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    textDecoration: 'none',
-                    fontSize: '0.8125rem',
-                    fontWeight: 500,
-                    color: 'var(--atlas-color-text-secondary, #64748b)',
-                    transition: 'color 0.15s ease',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                  className="echo-nav-link"
                 >
                   GitHub
                 </a>

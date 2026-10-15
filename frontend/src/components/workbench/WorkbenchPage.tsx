@@ -241,65 +241,41 @@ export function WorkbenchPage({
             </div>
 
             {/* Navigation */}
-            <nav style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }} aria-label="Workbench Navigation">
-              <button
-                type="button"
-                onClick={onOpenLanding}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  padding: 0,
-                  cursor: 'pointer',
-                  fontSize: '0.8125rem',
-                  fontWeight: 500,
-                  color: 'var(--atlas-color-text-secondary, #64748b)',
-                  transition: 'color 0.15s ease',
+            <nav className="echo-landing-nav" aria-label="Workbench Navigation">
+              <a
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onOpenLanding();
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                className="echo-nav-link"
               >
                 Showcase
-              </button>
-              <span
-                style={{
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  color: 'var(--atlas-color-text-primary, #0f172a)',
+              </a>
+              <a
+                href="/workbench"
+                onClick={(e) => {
+                  e.preventDefault();
                 }}
+                className="echo-nav-link is-active"
               >
                 Workbench
-              </span>
-              <button
-                type="button"
-                onClick={onOpenLibrary}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  padding: 0,
-                  cursor: 'pointer',
-                  fontSize: '0.8125rem',
-                  fontWeight: 500,
-                  color: 'var(--atlas-color-text-secondary, #64748b)',
-                  transition: 'color 0.15s ease',
+              </a>
+              <a
+                href="/library"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onOpenLibrary();
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                className="echo-nav-link"
               >
                 Library
-              </button>
+              </a>
               <a
                 href="https://github.com/tresnaid/echo"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  textDecoration: 'none',
-                  fontSize: '0.8125rem',
-                  fontWeight: 500,
-                  color: 'var(--atlas-color-text-secondary, #64748b)',
-                  transition: 'color 0.15s ease',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                className="echo-nav-link"
               >
                 GitHub
               </a>
