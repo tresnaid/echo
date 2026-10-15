@@ -307,6 +307,8 @@ export function App() {
             {/* Brand / Logo */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
               <div
+                role="button"
+                tabIndex={0}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -315,7 +317,14 @@ export function App() {
                   userSelect: 'none',
                 }}
                 onClick={handleOpenLanding}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleOpenLanding();
+                  }
+                }}
                 title="Echo — Click to return to Overview"
+                aria-label="Echo — Return to Overview"
               >
                 <img
                   src="/echo-logo.svg"

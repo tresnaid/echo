@@ -146,12 +146,35 @@ export function InteractiveShowcase({ onOpenApp }: InteractiveShowcaseProps) {
 
   const handleCopy = async (promptText: string, id: string) => {
     try {
-      await navigator.clipboard.writeText(promptText);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(promptText);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+        return;
+      }
+      throw new Error('Clipboard API unavailable');
     } catch {
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
+      // Fallback execution via temporary textarea and execCommand
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = promptText;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        textArea.remove();
+        if (successful) {
+          setCopiedId(id);
+          setTimeout(() => setCopiedId(null), 2000);
+        } else {
+          console.error('Fallback copy command was unsuccessful');
+        }
+      } catch (fallbackErr) {
+        console.error('Failed to copy prompt to clipboard:', fallbackErr);
+      }
     }
   };
 

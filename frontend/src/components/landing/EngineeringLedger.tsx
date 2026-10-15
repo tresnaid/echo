@@ -2,9 +2,9 @@ export function EngineeringLedger() {
   const specifications = [
     {
       index: '01',
-      title: 'Dual View Architecture',
+      title: 'Spatial Grid Architecture',
       description:
-        'Seamlessly toggle between Card Grid for spatial visual browsing and Split Showcase Workbench for deep prompt inspection, parameter dissection, and rapid copying.',
+        'High-density responsive masonry card grid for rapid visual browsing paired with non-destructive detail modals that strictly preserve active search queries, filters, and collection contexts.',
     },
     {
       index: '02',
