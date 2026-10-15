@@ -35,6 +35,7 @@ A web application built with React and Atlas Design System backed by persistent 
 * Persistent database storage (browser local storage is not the primary data store).
 * Integration with the Atlas design system (`@tresnaid/atlas`).
 * Photo and video media attachments (local uploads to `data/uploads/` and external media URLs) for prompts, with card previews and full detail modal inspection.
+* Portfolio landing page and interactive showcase demonstrating multimodal prompt workflows, copy fidelity, architecture, and Atlas Design System reference implementation.
 
 ### Out of Scope
 
@@ -93,4 +94,4 @@ Before delivery, verify the project using:
 
 ## Current State
 
-MVP completed. Persistent SQLite storage, Collection Management, Prompt CRUD Operations with Soft-Deletion, Search & Multi-criteria Filtering, Prompt Detail Modal with browsing context preservation, Photo & Video Media Attachments with thumbnail generation, and Comprehensive Test Suite are fully implemented and verified. All official Atlas Design System components (`@tresnaid/atlas` Masonry, SearchInput, CodeSnippet, NavList, NavItem) have been fully integrated and local fallbacks retired (issue #24 closed).
+MVP completed. Persistent SQLite storage, Collection Management, Prompt CRUD Operations with Soft-Deletion, Search & Multi-criteria Filtering, Prompt Detail Modal with browsing context preservation, Photo & Video Media Attachments with thumbnail generation, and Comprehensive Test Suite are fully implemented and verified. All official Atlas Design System components (`@tresnaid/atlas` Masonry, SearchInput, CodeSnippet, NavList, NavItem) have been fully integrated and local fallbacks retired (issue #24 closed). A modern, Apple-inspired portfolio landing page and interactive showcase has been implemented to present the project's purpose, workflows, and architecture.

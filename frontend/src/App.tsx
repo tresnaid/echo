@@ -19,6 +19,7 @@ import { DeletePromptDialog } from './components/prompts/DeletePromptDialog';
 import { PromptDetailModal } from './components/prompts/PromptDetailModal';
 import { FilterBar } from './components/prompts/FilterBar';
 import { PromptGrid } from './components/prompts/PromptGrid';
+import { LandingPage } from './components/landing/LandingPage';
 
 interface HealthStatus {
   status: string;
@@ -84,6 +85,47 @@ function useIsMobile(breakpoint = 840) {
 
 export function App() {
   const isMobile = useIsMobile(840);
+  const [viewMode, setViewMode] = useState<'landing' | 'library'>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('view') === 'library' || window.location.hash === '#library') {
+        return 'library';
+      }
+    }
+    return 'landing';
+  });
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('view') === 'library' || window.location.hash === '#library') {
+        setViewMode('library');
+      } else {
+        setViewMode('landing');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const handleOpenLibrary = () => {
+    setViewMode('library');
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', 'library');
+    window.history.pushState(null, '', url.toString());
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+
+  const handleOpenLanding = () => {
+    setViewMode('landing');
+    const url = new URL(window.location.href);
+    url.searchParams.delete('view');
+    url.hash = '';
+    const cleanUrl = url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '');
+    window.history.pushState(null, '', cleanUrl);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -219,6 +261,10 @@ export function App() {
   const defaultCollectionForModal = typeof selectedView === 'number' ? selectedView : null;
   const hasActiveFilters = Boolean(search.trim() || selectedCategory || selectedTag);
 
+  if (viewMode === 'landing') {
+    return <LandingPage onOpenApp={handleOpenLibrary} />;
+  }
+
   return (
     <div
       style={{
@@ -308,8 +354,18 @@ export function App() {
               )}
             </div>
 
-            {/* Actions: Health indicator & Create Prompt */}
+            {/* Actions: Overview return, Health indicator & Create Prompt */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexShrink: 0 }}>
+              <Button
+                variant="secondary"
+                size={isMobile ? 'sm' : 'md'}
+                onClick={handleOpenLanding}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                title="Return to Echo Overview & Portfolio Showcase"
+              >
+                <span>← Overview</span>
+              </Button>
+
               {loading ? (
                 <Badge variant="subtle" intent="neutral" size="sm">
                   Connecting...
