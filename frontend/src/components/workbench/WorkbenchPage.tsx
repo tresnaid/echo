@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Container,
   Heading,
@@ -7,6 +7,42 @@ import {
 } from '@tresnaid/atlas';
 import { Prompt, Category, Collection } from '../../types';
 import './workbench.css';
+
+function PlusIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
+
+function useIsMobile(breakpoint = 840) {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < breakpoint;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < breakpoint);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [breakpoint]);
+
+  return isMobile;
+}
 
 interface HealthStatus {
   status: string;
@@ -80,6 +116,7 @@ export function WorkbenchPage({
   onOpenLibrary,
   onOpenLanding,
 }: WorkbenchPageProps) {
+  const isMobile = useIsMobile(840);
   const [selectedModality, setSelectedModality] = useState<string>('all');
   const [selectedCollectionId, setSelectedCollectionId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -282,7 +319,7 @@ export function WorkbenchPage({
             </nav>
 
             {/* Actions */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexShrink: 0 }}>
               {loading ? (
                 <Badge variant="subtle" intent="neutral" size="sm">
                   Connecting...
@@ -297,8 +334,14 @@ export function WorkbenchPage({
                 </Badge>
               )}
 
-              <Button variant="primary" size="sm" onClick={onOpenCreatePrompt}>
-                + New Prompt
+              <Button
+                variant="primary"
+                size={isMobile ? 'sm' : 'md'}
+                onClick={onOpenCreatePrompt}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <PlusIcon size={14} />
+                <span>New Prompt</span>
               </Button>
             </div>
           </div>

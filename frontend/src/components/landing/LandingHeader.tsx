@@ -2,10 +2,9 @@ import type { MouseEvent } from 'react';
 
 interface LandingHeaderProps {
   onOpenApp: () => void;
-  onOpenWorkbench: () => void;
 }
 
-export function LandingHeader({ onOpenApp, onOpenWorkbench }: LandingHeaderProps) {
+export function LandingHeader({ onOpenApp }: LandingHeaderProps) {
   const scrollTo = (id: string) => (e: MouseEvent) => {
     e.preventDefault();
     const element = document.getElementById(id);
@@ -34,36 +33,17 @@ export function LandingHeader({ onOpenApp, onOpenWorkbench }: LandingHeaderProps
 
         <nav className="echo-landing-nav" aria-label="Main Navigation">
           <a
-            href="/"
-            onClick={(e) => {
-              e.preventDefault();
-              scrollTo('showcase')(e);
-            }}
-            className="echo-nav-link is-active"
-          >
-            Showcase
-          </a>
-          <a
-            href="/workbench"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenWorkbench();
-            }}
+            href="#showcase"
+            onClick={scrollTo('showcase')}
             className="echo-nav-link"
           >
-            Workbench
+            Interactive Showcase
           </a>
           <a
-            href="/library"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenApp();
-            }}
+            href="#specifications"
+            onClick={scrollTo('specifications')}
             className="echo-nav-link"
           >
-            Library
-          </a>
-          <a href="#specifications" onClick={scrollTo('specifications')} className="echo-nav-link">
             Specifications
           </a>
           <a

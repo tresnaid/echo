@@ -23,7 +23,7 @@ export function LandingPage({
   return (
     <div className="echo-landing">
       <CursorEffect />
-      <LandingHeader onOpenApp={onOpenApp} onOpenWorkbench={onOpenWorkbench} />
+      <LandingHeader onOpenApp={onOpenApp} />
       <main id="main-content">
         <LandingHero onOpenApp={onOpenApp} onOpenWorkbench={onOpenWorkbench} />
         <InteractiveShowcase
