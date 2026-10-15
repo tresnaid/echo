@@ -15,7 +15,7 @@ export function LandingPage({ onOpenApp }: LandingPageProps) {
       <LandingHeader onOpenApp={onOpenApp} />
       <main id="main-content">
         <LandingHero onOpenApp={onOpenApp} />
-        <InteractiveShowcase />
+        <InteractiveShowcase onOpenApp={onOpenApp} />
         <EngineeringLedger />
         <LandingFooter onOpenApp={onOpenApp} />
       </main>

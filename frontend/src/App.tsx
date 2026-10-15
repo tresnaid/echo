@@ -341,23 +341,58 @@ export function App() {
                 </Heading>
               </div>
 
-              {!isMobile && (
-                <Text
-                  color="secondary"
-                  size="xs"
-                  truncate
+            </div>
+
+            {/* Center Navigation in Library Header */}
+            {!isMobile && (
+              <nav style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }} aria-label="Library Navigation">
+                <button
+                  type="button"
+                  onClick={handleOpenLanding}
                   style={{
-                    borderLeft: '1px solid var(--atlas-color-border-subtle, #cbd5e1)',
-                    paddingLeft: '0.75rem',
-                    color: 'var(--atlas-color-text-muted, #64748b)',
-                    maxWidth: '420px',
-                    lineHeight: 1.4,
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                    color: 'var(--atlas-color-text-secondary, #64748b)',
+                    transition: 'color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                >
+                  Showcase
+                </button>
+                <span
+                  style={{
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    color: 'var(--atlas-color-text-brand, #2563eb)',
+                    borderBottom: '2px solid var(--atlas-color-text-brand, #2563eb)',
+                    paddingBottom: '2px',
                   }}
                 >
-                  Prompt library for storing, organizing, and 1-click copying.
-                </Text>
-              )}
-            </div>
+                  Library
+                </span>
+                <a
+                  href="https://github.com/tresnaid/echo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    textDecoration: 'none',
+                    fontSize: '0.8125rem',
+                    fontWeight: 500,
+                    color: 'var(--atlas-color-text-secondary, #64748b)',
+                    transition: 'color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                >
+                  GitHub
+                </a>
+              </nav>
+            )}
 
             {/* Actions: Health indicator & Create Prompt */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexShrink: 0 }}>
