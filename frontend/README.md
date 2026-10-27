@@ -78,6 +78,10 @@ The production build fetches `VITE_API_URL` from EnvHub environment
 `echo/frontend-production`. See `../docs/ENVHUB_IDENTITIES.md` for identity
 setup and rotation.
 
+SPA client-side routing is configured via `vercel.json` rewrites so direct URL
+access and browser refreshes on subroutes (such as `/library` and `/workbench`)
+serve `index.html`.
+
 ## Production (Docker)
 
 ```bash
