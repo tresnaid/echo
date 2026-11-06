@@ -1,0 +1,22 @@
+{
+  "project": "Echo responsive redesign",
+  "status": "passed",
+  "method": "manual-browser-fallback",
+  "viewports": [
+    { "name": "mobile", "width": 390, "height": 844 },
+    { "name": "tablet", "width": 834, "height": 1112 },
+    { "name": "desktop", "width": 1440, "height": 900 }
+  ],
+  "routes": ["/", "/library", "/workbench"],
+  "checks": {
+    "horizontalOverflow": 0,
+    "visibleBrokenImages": 0,
+    "mobileDetailOverflow": 0,
+    "mobileEditorOverflow": 0
+  },
+  "notes": [
+    "Prompt detail and editor were visually inspected on mobile.",
+    "Library, Overview, and Workbench were visually inspected at their representative breakpoints.",
+    "A failed third-party seed thumbnail is replaced by an explicit media preview fallback."
+  ]
+}
