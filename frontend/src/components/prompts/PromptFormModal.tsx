@@ -1,81 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  Dialog,
-  Field,
-  Input,
-  Textarea,
-  Select,
-  Button,
-  Stack,
-  Tag,
-  Text,
-  Badge,
-  Card,
-  IconButton,
-} from '@tresnaid/atlas';
-import { Prompt, Collection, Category, PromptMedia } from '../../types';
-import { createPrompt, updatePrompt, fetchCategories, uploadMediaFiles } from '../../api/prompts';
+import { useEffect, useRef, useState } from 'react';
+import { Category, Collection, Prompt, PromptMedia } from '../../types';
+import { createPrompt, fetchCategories, updatePrompt, uploadMediaFiles } from '../../api/prompts';
 import { getMediaUrl } from '../../api/config';
 import { CreateCollectionModal } from '../collections/CreateCollectionModal';
-
-function TrashIcon({ size = 13 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M3 6h18" />
-      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-    </svg>
-  );
-}
-
-function UploadIcon({ size = 14 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="17 8 12 3 7 8" />
-      <line x1="12" y1="3" x2="12" y2="15" />
-    </svg>
-  );
-}
-
-function LinkIcon({ size = 14 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-    </svg>
-  );
-}
 
 interface PromptFormModalProps {
   prompt?: Prompt | null;
@@ -87,575 +14,112 @@ interface PromptFormModalProps {
   onCollectionCreated?: (collection: Collection) => void;
 }
 
-export function PromptFormModal({
-  prompt,
-  collections,
-  defaultCollectionId,
-  open,
-  onOpenChange,
-  onSaved,
-  onCollectionCreated,
-}: PromptFormModalProps) {
-  const isEditing = Boolean(prompt);
-
+export function PromptFormModal({ prompt, collections, defaultCollectionId, open, onOpenChange, onSaved, onCollectionCreated }: PromptFormModalProps) {
   const [title, setTitle] = useState('');
   const [promptText, setPromptText] = useState('');
   const [description, setDescription] = useState('');
-  const [usageDescription, setUsageDescription] = useState('');
-  const [collectionId, setCollectionId] = useState<string>('');
-  const [categoryId, setCategoryId] = useState<string>('');
+  const [usage, setUsage] = useState('');
+  const [collectionId, setCollectionId] = useState('');
+  const [categoryId, setCategoryId] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
-  const [mediaList, setMediaList] = useState<PromptMedia[]>([]);
-
-  // URL attachment inputs
-  const [showUrlInput, setShowUrlInput] = useState(false);
-  const [mediaUrlInput, setMediaUrlInput] = useState('');
-  const [mediaTypeInput, setMediaTypeInput] = useState<'image' | 'video'>('image');
-  const [mediaCaptionInput, setMediaCaptionInput] = useState('');
-
+  const [media, setMedia] = useState<PromptMedia[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [createCollectionOpen, setCreateCollectionOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [showLink, setShowLink] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkCaption, setLinkCaption] = useState('');
+  const [linkType, setLinkType] = useState<'image' | 'video'>('image');
+  const [createCollection, setCreateCollection] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [errors, setErrors] = useState<{ title?: string; prompt_text?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{ title?: string; prompt?: string; general?: string }>({});
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Load categories
+  useEffect(() => { fetchCategories().then(setCategories).catch(() => setCategories([])); }, []);
   useEffect(() => {
-    fetchCategories()
-      .then(setCategories)
-      .catch((err) => console.error('Failed to load categories:', err));
-  }, []);
+    if (!open) return;
+    setTitle(prompt?.title || ''); setPromptText(prompt?.prompt_text || ''); setDescription(prompt?.description || ''); setUsage(prompt?.usage_description || '');
+    setCollectionId(prompt?.collection_id ? String(prompt.collection_id) : defaultCollectionId ? String(defaultCollectionId) : '');
+    setCategoryId(prompt?.category_id || ''); setTags(prompt?.tags || []); setMedia(prompt?.media || []); setErrors({}); setShowLink(false);
+    const escape = (event: KeyboardEvent) => event.key === 'Escape' && onOpenChange(false);
+    document.addEventListener('keydown', escape); document.body.classList.add('echo-modal-open');
+    return () => { document.removeEventListener('keydown', escape); document.body.classList.remove('echo-modal-open'); };
+  }, [open, prompt, defaultCollectionId, onOpenChange]);
+  if (!open) return null;
 
-  // Initialize form when opened or prompt changes
-  useEffect(() => {
-    if (open) {
-      if (prompt) {
-        setTitle(prompt.title || '');
-        setPromptText(prompt.prompt_text || '');
-        setDescription(prompt.description || '');
-        setUsageDescription(prompt.usage_description || '');
-        setCollectionId(prompt.collection_id ? String(prompt.collection_id) : '');
-        setCategoryId(prompt.category_id || '');
-        setTags(prompt.tags || []);
-        setMediaList(prompt.media || []);
-      } else {
-        setTitle('');
-        setPromptText('');
-        setDescription('');
-        setUsageDescription('');
-        setCollectionId(defaultCollectionId ? String(defaultCollectionId) : '');
-        setCategoryId('');
-        setTags([]);
-        setMediaList([]);
-      }
-      setTagInput('');
-      setShowUrlInput(false);
-      setMediaUrlInput('');
-      setMediaCaptionInput('');
-      setErrors({});
-    }
-  }, [open, prompt, defaultCollectionId]);
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
+  const addTag = () => {
+    const value = tagInput.trim().replace(/^#/, '');
+    if (value && !tags.some((tag) => tag.toLowerCase() === value.toLowerCase())) setTags([...tags, value]);
+    setTagInput('');
+  };
+  const upload = async (files: FileList | null) => {
+    if (!files?.length) return;
     try {
       setUploading(true);
       const uploaded = await uploadMediaFiles(Array.from(files));
-      setMediaList((prev) => [...prev, ...uploaded]);
-    } catch (err: unknown) {
-      setErrors((prev) => ({
-        ...prev,
-        general: err instanceof Error ? err.message : 'Failed to upload files',
-      }));
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      setMedia((current) => [...current, ...uploaded]);
     }
+    catch (error) { setErrors((current) => ({ ...current, general: error instanceof Error ? error.message : 'Media upload failed' })); }
+    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ''; }
   };
-
-  const handleAddMediaUrl = () => {
-    const trimmedUrl = mediaUrlInput.trim();
-    if (!trimmedUrl) return;
-
-    const newMediaItem: PromptMedia = {
-      id: Date.now(),
-      prompt_id: prompt?.id || 0,
-      media_type: mediaTypeInput,
-      url: trimmedUrl,
-      thumbnail_url: mediaTypeInput === 'image' ? trimmedUrl : null,
-      medium_url: mediaTypeInput === 'image' ? trimmedUrl : null,
-      caption: mediaCaptionInput.trim() || null,
-      created_at: new Date().toISOString(),
-    };
-
-    setMediaList((prev) => [...prev, newMediaItem]);
-    setMediaUrlInput('');
-    setMediaCaptionInput('');
-    setShowUrlInput(false);
+  const addLink = () => {
+    if (!linkUrl.trim()) return;
+    setMedia((current) => [...current, { id: Date.now(), prompt_id: prompt?.id || 0, media_type: linkType, url: linkUrl.trim(), thumbnail_url: linkType === 'image' ? linkUrl.trim() : null, medium_url: linkType === 'image' ? linkUrl.trim() : null, caption: linkCaption.trim() || null, created_at: new Date().toISOString() }]);
+    setLinkUrl(''); setLinkCaption(''); setShowLink(false);
   };
-
-  const handleRemoveMedia = (index: number) => {
-    setMediaList((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleAddTag = (rawTag: string) => {
-    const trimmed = rawTag.trim();
-    if (!trimmed) return;
-    if (!tags.some((t) => t.toLowerCase() === trimmed.toLowerCase())) {
-      setTags([...tags, trimmed]);
-    }
-    setTagInput('');
-  };
-
-  const handleRemoveTag = (indexToRemove: number) => {
-    setTags(tags.filter((_, i) => i !== indexToRemove));
-  };
-
-  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      handleAddTag(tagInput);
-    }
-  };
-
-  const handleCollectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
-    if (val === '__CREATE_NEW__') {
-      setCreateCollectionOpen(true);
-    } else {
-      setCollectionId(val);
-    }
-  };
-
-  const handleInlineCollectionCreated = (newCol: Collection) => {
-    if (onCollectionCreated) {
-      onCollectionCreated(newCol);
-    }
-    setCollectionId(String(newCol.id));
-  };
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-
-    const newErrors: typeof errors = {};
-    if (!title.trim()) {
-      newErrors.title = 'Title is required';
-    }
-    if (!promptText.trim()) {
-      newErrors.prompt_text = 'Prompt text is required';
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
+  const save = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const nextErrors: typeof errors = {};
+    if (!title.trim()) nextErrors.title = 'Title is required.';
+    if (!promptText.trim()) nextErrors.prompt = 'Prompt text is required.';
+    if (Object.keys(nextErrors).length) { setErrors(nextErrors); return; }
     try {
-      setSubmitting(true);
-      setErrors({});
-
-      const payload = {
-        title: title.trim(),
-        prompt_text: promptText, // exact raw prompt text preserved
-        description: description.trim() || null,
-        usage_description: usageDescription.trim() || null,
-        collection_id: collectionId ? parseInt(collectionId, 10) : null,
-        category_id: categoryId || null,
-        tags: tags.length > 0 ? tags : undefined,
-        media: mediaList,
-      };
-
-      let result: Prompt;
-      if (isEditing && prompt) {
-        result = await updatePrompt(prompt.id, payload);
-      } else {
-        result = await createPrompt(payload);
-      }
-
-      onOpenChange(false);
-      if (onSaved) {
-        onSaved(result);
-      }
-    } catch (err: unknown) {
-      setErrors({
-        general: err instanceof Error ? err.message : 'Failed to save prompt',
-      });
-    } finally {
-      setSubmitting(false);
-    }
+      setSaving(true); setErrors({});
+      const payload = { title: title.trim(), prompt_text: promptText, description: description.trim() || null, usage_description: usage.trim() || null, collection_id: collectionId ? Number(collectionId) : null, category_id: categoryId || null, tags, media };
+      const saved = prompt ? await updatePrompt(prompt.id, payload) : await createPrompt(payload);
+      onOpenChange(false); onSaved?.(saved);
+    } catch (error) { setErrors({ general: error instanceof Error ? error.message : 'Unable to save prompt' }); }
+    finally { setSaving(false); }
   };
 
   return (
     <>
-      <Dialog
-        open={open}
-        onOpenChange={onOpenChange}
-        title={isEditing ? 'Edit Prompt' : 'Create New Prompt'}
-        description={
-          isEditing
-            ? 'Update your prompt text, descriptions, media attachments, and optional tags.'
-            : 'Add a structured, reusable prompt to your personal prompt library.'
-        }
-        size="lg"
-        footer={
-          <Stack direction="horizontal" justify="end" gap="3">
-            <Button
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-              disabled={submitting || uploading}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => handleSubmit()}
-              isLoading={submitting}
-              disabled={uploading}
-            >
-              {isEditing ? 'Save Changes' : 'Create Prompt'}
-            </Button>
-          </Stack>
-        }
-      >
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            maxHeight: 'calc(80vh - 140px)',
-            overflowY: 'auto',
-            paddingRight: '4px',
-          }}
-        >
-          <Stack direction="vertical" gap="4">
-            {errors.general && (
-              <Text color="muted" style={{ color: 'var(--atlas-color-danger, #ef4444)', fontSize: '0.875rem' }}>
-                {errors.general}
-              </Text>
-            )}
+      <div className="echo-modal-backdrop echo-editor-backdrop" role="presentation">
+        <form className="echo-editor-panel" role="dialog" aria-modal="true" aria-labelledby="echo-editor-title" onSubmit={save}>
+          <header className="echo-editor-title-row">
+            <div><h2 id="echo-editor-title">{prompt ? 'Edit prompt' : 'Create new prompt'}</h2><p>Edit mode uses the same form with existing values loaded.</p></div>
+            <button type="button" onClick={() => onOpenChange(false)}>Cancel</button>
+          </header>
+          {errors.general && <p className="echo-form-error" role="alert">{errors.general}</p>}
 
-            {/* Title */}
-            <Field label="Title" isRequired errorMessage={errors.title}>
-              <Input
-                value={title}
-                onChange={(e) => {
-                  setTitle(e.target.value);
-                  if (errors.title) setErrors({ ...errors, title: undefined });
-                }}
-                placeholder="e.g. Next.js App Router Architecture Guide"
-                autoFocus
-                disabled={submitting}
-              />
-            </Field>
+          <div className="echo-editor-columns">
+            <div className="echo-editor-primary">
+              <label className="echo-field"><span>Title <small>Shown in the library and search results.</small></span><input autoFocus value={title} onChange={(event) => setTitle(event.target.value)} />{errors.title && <em>{errors.title}</em>}</label>
+              <label className="echo-field"><span>Prompt text <small>The exact prompt that will be copied and used.</small></span><textarea rows={8} value={promptText} onChange={(event) => setPromptText(event.target.value)} />{errors.prompt && <em>{errors.prompt}</em>}</label>
+              <label className="echo-field"><span>Short description <small>A short summary shown on prompt cards.</small></span><textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} /></label>
+              <label className="echo-field"><span>Usage notes <small>Explain what to change and what to keep.</small></span><textarea rows={4} value={usage} onChange={(event) => setUsage(event.target.value)} /></label>
 
-            {/* Raw Prompt Text */}
-            <Field
-              label="Prompt Text"
-              isRequired
-              description="The exact raw prompt to be copied and used."
-              errorMessage={errors.prompt_text}
-            >
-              <Textarea
-                value={promptText}
-                onChange={(e) => {
-                  setPromptText(e.target.value);
-                  if (errors.prompt_text) setErrors({ ...errors, prompt_text: undefined });
-                }}
-                placeholder="Enter prompt instructions, code template, or generative instructions..."
-                rows={6}
-                disabled={submitting}
-                style={{
-                  fontFamily: 'var(--atlas-font-mono, monospace)',
-                  fontSize: '0.875rem',
-                  lineHeight: 1.5,
-                }}
-              />
-            </Field>
-
-            {/* Organization row: Category & Collection */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-              {/* Category */}
-              <Field label="Category" description="Optional medium type">
-                <Select
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  disabled={submitting}
-                >
-                  <option value="">None (Uncategorized)</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-
-              {/* Collection */}
-              <Field label="Collection" description="Optional organizational folder">
-                <Select
-                  value={collectionId}
-                  onChange={handleCollectionChange}
-                  disabled={submitting}
-                >
-                  <option value="">None (Uncollected)</option>
-                  {collections.map((col) => (
-                    <option key={col.id} value={col.id}>
-                      {col.name}
-                    </option>
-                  ))}
-                  <option value="__CREATE_NEW__">+ Create new collection...</option>
-                </Select>
-              </Field>
+              <section className="echo-media-editor">
+                <h3>Media</h3><p>Upload an image or video, or add a public media URL.</p>
+                <input ref={fileRef} hidden type="file" multiple accept="image/*,video/*" onChange={(event) => upload(event.target.files)} />
+                <div className="echo-action-row"><button type="button" className="echo-button echo-button-quiet" disabled={uploading} onClick={() => fileRef.current?.click()}>{uploading ? 'Uploading...' : 'Upload file'}</button><button type="button" className="echo-button echo-button-quiet" onClick={() => setShowLink(!showLink)}>Add link</button></div>
+                {media.map((item, index) => <div className="echo-attached-media" key={item.id || index}>{item.media_type === 'image' && <img src={getMediaUrl(item.thumbnail_url || item.url)} alt={item.caption || 'Attached media'} />}<span>{item.file_name || item.caption || item.url}</span><button type="button" onClick={() => setMedia(media.filter((_, itemIndex) => itemIndex !== index))}>Remove</button></div>)}
+              </section>
             </div>
 
-            {/* Media Attachments Section */}
-            <Field
-              label="Photos & Videos"
-              description="Attach media examples or reference images (thumbnails auto-generated)"
-            >
-              <Stack direction="vertical" gap="3">
-                {/* Hidden File Input */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,video/mp4,video/webm,video/quicktime"
-                  multiple
-                  style={{ display: 'none' }}
-                  onChange={handleFileUpload}
-                />
-
-                {/* Upload & Link Action Buttons */}
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    isLoading={uploading}
-                    disabled={submitting}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                  >
-                    <UploadIcon size={14} />
-                    <span>{uploading ? 'Processing Media...' : 'Upload File'}</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowUrlInput(!showUrlInput)}
-                    disabled={submitting || uploading}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                  >
-                    <LinkIcon size={14} />
-                    <span>{showUrlInput ? 'Cancel URL' : 'Add from URL'}</span>
-                  </Button>
-                </div>
-
-                {/* Optional Media URL Form */}
-                {showUrlInput && (
-                  <Card variant="outline" style={{ padding: '0.75rem', backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)' }}>
-                    <Stack direction="vertical" gap="2">
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
-                        <Select
-                          value={mediaTypeInput}
-                          onChange={(e) => setMediaTypeInput(e.target.value as 'image' | 'video')}
-                        >
-                          <option value="image">Image URL</option>
-                          <option value="video">Video URL</option>
-                        </Select>
-                        <Input
-                          value={mediaUrlInput}
-                          onChange={(e) => setMediaUrlInput(e.target.value)}
-                          placeholder="https://example.com/image.jpg"
-                        />
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <div style={{ flex: '1 1 180px' }}>
-                          <Input
-                            value={mediaCaptionInput}
-                            onChange={(e) => setMediaCaptionInput(e.target.value)}
-                            placeholder="Optional caption..."
-                          />
-                        </div>
-                        <Button
-                          type="button"
-                          variant="primary"
-                          size="sm"
-                          onClick={handleAddMediaUrl}
-                          disabled={!mediaUrlInput.trim()}
-                        >
-                          Attach
-                        </Button>
-                      </div>
-                    </Stack>
-                  </Card>
-                )}
-
-                {/* Media Attachment Previews Grid */}
-                {mediaList.length > 0 && (
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
-                      gap: '0.5rem',
-                      marginTop: '0.25rem',
-                    }}
-                  >
-                    {mediaList.map((item, idx) => (
-                      <div
-                        key={idx}
-                        style={{
-                          position: 'relative',
-                          borderRadius: 'var(--atlas-radius-md, 6px)',
-                          border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-                          overflow: 'hidden',
-                          backgroundColor: 'var(--atlas-color-bg-subtle, #f8fafc)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                        }}
-                      >
-                        {item.media_type === 'image' ? (
-                          <div
-                            style={{
-                              width: '100%',
-                              height: '84px',
-                              backgroundColor: '#0f172a',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <img
-                              src={getMediaUrl(item.thumbnail_url || item.medium_url || item.url)}
-                              alt={item.caption || item.file_name || 'Media preview'}
-                              style={{
-                                maxWidth: '100%',
-                                maxHeight: '84px',
-                                objectFit: 'contain',
-                                display: 'block',
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <div
-                            style={{
-                              width: '100%',
-                              height: '84px',
-                              backgroundColor: '#0f172a',
-                              color: '#ffffff',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              letterSpacing: '0.04em',
-                            }}
-                          >
-                            VIDEO
-                          </div>
-                        )}
-
-                        <div
-                          style={{
-                            padding: '0.375rem 0.5rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
-                            borderTop: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-                          }}
-                        >
-                          <Badge variant="subtle" size="sm" intent={item.media_type === 'video' ? 'warning' : 'info'}>
-                            {item.media_type.toUpperCase()}
-                          </Badge>
-                          <IconButton
-                            size="sm"
-                            variant="ghost"
-                            isDanger
-                            aria-label="Remove media"
-                            title="Remove media attachment"
-                            icon={<TrashIcon size={12} />}
-                            onClick={() => handleRemoveMedia(idx)}
-                            style={{
-                              minWidth: '22px',
-                              minHeight: '22px',
-                              width: '22px',
-                              height: '22px',
-                              borderRadius: 'var(--atlas-radius-sm, 4px)',
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Stack>
-            </Field>
-
-            {/* Tags Input */}
-            <Field label="Tags" description="Type a tag and press Enter or comma">
-              <Stack direction="vertical" gap="2">
-                <Input
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleTagKeyDown}
-                  onBlur={() => {
-                    if (tagInput.trim()) handleAddTag(tagInput);
-                  }}
-                  placeholder="e.g. react, code-review, refactoring"
-                  disabled={submitting}
-                />
-                {tags.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginTop: '0.25rem' }}>
-                    {tags.map((tag, idx) => (
-                      <Tag
-                        key={idx}
-                        size="sm"
-                        variant="subtle"
-                        intent="neutral"
-                        onRemove={() => handleRemoveTag(idx)}
-                      >
-                        #{tag}
-                      </Tag>
-                    ))}
-                  </div>
-                )}
-              </Stack>
-            </Field>
-
-            {/* Optional Short Description */}
-            <Field label="Short Description" description="Summary displayed on prompt cards">
-              <Input
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g. Comprehensive architectural instructions for App Router"
-                disabled={submitting}
-              />
-            </Field>
-
-            {/* Optional Usage Instructions */}
-            <Field label="Usage Instructions" description="Optional parameters, placeholders, or usage notes">
-              <Textarea
-                value={usageDescription}
-                onChange={(e) => setUsageDescription(e.target.value)}
-                placeholder="e.g. Replace [MODEL] with your target model..."
-                rows={3}
-                disabled={submitting}
-              />
-            </Field>
-          </Stack>
+            <aside className="echo-editor-secondary">
+              <label className="echo-field"><span>Prompt type <small>Text, code, image, or video.</small></span><select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}><option value="">Uncategorized</option>{categories.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}</select></label>
+              <label className="echo-field"><span>Collection <small>Optional group for related prompts.</small></span><select value={collectionId} onChange={(event) => event.target.value === '__new__' ? setCreateCollection(true) : setCollectionId(event.target.value)}><option value="">Uncollected</option>{collections.map((collection) => <option value={collection.id} key={collection.id}>{collection.name}</option>)}<option value="__new__">Create collection...</option></select></label>
+              <label className="echo-field"><span>Tags <small>Use tags to make the prompt easier to find.</small></span><input value={tagInput} onChange={(event) => setTagInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ',') { event.preventDefault(); addTag(); } }} onBlur={addTag} placeholder="portrait, lighting" /></label>
+              {!!tags.length && <div className="echo-editor-tags">{tags.map((tag) => <button type="button" key={tag} onClick={() => setTags(tags.filter((item) => item !== tag))}>{tag} ×</button>)}</div>}
+              {showLink && <section className="echo-link-editor"><h3>Add media link</h3><select value={linkType} onChange={(event) => setLinkType(event.target.value as 'image' | 'video')}><option value="image">Image</option><option value="video">Video</option></select><input value={linkUrl} onChange={(event) => setLinkUrl(event.target.value)} placeholder="https://example.com/image.jpg" /><input value={linkCaption} onChange={(event) => setLinkCaption(event.target.value)} placeholder="Optional caption" /><button type="button" onClick={addLink}>Add link</button></section>}
+              <section className="echo-editor-states"><h3>{prompt ? 'Edit mode' : 'Create mode'}</h3><p>{prompt ? 'Existing media can be removed before saving.' : 'Required: title and prompt text.'}</p></section>
+            </aside>
+          </div>
+          <footer className="echo-editor-footer"><span>Required: title and prompt text</span><button type="submit" className="echo-button echo-button-primary" disabled={saving || uploading}>{saving ? 'Saving...' : 'Save prompt'}</button></footer>
         </form>
-      </Dialog>
-
-      {/* Inline Collection Creation Modal */}
-      <CreateCollectionModal
-        open={createCollectionOpen}
-        onOpenChange={setCreateCollectionOpen}
-        onCreated={handleInlineCollectionCreated}
-      />
+      </div>
+      <CreateCollectionModal open={createCollection} onOpenChange={setCreateCollection} onCreated={(collection) => { onCollectionCreated?.(collection); setCollectionId(String(collection.id)); }} />
     </>
   );
 }

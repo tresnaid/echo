@@ -1,901 +1,116 @@
-import { useEffect, useState, useCallback } from 'react';
-import {
-  Container,
-  Stack,
-  Heading,
-  Text,
-  Badge,
-  Button,
-  Dialog,
-} from '@tresnaid/atlas';
-import { Collection, CollectionCounts, SelectedCollectionView, Prompt, Category } from './types';
+import { useCallback, useEffect, useState } from 'react';
+import { Category, Collection, CollectionCounts, Prompt, SelectedCollectionView } from './types';
 import { fetchCollections } from './api/collections';
-import { fetchPrompts, fetchCategories, fetchTags } from './api/prompts';
+import { fetchCategories, fetchPrompts, fetchTags } from './api/prompts';
 import { getApiUrl } from './api/config';
-import { SidebarNavigation } from './components/collections/SidebarNavigation';
-import { CreateCollectionModal } from './components/collections/CreateCollectionModal';
-import { PromptFormModal } from './components/prompts/PromptFormModal';
-import { DeletePromptDialog } from './components/prompts/DeletePromptDialog';
-import { PromptDetailModal } from './components/prompts/PromptDetailModal';
-import { FilterBar } from './components/prompts/FilterBar';
-import { PromptGrid } from './components/prompts/PromptGrid';
+import { EchoHeader } from './components/layout/EchoHeader';
+import { EchoFooter } from './components/layout/EchoFooter';
 import { LandingPage } from './components/landing/LandingPage';
 import { WorkbenchPage } from './components/workbench/WorkbenchPage';
+import { SidebarNavigation } from './components/collections/SidebarNavigation';
+import { FilterBar } from './components/prompts/FilterBar';
+import { PromptGrid } from './components/prompts/PromptGrid';
+import { PromptDetailModal } from './components/prompts/PromptDetailModal';
+import { PromptFormModal } from './components/prompts/PromptFormModal';
+import { DeletePromptDialog } from './components/prompts/DeletePromptDialog';
 
-interface HealthStatus {
-  status: string;
-  database: string;
-  timestamp: string;
-}
+interface HealthStatus { status: string; database: string; timestamp: string; }
+type View = 'overview' | 'library' | 'workbench';
 
-function PlusIcon({ size = 14 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <line x1="12" y1="5" x2="12" y2="19" />
-      <line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-  );
-}
-
-function LayersIcon({ size = 14 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <polygon points="12 2 2 7 12 12 22 7 12 2" />
-      <polyline points="2 17 12 22 22 17" />
-      <polyline points="2 12 12 17 22 12" />
-    </svg>
-  );
-}
-
-function useIsMobile(breakpoint = 840) {
-  const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth < breakpoint;
-  });
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < breakpoint);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [breakpoint]);
-
-  return isMobile;
+function viewFromPath(): View {
+  if (typeof window === 'undefined') return 'overview';
+  if (window.location.pathname.startsWith('/workbench')) return 'workbench';
+  if (window.location.pathname.startsWith('/library') || window.location.pathname.startsWith('/app')) return 'library';
+  return 'overview';
 }
 
 export function App() {
-  const isMobile = useIsMobile(840);
-  const [viewMode, setViewMode] = useState<'landing' | 'library' | 'workbench'>(() => {
-    if (typeof window !== 'undefined') {
-      const path = window.location.pathname.toLowerCase();
-      const params = new URLSearchParams(window.location.search);
-      if (path.startsWith('/workbench') || params.get('view') === 'workbench') {
-        return 'workbench';
-      }
-      if (path.startsWith('/library') || path.startsWith('/app') || params.get('view') === 'library') {
-        return 'library';
-      }
-    }
-    return 'landing';
-  });
-
-  useEffect(() => {
-    // Gracefully clean up any legacy ?view= query parameter
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.has('view')) {
-        const val = params.get('view');
-        const target = val === 'workbench' ? '/workbench' : val === 'library' ? '/library' : '/';
-        window.history.replaceState(null, '', target);
-      }
-    }
-
-    const handlePopState = () => {
-      const path = window.location.pathname.toLowerCase();
-      if (path.startsWith('/workbench')) {
-        setViewMode('workbench');
-      } else if (path.startsWith('/library') || path.startsWith('/app')) {
-        setViewMode('library');
-      } else {
-        setViewMode('landing');
-      }
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  const handleOpenWorkbench = () => {
-    setViewMode('workbench');
-    window.history.pushState(null, '', '/workbench');
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  };
-
-  const handleOpenLibrary = () => {
-    setViewMode('library');
-    window.history.pushState(null, '', '/library');
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  };
-
-  const handleOpenLanding = () => {
-    setViewMode('landing');
-    window.history.pushState(null, '', '/');
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  };
-
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [view, setView] = useState<View>(viewFromPath);
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [counts, setCounts] = useState<CollectionCounts>({ all: 0, uncollected: 0 });
   const [categories, setCategories] = useState<Category[]>([]);
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
-
-  // Browsing & Filtering state
+  const [tags, setTags] = useState<string[]>([]);
+  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [metadataLoading, setMetadataLoading] = useState(true);
+  const [promptsLoading, setPromptsLoading] = useState(true);
   const [selectedView, setSelectedView] = useState<SelectedCollectionView>('all');
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedTag, setSelectedTag] = useState('');
+  const [category, setCategory] = useState('');
+  const [tag, setTag] = useState('');
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Prompt | null>(null);
+  const [detail, setDetail] = useState<Prompt | null>(null);
+  const [deleting, setDeleting] = useState<Prompt | null>(null);
 
-  const [prompts, setPrompts] = useState<Prompt[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [promptsLoading, setPromptsLoading] = useState(true);
-
-  // Modals
-  const [promptModalOpen, setPromptModalOpen] = useState(false);
-  const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
-  const [deletingPrompt, setDeletingPrompt] = useState<Prompt | null>(null);
-  const [detailPrompt, setDetailPrompt] = useState<Prompt | null>(null);
-  const [mobileManageOpen, setMobileManageOpen] = useState(false);
-  const [mobileCreateCollectionOpen, setMobileCreateCollectionOpen] = useState(false);
-
-  // Scroll listener for sticky header elevation
+  const navigate = useCallback((next: View) => {
+    const path = next === 'overview' ? '/' : `/${next}`;
+    setView(next); window.history.pushState(null, '', path); window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 4);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const pop = () => setView(viewFromPath());
+    window.addEventListener('popstate', pop); return () => window.removeEventListener('popstate', pop);
   }, []);
 
-  // Load global metadata (health, collections, categories, tags)
   const loadMetadata = useCallback(async () => {
     try {
-      const [healthRes, colData, catData, tagData] = await Promise.all([
-        fetch(getApiUrl('/api/health')).then((r) => r.json()).catch(() => null),
+      const [healthData, collectionData, categoryData, tagData] = await Promise.all([
+        fetch(getApiUrl('/api/health')).then((response) => response.json()).catch(() => null),
         fetchCollections().catch(() => ({ collections: [], counts: { all: 0, uncollected: 0 } })),
-        fetchCategories().catch(() => []),
-        fetchTags().catch(() => []),
+        fetchCategories().catch(() => []), fetchTags().catch(() => []),
       ]);
-      setHealth(healthRes);
-      setCollections(colData.collections);
-      setCounts(colData.counts);
-      setCategories(catData);
-      setAvailableTags(tagData);
-    } catch (err) {
-      console.error('Failed to load metadata:', err);
-    } finally {
-      setLoading(false);
-    }
+      setHealth(healthData); setCollections(collectionData.collections); setCounts(collectionData.counts); setCategories(categoryData); setTags(tagData);
+    } finally { setMetadataLoading(false); }
   }, []);
-
-  // Load filtered prompts
   const loadPrompts = useCallback(async () => {
+    setPromptsLoading(true);
     try {
-      setPromptsLoading(true);
       const params: Parameters<typeof fetchPrompts>[0] = {};
+      if (selectedView === 'uncollected') params.collection_id = 'uncollected'; else if (typeof selectedView === 'number') params.collection_id = selectedView;
+      if (category) params.category_id = category; if (tag) params.tag = tag; if (search.trim()) params.search = search.trim();
+      setPrompts(await fetchPrompts(params));
+    } catch { setPrompts([]); }
+    finally { setPromptsLoading(false); }
+  }, [selectedView, category, tag, search]);
+  useEffect(() => { loadMetadata(); }, [loadMetadata]);
+  useEffect(() => { loadPrompts(); }, [loadPrompts]);
 
-      if (selectedView === 'uncollected') {
-        params.collection_id = 'uncollected';
-      } else if (typeof selectedView === 'number') {
-        params.collection_id = selectedView;
-      }
+  const refresh = () => { loadMetadata(); loadPrompts(); setEditing(null); };
+  const openCreate = () => { setEditing(null); setFormOpen(true); };
+  const openEdit = (prompt: Prompt) => { setDetail(null); setEditing(prompt); setFormOpen(true); };
+  const activeLabel = selectedView === 'all' ? 'All prompts' : selectedView === 'uncollected' ? 'Uncollected' : collections.find((item) => item.id === selectedView)?.name || 'Collection';
 
-      if (selectedCategory) {
-        params.category_id = selectedCategory;
-      }
-
-      if (selectedTag) {
-        params.tag = selectedTag;
-      }
-
-      if (search.trim()) {
-        params.search = search.trim();
-      }
-
-      const data = await fetchPrompts(params);
-      setPrompts(data);
-    } catch (err) {
-      console.error('Failed to load prompts:', err);
-    } finally {
-      setPromptsLoading(false);
-    }
-  }, [selectedView, selectedCategory, selectedTag, search]);
-
-  useEffect(() => {
-    loadMetadata();
-  }, [loadMetadata]);
-
-  useEffect(() => {
-    loadPrompts();
-  }, [loadPrompts]);
-
-  const handlePromptSaved = () => {
-    loadMetadata();
-    loadPrompts();
-    setEditingPrompt(null);
-  };
-
-  const handlePromptDeleted = () => {
-    loadMetadata();
-    loadPrompts();
-    setDeletingPrompt(null);
-  };
-
-  const handleOpenCreatePrompt = () => {
-    setEditingPrompt(null);
-    setPromptModalOpen(true);
-  };
-
-  const handleOpenEditPrompt = (prompt: Prompt) => {
-    setEditingPrompt(prompt);
-    setPromptModalOpen(true);
-  };
-
-  const handleClearFilters = () => {
-    setSearch('');
-    setSelectedCategory('');
-    setSelectedTag('');
-  };
-
-  // Determine active view label
-  const activeViewLabel = (() => {
-    if (selectedView === 'all') return 'All Prompts';
-    if (selectedView === 'uncollected') return 'Uncollected Prompts';
-    const found = collections.find((c) => c.id === selectedView);
-    return found ? found.name : 'Collection';
-  })();
-
-  const defaultCollectionForModal = typeof selectedView === 'number' ? selectedView : null;
-  const hasActiveFilters = Boolean(search.trim() || selectedCategory || selectedTag);
-
-  if (viewMode === 'landing') {
-    return (
-      <LandingPage
-        onOpenApp={handleOpenLibrary}
-        onOpenWorkbench={handleOpenWorkbench}
-      />
-    );
-  }
-
-  if (viewMode === 'workbench') {
-    return (
-      <>
-        <WorkbenchPage
-          prompts={prompts}
-          categories={categories}
-          collections={collections}
-          availableTags={availableTags}
-          health={health}
-          loading={loading || promptsLoading}
-          onOpenCreatePrompt={handleOpenCreatePrompt}
-          onOpenEditPrompt={handleOpenEditPrompt}
-          onOpenLibrary={handleOpenLibrary}
-          onOpenLanding={handleOpenLanding}
-        />
-        <PromptFormModal
-          prompt={editingPrompt}
-          collections={collections}
-          defaultCollectionId={defaultCollectionForModal}
-          open={promptModalOpen}
-          onOpenChange={(open) => {
-            setPromptModalOpen(open);
-            if (!open) setEditingPrompt(null);
-          }}
-          onSaved={handlePromptSaved}
-          onCollectionCreated={() => {
-            loadMetadata();
-          }}
-        />
-        <DeletePromptDialog
-          prompt={deletingPrompt}
-          open={Boolean(deletingPrompt)}
-          onOpenChange={(open) => {
-            if (!open) setDeletingPrompt(null);
-          }}
-          onDeleted={handlePromptDeleted}
-        />
-      </>
-    );
-  }
+  if (view === 'overview') return <LandingPage onOpenApp={() => navigate('library')} onOpenWorkbench={() => navigate('workbench')} />;
+  if (view === 'workbench') return (
+    <>
+      <WorkbenchPage prompts={prompts} categories={categories} collections={collections} availableTags={tags} health={health} loading={metadataLoading || promptsLoading} onOpenCreatePrompt={openCreate} onOpenEditPrompt={openEdit} onOpenLibrary={() => navigate('library')} onOpenLanding={() => navigate('overview')} />
+      <PromptFormModal prompt={editing} collections={collections} open={formOpen} onOpenChange={(open) => { setFormOpen(open); if (!open) setEditing(null); }} onSaved={refresh} onCollectionCreated={loadMetadata} />
+    </>
+  );
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'var(--atlas-color-bg-canvas, #f8fafc)',
-      }}
-    >
-      {/* Sticky App Header */}
-      <header
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-          backgroundColor: 'rgba(255, 255, 255, 0.88)',
-          backdropFilter: 'blur(16px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(16px) saturate(180%)',
-          borderBottom: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-          boxShadow: isScrolled
-            ? '0 4px 20px -2px rgba(15, 23, 42, 0.06)'
-            : 'none',
-          transition: 'box-shadow 0.2s ease, background-color 0.2s ease',
-          width: '100%',
-        }}
-      >
-        <Container maxWidth="xl" center style={{ padding: isMobile ? '0.625rem 0.875rem' : '0.875rem 1.25rem' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '0.75rem',
-            }}
-          >
-            {/* Brand / Logo */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
-              <div
-                role="button"
-                tabIndex={0}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                }}
-                onClick={handleOpenLanding}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleOpenLanding();
-                  }
-                }}
-                title="Echo — Click to return to Overview"
-                aria-label="Echo — Return to Overview"
-              >
-                <img
-                  src="/echo-logo.svg"
-                  alt="Echo"
-                  style={{
-                    width: isMobile ? '26px' : '28px',
-                    height: isMobile ? '26px' : '28px',
-                    borderRadius: '7px',
-                    flexShrink: 0,
-                  }}
-                />
-                <Heading
-                  level={1}
-                  style={{
-                    fontSize: isMobile ? '1.25rem' : '1.375rem',
-                    fontWeight: 700,
-                    letterSpacing: '-0.025em',
-                    margin: 0,
-                    color: 'var(--atlas-color-text-primary, #0f172a)',
-                  }}
-                >
-                  Echo
-                </Heading>
-              </div>
-
-            </div>
-
-            {/* Center Navigation in Library Header */}
-            {!isMobile && (
-              <nav className="echo-landing-nav" aria-label="Library Navigation">
-                <a
-                  href="/"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleOpenLanding();
-                  }}
-                  className="echo-nav-link"
-                >
-                  Showcase
-                </a>
-                <a
-                  href="/workbench"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleOpenWorkbench();
-                  }}
-                  className="echo-nav-link"
-                >
-                  Workbench
-                </a>
-                <a
-                  href="/library"
-                  onClick={(e) => {
-                    e.preventDefault();
-                  }}
-                  className="echo-nav-link is-active"
-                >
-                  Library
-                </a>
-                <a
-                  href="https://github.com/tresnaid/echo"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="echo-nav-link"
-                >
-                  GitHub
-                </a>
-              </nav>
-            )}
-
-            {/* Actions: Health indicator & Create Prompt */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexShrink: 0 }}>
-              {loading ? (
-                <Badge variant="subtle" intent="neutral" size="sm">
-                  Connecting...
-                </Badge>
-              ) : health?.status === 'ok' ? (
-                <Badge variant="subtle" intent="success" size="sm">
-                  Online
-                </Badge>
-              ) : (
-                <Badge variant="subtle" intent="danger" size="sm">
-                  Offline
-                </Badge>
-              )}
-
-              <Button
-                variant="primary"
-                size={isMobile ? 'sm' : 'md'}
-                onClick={handleOpenCreatePrompt}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-              >
-                <PlusIcon size={14} />
-                <span>New Prompt</span>
-              </Button>
-            </div>
-          </div>
-        </Container>
-      </header>
-
-      {/* Main Content Area */}
-      <main style={{ flexGrow: 1, width: '100%' }}>
-        <Container
-          maxWidth="xl"
-          center
-          style={{
-            padding: isMobile ? '1rem 0.875rem 2.5rem' : '1.5rem 1.25rem 3.5rem',
-          }}
-        >
-          <Stack direction="vertical" gap={isMobile ? '4' : '5'}>
-            {/* Mobile View Header & Collection Pill Bar */}
-            {isMobile && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                {/* Active View Context Title & Counter */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
-                    <Heading
-                      level={2}
-                      style={{
-                        fontSize: '1.125rem',
-                        fontWeight: 700,
-                        letterSpacing: '-0.02em',
-                        margin: 0,
-                        color: 'var(--atlas-color-text-primary, #0f172a)',
-                      }}
-                    >
-                      {activeViewLabel}
-                    </Heading>
-                    <Badge variant="subtle" intent="neutral" size="sm">
-                      {prompts.length}
-                    </Badge>
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setMobileManageOpen(true)}
-                    style={{
-                      padding: '0.25rem 0.5rem',
-                      fontSize: '0.75rem',
-                      color: 'var(--atlas-color-text-brand, #2563eb)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
-                  >
-                    <LayersIcon size={13} />
-                    <span>Collections</span>
-                  </Button>
-                </div>
-
-                {/* Horizontal Quick Collection Picker */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.375rem',
-                    overflowX: 'auto',
-                    paddingBottom: '0.25rem',
-                    WebkitOverflowScrolling: 'touch',
-                    maxWidth: '100%',
-                  }}
-                >
-                  {/* All Prompts */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedView('all')}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.375rem',
-                      padding: '0.375rem 0.625rem',
-                      fontSize: '0.8125rem',
-                      fontWeight: selectedView === 'all' ? 600 : 500,
-                      borderRadius: 'var(--atlas-radius-md, 6px)',
-                      border: selectedView === 'all'
-                        ? '1px solid var(--atlas-color-border-focus, #3b82f6)'
-                        : '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-                      backgroundColor: selectedView === 'all'
-                        ? 'rgba(59, 130, 246, 0.08)'
-                        : 'var(--atlas-color-bg-surface, #ffffff)',
-                      color: selectedView === 'all'
-                        ? 'var(--atlas-color-text-brand, #2563eb)'
-                        : 'var(--atlas-color-text-secondary, #475569)',
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    <span>All</span>
-                    <Badge
-                      variant="subtle"
-                      intent={selectedView === 'all' ? 'info' : 'neutral'}
-                      size="sm"
-                    >
-                      {counts.all}
-                    </Badge>
-                  </button>
-
-                  {/* Custom Collections */}
-                  {collections.map((col) => {
-                    const isSelected = selectedView === col.id;
-                    return (
-                      <button
-                        key={col.id}
-                        type="button"
-                        onClick={() => setSelectedView(col.id)}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.375rem',
-                          padding: '0.375rem 0.625rem',
-                          fontSize: '0.8125rem',
-                          fontWeight: isSelected ? 600 : 500,
-                          borderRadius: 'var(--atlas-radius-md, 6px)',
-                          border: isSelected
-                            ? '1px solid var(--atlas-color-border-focus, #3b82f6)'
-                            : '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-                          backgroundColor: isSelected
-                            ? 'rgba(59, 130, 246, 0.08)'
-                            : 'var(--atlas-color-bg-surface, #ffffff)',
-                          color: isSelected
-                            ? 'var(--atlas-color-text-brand, #2563eb)'
-                            : 'var(--atlas-color-text-secondary, #475569)',
-                          cursor: 'pointer',
-                          flexShrink: 0,
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        <span>{col.name}</span>
-                        <Badge
-                          variant="subtle"
-                          intent={isSelected ? 'info' : 'neutral'}
-                          size="sm"
-                        >
-                          {col.prompt_count}
-                        </Badge>
-                      </button>
-                    );
-                  })}
-
-                  {/* Uncollected */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedView('uncollected')}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.375rem',
-                      padding: '0.375rem 0.625rem',
-                      fontSize: '0.8125rem',
-                      fontWeight: selectedView === 'uncollected' ? 600 : 500,
-                      borderRadius: 'var(--atlas-radius-md, 6px)',
-                      border: selectedView === 'uncollected'
-                        ? '1px solid var(--atlas-color-border-focus, #3b82f6)'
-                        : '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-                      backgroundColor: selectedView === 'uncollected'
-                        ? 'rgba(59, 130, 246, 0.08)'
-                        : 'var(--atlas-color-bg-surface, #ffffff)',
-                      color: selectedView === 'uncollected'
-                        ? 'var(--atlas-color-text-brand, #2563eb)'
-                        : 'var(--atlas-color-text-secondary, #475569)',
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    <span>Uncollected</span>
-                    <Badge
-                      variant="subtle"
-                      intent={selectedView === 'uncollected' ? 'info' : 'neutral'}
-                      size="sm"
-                    >
-                      {counts.uncollected}
-                    </Badge>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Desktop / Responsive Layout with Left Sidebar */}
-            <div
-              style={{
-                display: 'flex',
-                gap: '1.5rem',
-                alignItems: 'flex-start',
-                flexDirection: isMobile ? 'column' : 'row',
-              }}
-            >
-              {/* Desktop Left Sidebar */}
-              {!isMobile && (
-                <SidebarNavigation
-                  collections={collections}
-                  counts={counts}
-                  selectedView={selectedView}
-                  onSelectView={(view) => {
-                    setSelectedView(view);
-                  }}
-                  onCollectionsChanged={() => {
-                    loadMetadata();
-                    loadPrompts();
-                  }}
-                />
-              )}
-
-              {/* Main Content & Product Catalog Area */}
-              <div style={{ flexGrow: 1, minWidth: 0, width: '100%' }}>
-                <div
-                  style={{
-                    backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
-                    border: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-                    borderRadius: 'var(--atlas-radius-lg, 14px)',
-                    padding: isMobile ? '1.25rem 1rem' : '1.75rem 2rem 2.25rem',
-                    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
-                  }}
-                >
-                  <Stack direction="vertical" gap="5">
-                    {/* Desktop Section Header */}
-                    {!isMobile && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap',
-                          gap: '0.75rem',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                          <Heading
-                            level={2}
-                            style={{
-                              fontSize: '1.25rem',
-                              fontWeight: 700,
-                              letterSpacing: '-0.02em',
-                              margin: 0,
-                              color: 'var(--atlas-color-text-primary, #0f172a)',
-                            }}
-                          >
-                            {activeViewLabel}
-                          </Heading>
-                          <Badge variant="subtle" intent="neutral" size="md">
-                            {prompts.length} {prompts.length === 1 ? 'prompt' : 'prompts'}
-                          </Badge>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Filter Bar */}
-                    <FilterBar
-                      search={search}
-                      onSearchChange={setSearch}
-                      selectedCategory={selectedCategory}
-                      onCategoryChange={setSelectedCategory}
-                      selectedTag={selectedTag}
-                      onTagChange={setSelectedTag}
-                      categories={categories}
-                      availableTags={availableTags}
-                      totalResults={prompts.length}
-                    />
-
-                    {/* Prompt Grid */}
-                    <PromptGrid
-                      prompts={prompts}
-                      loading={promptsLoading}
-                      hasActiveFilters={hasActiveFilters}
-                      onClearFilters={handleClearFilters}
-                      onCreatePrompt={handleOpenCreatePrompt}
-                      onEditPrompt={handleOpenEditPrompt}
-                      onDeletePrompt={setDeletingPrompt}
-                      onTagClick={(tag) => setSelectedTag(tag)}
-                      onOpenDetails={(prompt) => setDetailPrompt(prompt)}
-                    />
-                  </Stack>
-                </div>
-              </div>
-            </div>
-          </Stack>
-        </Container>
+    <div className="echo-page echo-library-page">
+      <EchoHeader active="library" onNavigate={navigate} />
+      <main>
+        <section className="echo-page-title">
+          <div><h1>Prompt Library</h1><p>{counts.all} prompts in all collections</p></div>
+          <button type="button" className="echo-button echo-button-primary" onClick={openCreate}>New prompt</button>
+        </section>
+        {health?.status !== 'ok' && <div className="echo-offline-notice" role="status">Offline. Saved content remains visible when available.</div>}
+        <div className="echo-library-layout">
+          <SidebarNavigation collections={collections} counts={counts} selectedView={selectedView} onSelectView={setSelectedView} onCollectionsChanged={() => { loadMetadata(); loadPrompts(); }} />
+          <section className="echo-library-content">
+            <FilterBar search={search} onSearchChange={setSearch} selectedCategory={category} onCategoryChange={setCategory} selectedTag={tag} onTagChange={setTag} categories={categories} availableTags={tags} totalResults={prompts.length} />
+            <div className="echo-result-heading"><h2>{activeLabel}</h2><span>{prompts.length} results</span></div>
+            <PromptGrid prompts={prompts} loading={promptsLoading} hasActiveFilters={Boolean(search || category || tag)} onClearFilters={() => { setSearch(''); setCategory(''); setTag(''); }} onCreatePrompt={openCreate} onTagClick={setTag} onOpenDetails={setDetail} />
+          </section>
+        </div>
       </main>
+      <EchoFooter onNavigate={navigate} status={health?.status === 'ok' ? 'online' : 'offline'} />
 
-      {/* App Footer */}
-      <footer
-        style={{
-          marginTop: 'auto',
-          borderTop: '1px solid var(--atlas-color-border-subtle, #e2e8f0)',
-          backgroundColor: 'var(--atlas-color-bg-surface, #ffffff)',
-          padding: isMobile ? '1.25rem 0.875rem' : '1.5rem 1.25rem',
-        }}
-      >
-        <Container maxWidth="xl" center>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: isMobile ? 'column' : 'row',
-              alignItems: isMobile ? 'flex-start' : 'center',
-              justifyContent: 'space-between',
-              gap: '0.75rem',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap' }}>
-              <img
-                src="/echo-logo.svg"
-                alt="Echo"
-                style={{ width: '18px', height: '18px', borderRadius: '4px' }}
-              />
-              <Text size="sm" weight="semibold" style={{ color: 'var(--atlas-color-text-primary, #0f172a)' }}>
-                Echo
-              </Text>
-              <Text size="xs" color="muted">
-                • Structured Prompt Library
-              </Text>
-              <Badge variant="subtle" intent="neutral" size="sm">
-                v0.1.0
-              </Badge>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-              <Text size="xs" color="muted">
-                Built with Atlas Design System
-              </Text>
-            </div>
-          </div>
-        </Container>
-      </footer>
-
-      {/* Mobile Manage Collections Modal */}
-      {isMobile && (
-        <Dialog
-          open={mobileManageOpen}
-          onOpenChange={setMobileManageOpen}
-          title="Collections"
-          description="Switch, create, rename, or delete collections in your library."
-          size="sm"
-          footer={
-            <Button variant="primary" onClick={() => setMobileManageOpen(false)}>
-              Done
-            </Button>
-          }
-        >
-          <div style={{ padding: '0.25rem 0' }}>
-            <SidebarNavigation
-              collections={collections}
-              counts={counts}
-              selectedView={selectedView}
-              onSelectView={(view) => {
-                setSelectedView(view);
-                setMobileManageOpen(false);
-              }}
-              onCollectionsChanged={() => {
-                loadMetadata();
-                loadPrompts();
-              }}
-              style={{ width: '100%', border: 'none', boxShadow: 'none', padding: 0 }}
-            />
-          </div>
-        </Dialog>
-      )}
-
-      {/* Mobile Create Collection Modal */}
-      <CreateCollectionModal
-        open={mobileCreateCollectionOpen}
-        onOpenChange={setMobileCreateCollectionOpen}
-        onCreated={(col) => {
-          loadMetadata();
-          setSelectedView(col.id);
-        }}
-      />
-
-      {/* Prompt Detail Modal */}
-      <PromptDetailModal
-        prompt={detailPrompt}
-        isOpen={Boolean(detailPrompt)}
-        onClose={() => setDetailPrompt(null)}
-        onEdit={(prompt) => {
-          setDetailPrompt(null);
-          handleOpenEditPrompt(prompt);
-        }}
-        onDelete={(prompt) => {
-          setDetailPrompt(null);
-          setDeletingPrompt(prompt);
-        }}
-        onTagClick={(tag) => {
-          setSelectedTag(tag);
-        }}
-      />
-
-      {/* Prompt Form Modal (Create & Edit) */}
-      <PromptFormModal
-        prompt={editingPrompt}
-        collections={collections}
-        defaultCollectionId={defaultCollectionForModal}
-        open={promptModalOpen}
-        onOpenChange={(open) => {
-          setPromptModalOpen(open);
-          if (!open) setEditingPrompt(null);
-        }}
-        onSaved={handlePromptSaved}
-        onCollectionCreated={() => {
-          loadMetadata();
-        }}
-      />
-
-      {/* Delete Prompt Dialog */}
-      <DeletePromptDialog
-        prompt={deletingPrompt}
-        open={Boolean(deletingPrompt)}
-        onOpenChange={(open) => {
-          if (!open) setDeletingPrompt(null);
-        }}
-        onDeleted={handlePromptDeleted}
-      />
+      <PromptDetailModal prompt={detail} isOpen={Boolean(detail)} onClose={() => setDetail(null)} onEdit={openEdit} onDelete={(prompt) => { setDetail(null); setDeleting(prompt); }} onTagClick={(value) => { setTag(value); setDetail(null); }} />
+      <PromptFormModal prompt={editing} collections={collections} defaultCollectionId={typeof selectedView === 'number' ? selectedView : null} open={formOpen} onOpenChange={(open) => { setFormOpen(open); if (!open) setEditing(null); }} onSaved={refresh} onCollectionCreated={loadMetadata} />
+      <DeletePromptDialog prompt={deleting} open={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)} onDeleted={() => { setDeleting(null); refresh(); }} />
     </div>
   );
 }
